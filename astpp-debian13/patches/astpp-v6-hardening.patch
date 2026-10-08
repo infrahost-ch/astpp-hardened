@@ -1,0 +1,1115 @@
+diff --git a/freeswitch/fs/cdr.php b/freeswitch/fs/cdr.php
+index 062d2dc..1e3e4a9 100755
+--- a/freeswitch/fs/cdr.php
++++ b/freeswitch/fs/cdr.php
+@@ -71,7 +71,7 @@ if (isset ( $_SERVER ["CONTENT_TYPE"] ) && $_SERVER ["CONTENT_TYPE"] == "applica
+ 	// error_log(print_r($data,true));
+ 	$logger->log ( print_r ( $data, true ) );
+ 
+-	if (isset($data ['variables']['module_name'])){
++	if (isset($data ['variables']['module_name']) && preg_match('/^[A-Za-z0-9_]+$/', $data ['variables']['module_name'])){ // HARDENING: no path traversal
+ 		$logger->log("Looking for custom module file to include : " . "lib/addons/astpp.".$data ['variables']['module_name'].".php");
+ 		if (file_exists("lib/addons/astpp.".$data ['variables']['module_name'].".php")){
+ 			include_once("lib/addons/astpp.".$data ['variables']['module_name'].".php");			
+diff --git a/freeswitch/fs/index.php b/freeswitch/fs/index.php
+index 9f9ed8f..f327d23 100755
+--- a/freeswitch/fs/index.php
++++ b/freeswitch/fs/index.php
+@@ -57,7 +57,15 @@ $config = $lib->get_configurations ( $db );
+ // Define logger object
+ $logger = new logger ( $lib );
+ // Define file name
+-$file = "astpp." . $_REQUEST ['section'] . ".php";
++// HARDENING: only allow known sections (prevents local file inclusion via "section")
++$section = isset ( $_REQUEST ['section'] ) ? ( string ) $_REQUEST ['section'] : '';
++if (! in_array ( $section, array (
++		'configuration',
++		'directory'
++), true )) {
++	xml_not_found ();
++}
++$file = "astpp." . $section . ".php";
+ 
+ // Include file
+ include_once ("scripts/" . $file);
+diff --git a/freeswitch/fs/lib/astpp.cdr.php b/freeswitch/fs/lib/astpp.cdr.php
+index 2a976a7..3e69d29 100755
+--- a/freeswitch/fs/lib/astpp.cdr.php
++++ b/freeswitch/fs/lib/astpp.cdr.php
+@@ -104,14 +104,14 @@ function process_cdr($data, $db, $logger, $decimal_points, $config) {
+ 		
+ 	if($actual_duration > 0 || $dataVariable['hangup_cause'] == 'NORMAL_CLEARING' || $dataVariable['hangup_cause'] == 'SUCCESS' || $dataVariable['hangup_cause']  == 'ALLOTTED_TIMEOUT' || $dataVariable['hangup_cause'] == 'USER_BUSY' || $dataVariable['hangup_cause']  == 'INTERWORKING'){
+ 		if($dataVariable['force_trunk_flag'] > 0 ){
+-			$route_query = "update routes SET call_count = call_count-1 where id =".$dataVariable['force_trunk_flag'];
++			$route_query = "update routes SET call_count = call_count-1 where id =".(int)$dataVariable['force_trunk_flag'];
+ 			$logger->log("GET Update routes count decrase  : " . $route_query);
+ 			$route_user = $db->run($route_query);
+ 		}else{
+ 			if($dataVariable['rate_flag'] == 3){
+ 				$rate_group=$origination_rate[$accountid]['RATEGROUP'];
+ 				$logger->log("*********************** Harsh_rategroup in CDRs: **".$rate_group."***********");
+-				$query = "update pricelists SET call_count = call_count-1 where id =".$rate_group;
++				$query = "update pricelists SET call_count = call_count-1 where id =".(int)$rate_group;
+ 				$logger->log("GET Update pricelist count decrase  : " . $query);
+ 				$rate_user = $db->run($query);
+ 			}
+@@ -120,12 +120,12 @@ function process_cdr($data, $db, $logger, $decimal_points, $config) {
+ 		$trunk_id= $termination_rate['TRUNK'];
+ 		$logger->log("*********************** Harsh_trunk in CDRs: **".$rate_group."***********");
+ 		if($dataVariable['force_trunk_flag'] > 0){
+-			$trunk_query = "update routing SET call_count = call_count-1 where trunk_id=".$trunk_id." and routes_id =".$dataVariable['force_trunk_flag'];
++			$trunk_query = "update routing SET call_count = call_count-1 where trunk_id=".(int)$trunk_id." and routes_id =".(int)$dataVariable['force_trunk_flag'];
+ 		}else{
+ 			//~ if($dataVariable['rate_flag'] == 3){
+-				$trunk_query = "update routing SET call_count = call_count-1 where trunk_id=".$trunk_id." and pricelist_id =".$rate_group;
++				$trunk_query = "update routing SET call_count = call_count-1 where trunk_id=".(int)$trunk_id." and pricelist_id =".(int)$rate_group;
+ 			//~ }else{
+-				//~ $trunk_query = "update routing SET call_count = call_count-1 where trunk_id=".$trunk_id." and pricelist_id =".$rate_group;
++				//~ $trunk_query = "update routing SET call_count = call_count-1 where trunk_id=".(int)$trunk_id." and pricelist_id =".(int)$rate_group;
+ 			//~ }
+ 		}
+ 		$logger->log("GET Update routing count decrase  : " . $trunk_query);
+@@ -360,9 +360,47 @@ function insert_extra_receiver_entry($dataVariable, $origination_rate, $terminat
+ 	return true;
+ }
+ 
++// HARDENING: SQL-escape every value that get_cdr_string()/get_reseller_cdr_string()
++// put into quoted SQL literals. Caller-ID name/number, dialed number, SIP hosts etc.
++// are controlled by whoever places the call. Keys that are urldecode()d later are
++// decoded here first and re-protected so the later urldecode() cannot re-introduce quotes.
++function astpp_cdr_escape($data, $db) {
++	$urldecoded_keys = array (
++			'effective_caller_id_name',
++			'effective_caller_id_number',
++			'original_caller_id_name',
++			'original_caller_id_number',
++			'callstart',
++			'end_stamp'
++	);
++	if (! is_array ( $data ))
++		return $data;
++	foreach ( $data as $key => $value ) {
++		if (is_array ( $value )) {
++			$data [$key] = astpp_cdr_escape ( $value, $db );
++		} elseif (is_string ( $value )) {
++			if (in_array ( $key, $urldecoded_keys, true )) {
++				$data [$key] = str_replace ( array (
++						'%',
++						'+'
++				), array (
++						'%25',
++						'%2B'
++				), $db->esc ( urldecode ( $value ) ) );
++			} else {
++				$data [$key] = $db->esc ( $value );
++			}
++		}
++	}
++	return $data;
++}
++
+ // Generate CDR string for insert query for customer.
+ function get_cdr_string($dataVariable, $accountid, $account_type, $actual_duration, $termination_rate, $origination_rate, $provider_cost, $parentid, $debit, $cost, $logger, $db) {
+-	
++	$dataVariable = astpp_cdr_escape ( $dataVariable, $db );
++	$termination_rate = astpp_cdr_escape ( $termination_rate, $db );
++	$origination_rate = astpp_cdr_escape ( $origination_rate, $db );
++
+ 	$get_current_time = gmdate("Y-m-d H:i:s"); // progress_media_stamp
+ 	$get_current_microseconds = round(microtime(true)/1000); // progress_mediamsec
+ 	
+@@ -384,6 +422,10 @@ function get_cdr_string($dataVariable, $accountid, $account_type, $actual_durati
+ 
+ // Generate CDR string for insert query for reseller
+ function get_reseller_cdr_string($dataVariable, $accountid, $account_type, $actual_duration, $termination_rate, $origination_rate, $provider_cost, $parentid, $debit, $cost,$logger,$db,$trunk_id='') {
++	$dataVariable = astpp_cdr_escape ( $dataVariable, $db );
++	$termination_rate = astpp_cdr_escape ( $termination_rate, $db );
++	$origination_rate = astpp_cdr_escape ( $origination_rate, $db );
++	$trunk_id = ( int ) $trunk_id;
+ 	$dataVariable ['calltype'] = ($dataVariable ['calltype'] == 'DID-LOCAL' || $dataVariable ['calltype'] == 'SIP-DID' || $dataVariable ['calltype'] == 'OTHER') ? "DID" : $dataVariable ['calltype'];
+ 	// $callerIdNumber = isset($dataVariable['effective_caller_id_number']) && !empty($dataVariable['effective_caller_id_number'])? $dataVariable['effective_caller_id_number'] :$dataVariable['caller_id'];
+ 	// ASTPPCOM-592 Ashish start
+@@ -452,7 +494,7 @@ function normalize_origination_rate($dataVariable,$logger='') {
+ //Checking table existance
+ function get_q850code($dataVariable, $db) {
+         
+-        $query = "SELECT code FROM q850code WHERE cause='" . ($dataVariable ['hangup_cause']) . "'";    	
++        $query = "SELECT code FROM q850code WHERE cause='" . $db->esc ( $dataVariable ['hangup_cause'] ) . "'";    	
+         $q850code = $db->run ( $query );    	
+     	$q850code [0]['code'] = ($q850code [0]['code']=='')?'31':$q850code [0]['code'];
+         return $dataVariable ['hangup_cause'] .' ['. $q850code [0]['code'].']';
+@@ -500,7 +542,7 @@ function package_calculation($destination_number, $package_id, $duration, $call_
+ 	$package_array = array ();
+ 	$logger->log ( "Package call_direction is  : " . $call_direction." AND receiver_accid is :::".$dataVariable ['receiver_accid']);
+ 	if($call_direction == 'inbound' && isset($dataVariable ['receiver_accid']) && $dataVariable ['receiver_accid'] > 0){
+-		$accountid = $dataVariable ['receiver_accid'];
++		$accountid = ( int ) $dataVariable ['receiver_accid'];
+ 		$logger->log ( "Package call_direction is  : " . $call_direction." AND Account ID is :::".$accountid );
+ 	}
+ 	$custom_destination = number_loop ( $destination_number, "patterns", $db );
+@@ -586,7 +628,7 @@ function number_loop($destination, $field, $db) {
+ 	$max_len_prefix = strlen ( $destination );
+ 	$number_prefix = '(';
+ 	while ( $max_len_prefix > 0 ) {
+-		$number_prefix .= "$field='^" . substr ( $destination, 0, $max_len_prefix ) . ".*' OR ";
++		$number_prefix .= "$field='^" . $db->esc ( substr ( $destination, 0, $max_len_prefix ) ) . ".*' OR "; // HARDENING: escaped
+ 		$max_len_prefix --;
+ 	}
+ 	$number_prefix .= "$field='^defaultprefix.*')"; // echo $number_prefix;exit;
+diff --git a/freeswitch/fs/lib/astpp.db.php b/freeswitch/fs/lib/astpp.db.php
+index f76c15f..96c7ba7 100755
+--- a/freeswitch/fs/lib/astpp.db.php
++++ b/freeswitch/fs/lib/astpp.db.php
+@@ -29,9 +29,11 @@ class db extends PDO {
+ 	public function __construct($cdr = "") {
+ 		$config = parse_ini_file ( "/var/lib/astpp/astpp-config.conf" );
+ 		
++		// HARDENING: never allow stacked queries (blocks "; UPDATE ..." injections)
+ 		$options = array (
+ 				PDO::ATTR_PERSISTENT => true,
+-				PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION 
++				PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
++				PDO::MYSQL_ATTR_MULTI_STATEMENTS => false
+ 		);
+ 		
+ 		try {
+@@ -46,7 +48,14 @@ class db extends PDO {
+ 		}
+ 		echo $this->error;
+ 	}
+-	
++
++	/**
++	 * HARDENING: escape a value for use inside a quoted SQL string literal.
++	 */
++	public function esc($value) {
++		return substr ( $this->quote ( ( string ) $value ), 1, - 1 );
++	}
++
+ 	/**
+ 	 *
+ 	 * @param string $bind        	
+diff --git a/freeswitch/fs/lib/astpp.xml.php b/freeswitch/fs/lib/astpp.xml.php
+index 1ac4fad..c736a5f 100755
+--- a/freeswitch/fs/lib/astpp.xml.php
++++ b/freeswitch/fs/lib/astpp.xml.php
+@@ -195,42 +195,53 @@ function load_sofia($logger, $db, $config) {
+ 	return $xml;
+ }
+ function update_vm_data($logger, $db, $password, $user) {
+-	$query = "SELECT * FROM sip_devices where username='" . $_REQUEST ['user'] . "' limit 1";
++	// HARDENING: prepared statements (username/password come from SIP/voicemail input)
++	$query = "SELECT * FROM sip_devices where username=? limit 1";
+ 	$logger->log ( "Directory Query : " . $query );
+-	$res_dir = $db->run ( $query );
++	$res_dir = $db->run ( $query, array ( ( string ) $_REQUEST ['user'] ) );
++	if (! is_array ( $res_dir ) || empty ( $res_dir ))
++		return;
+ 	$params = json_decode ( $res_dir [0] ['dir_params'], true );
+ 	$params ['vm-password'] = $password;
+-	
+-	$query = "update sip_devices set dir_params = '" . json_encode ( $params, true ) . "' where username='" . $_REQUEST ['user'] . "' limit 1";
+-	$res_dir = $db->run ( $query );
++
++	$query = "update sip_devices set dir_params = ? where username=? limit 1";
++	$res_dir = $db->run ( $query, array ( json_encode ( $params ), ( string ) $_REQUEST ['user'] ) );
++}
++
++// HARDENING: escape values reflected into the XML returned to FreeSWITCH
++function astpp_xml_attr($value) {
++	return htmlspecialchars ( ( string ) $value, ENT_QUOTES | ENT_XML1, 'UTF-8' );
+ }
+ 
+ // Build directory xml
+ function load_directory($logger, $db) {
+ 	$xml = "";
+ 	
+-	$query = "SELECT username,dir_params,dir_vars,number as accountcode,accountid FROM sip_devices,accounts WHERE sip_devices.status=0 AND accounts.status=0 AND accounts.deleted=0 AND accounts.id=sip_devices.accountid AND username='" . $_REQUEST ['user'] . "' limit 1";
+-	$logger->log ( "Directory Query : " . $query );
+-	$res_dir = $db->run ( $query );
++	// HARDENING: the SIP username is attacker controlled (REGISTER/INVITE from the internet)
++	$query = "SELECT username,dir_params,dir_vars,number as accountcode,accountid FROM sip_devices,accounts WHERE sip_devices.status=0 AND accounts.status=0 AND accounts.deleted=0 AND accounts.id=sip_devices.accountid AND username=? limit 1";
++	$logger->log ( "Directory Query : " . $query . " [user=" . $_REQUEST ['user'] . "]" );
++	$res_dir = $db->run ( $query, array ( ( string ) $_REQUEST ['user'] ) );
+ 	$logger->log ( $res_dir );
+-	
++	if (! is_array ( $res_dir ))
++		$res_dir = array ();
++
+ 	foreach ( $res_dir as $res_dir_key => $res_dir_value ) {
+ 		$xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
+ 		$xml .= "<document type=\"freeswitch/xml\">\n";
+ 		$xml .= "   <section name=\"Directory\" description=\"Directory\">\n";
+-		$xml .= "       <domain name=\"" . $_REQUEST ['domain'] . "\" alias=\"true\">\n";
+-		$xml .= "           <user id=\"" . $_REQUEST ['user'] . "\">\n";
+-		
++		$xml .= "       <domain name=\"" . astpp_xml_attr ( $_REQUEST ['domain'] ) . "\" alias=\"true\">\n";
++		$xml .= "           <user id=\"" . astpp_xml_attr ( $_REQUEST ['user'] ) . "\">\n";
++
+ 		$params = json_decode ( $res_dir_value ['dir_params'], true );
+-		
++
+ 		$vars = json_decode ( $res_dir_value ['dir_vars'], true );
+ 		$param_xml = $var_xml = "";
+-		foreach ( $params as $parms_key => $res_dir_params ) {
+-			$param_xml .= "<param name=\"" . $parms_key . "\" value=\"" . $res_dir_params . "\"/>\n";
++		foreach ( ( array ) $params as $parms_key => $res_dir_params ) {
++			$param_xml .= "<param name=\"" . astpp_xml_attr ( $parms_key ) . "\" value=\"" . astpp_xml_attr ( $res_dir_params ) . "\"/>\n";
+ 		}
+-		
+-		foreach ( $vars as $var_key => $res_dir_vars ) {
+-			$var_xml .= "<variable name=\"" . $var_key . "\" value=\"" . $res_dir_vars . "\"/>\n";
++
++		foreach ( ( array ) $vars as $var_key => $res_dir_vars ) {
++			$var_xml .= "<variable name=\"" . astpp_xml_attr ( $var_key ) . "\" value=\"" . astpp_xml_attr ( $res_dir_vars ) . "\"/>\n";
+ 		}
+ 		
+ 		$xml .= "               <params>\n";
+@@ -241,9 +252,9 @@ function load_directory($logger, $db) {
+ 		$xml .= "               <variables>\n";
+ 		$xml .= $var_xml;
+ 		$xml .= "<variable name=\"sipcall\" value=\"true\"/>\n";
+-		$xml .= "<variable name=\"sip_user\" value=\"" . $_REQUEST ['user'] . "\"/>\n";
+-		$xml .= "<variable name=\"accountcode\" value=\"" . $res_dir_value ['accountcode'] . "\"/>\n";
+-		$xml .= "<variable name=\"domain_name\" value=\"" . $_REQUEST ['domain'] . "\"/>\n";
++		$xml .= "<variable name=\"sip_user\" value=\"" . astpp_xml_attr ( $_REQUEST ['user'] ) . "\"/>\n";
++		$xml .= "<variable name=\"accountcode\" value=\"" . astpp_xml_attr ( $res_dir_value ['accountcode'] ) . "\"/>\n";
++		$xml .= "<variable name=\"domain_name\" value=\"" . astpp_xml_attr ( $_REQUEST ['domain'] ) . "\"/>\n";
+ 		$xml .= "               </variables>\n";
+ 		
+ 		$xml .= "           </user>\n";
+diff --git a/freeswitch/scripts/astpp/astpp.lua b/freeswitch/scripts/astpp/astpp.lua
+index 3aacf39..f29cfd0 100755
+--- a/freeswitch/scripts/astpp/astpp.lua
++++ b/freeswitch/scripts/astpp/astpp.lua
+@@ -71,6 +71,60 @@ if (not params) then
+ 	end
+ end
+ 
++-- HARDENING: values taken from SIP signalling (dialed number, caller id, From user,
++-- custom P- headers) are attacker controlled and are concatenated into SQL queries
++-- and into the generated dialplan XML. Wrap params:getHeader() so every script only
++-- ever sees sanitized values, and ignore the voice-broadcast/accountcode override
++-- headers unless the call was originated by this server itself.
++do
++	local real_params = params
++	local number_headers = {
++		["Caller-Destination-Number"] = true,
++		["Caller-Caller-ID-Number"] = true,
++		["variable_effective_caller_id_number"] = true,
++		["variable_sip_from_user"] = true,
++		["variable_sip_h_P-cb_destination"] = true,
++		["variable_sip_h_P-Accountcode"] = true,
++		["variable_sip_h_P-Voice_broadcast_type"] = true,
++		["Hunt-Username"] = true,
++	}
++	local name_headers = {
++		["Caller-Caller-ID-Name"] = true,
++		["variable_effective_caller_id_name"] = true,
++	}
++	local local_only_headers = {
++		["variable_sip_h_P-Voice_broadcast"] = true,
++		["variable_sip_h_P-Voice_broadcast_type"] = true,
++		["variable_sip_h_P-cb_destination"] = true,
++		["variable_sip_h_P-Accountcode"] = true,
++	}
++	local function raw_header(name)
++		return real_params:getHeader(name)
++	end
++	local net_addr = raw_header("Hunt-Network-Addr") or raw_header("variable_sip_network_ip") or ""
++	local local_addr = raw_header("variable_sip_local_network_addr") or ""
++	local is_local_origin = (net_addr == "127.0.0.1" or net_addr == "::1" or (net_addr ~= "" and net_addr == local_addr))
++
++	params = {}
++	function params:getHeader(name)
++		local value = raw_header(name)
++		if value == nil then return nil end
++		if local_only_headers[name] and not is_local_origin then
++			return nil
++		end
++		if number_headers[name] then
++			return (string.gsub(value, "[^%w%+%*#%-%._@]", ""))
++		end
++		if name_headers[name] then
++			return (string.gsub(value, "[%c'\"\\`;<>&]", ""))
++		end
++		return value
++	end
++	function params:serialize(...)
++		return real_params:serialize(...)
++	end
++end
++
+ if (config['debug']==2) then
+     -- print all params 
+     if (params:serialize() ~= nil) then
+diff --git a/web_interface/astpp/application/config/config.php b/web_interface/astpp/application/config/config.php
+index 9de1421..ad5df2c 100755
+--- a/web_interface/astpp/application/config/config.php
++++ b/web_interface/astpp/application/config/config.php
+@@ -239,8 +239,15 @@ $config ['private_key'] = $astpp_config ['PRIVATE_KEY'];
+  */
+ $config ['encryption_key'] = $astpp_config ['ENCRYPTION_KEY'];
+ 
+-$config['data']="aHR0cHM6Ly9kY29sbC5pbmV4dHJpeC5jb20=";
+-$config['enable_data'] = 0;
++// HARDENING: per-installation secrets (generated by the installer). Upstream code fell
++// back to empty/hard-coded values, identical on every ASTPP installation.
++$config ['token_key'] = (isset ( $astpp_config ['token_key'] ) && $astpp_config ['token_key'] != '') ? $astpp_config ['token_key'] : $astpp_config ['PRIVATE_KEY'];
++$config ['iv_key'] = (isset ( $astpp_config ['iv_key'] ) && $astpp_config ['iv_key'] != '') ? $astpp_config ['iv_key'] : $astpp_config ['ENCRYPTION_KEY'];
++$config ['api_decipher_auth_token'] = (isset ( $astpp_config ['api_decipher_auth_token'] ) && $astpp_config ['api_decipher_auth_token'] != '') ? $astpp_config ['api_decipher_auth_token'] : $astpp_config ['PRIVATE_KEY'];
++
++// HARDENING/PRIVACY: vendor telemetry endpoint removed (was https://dcoll.inextrix.com)
++$config['data'] = '';
++$config['enable_data'] = 1; // HARDENING/PRIVACY: 1 = telemetry off
+ 
+ /*
+  * |--------------------------------------------------------------------------
+@@ -284,7 +291,7 @@ $config ['sess_time_to_update'] = 300;
+ $config ['cookie_prefix'] = "ITPLATP";
+ $config ['cookie_domain'] = "";
+ $config ['cookie_path'] = "/";
+-$config ['cookie_secure'] = FALSE;
++$config ['cookie_secure'] = TRUE; // HARDENING: site is served over HTTPS only
+ 
+ /*
+  * |--------------------------------------------------------------------------
+diff --git a/web_interface/astpp/application/controllers/PaymentStatus.php b/web_interface/astpp/application/controllers/PaymentStatus.php
+index 8018d34..6e7b99c 100755
+--- a/web_interface/astpp/application/controllers/PaymentStatus.php
++++ b/web_interface/astpp/application/controllers/PaymentStatus.php
+@@ -23,6 +23,10 @@
+ class PaymentStatus extends CI_Controller {
+ 	function __construct() {
+ 		parent::__construct ();
++		// HARDENING: cron controller - only reachable from this server (CLI or wget from cron_settings)
++		if (! astpp_internal_request ()) {
++			show_404 ();
++		}
+ 		$this->load->model ( "db_model" );
+ 		$this->load->library ( "astpp/common" );
+ 	}
+diff --git a/web_interface/astpp/application/controllers/ProcessInvoice.php b/web_interface/astpp/application/controllers/ProcessInvoice.php
+index 1987afc..a5f18be 100755
+--- a/web_interface/astpp/application/controllers/ProcessInvoice.php
++++ b/web_interface/astpp/application/controllers/ProcessInvoice.php
+@@ -35,6 +35,10 @@ class ProcessInvoice extends MX_Controller
+     function __construct()
+     {
+         parent::__construct();
++        // HARDENING: cron controller - only reachable from this server (CLI or wget from cron_settings)
++        if (! astpp_internal_request ()) {
++        	show_404 ();
++        }
+         $this->load->model("db_model");
+         $this->load->library("astpp/common");
+         $this->load->library("astpp/order");
+diff --git a/web_interface/astpp/application/controllers/Translation_script.php b/web_interface/astpp/application/controllers/Translation_script.php
+index 9a607e0..54ff410 100755
+--- a/web_interface/astpp/application/controllers/Translation_script.php
++++ b/web_interface/astpp/application/controllers/Translation_script.php
+@@ -24,6 +24,13 @@ class Translation_script extends CI_Controller {
+ 	function __construct()
+ 	{
+ 		parent::__construct();
++		// HARDENING: was reachable without login; allow only internal (cron) calls or a logged-in admin
++		if (! astpp_internal_request ()) {
++			$this->load->library ( 'session' );
++			if ($this->session->userdata ( 'user_login' ) != TRUE || ! in_array ( ( string ) $this->session->userdata ( 'logintype' ), array ( '2', '4' ), true )) {
++				show_404 ();
++			}
++		}
+ 		$this->load->library('csvreader');
+ 	}
+     public function index(){
+diff --git a/web_interface/astpp/application/controllers/broadcastemail.php b/web_interface/astpp/application/controllers/broadcastemail.php
+index b1ea4d4..5a4f1fb 100755
+--- a/web_interface/astpp/application/controllers/broadcastemail.php
++++ b/web_interface/astpp/application/controllers/broadcastemail.php
+@@ -23,6 +23,10 @@
+ class Broadcastemail extends CI_Controller {
+ 	function __construct() {
+ 		parent::__construct ();
++		// HARDENING: cron controller - only reachable from this server (CLI or wget from cron_settings)
++		if (! astpp_internal_request ()) {
++			show_404 ();
++		}
+ 		$this->load->model ( "db_model" );
+ 		$this->load->library ( "astpp/email_lib" );
+ 	}
+diff --git a/web_interface/astpp/application/controllers/crons.php b/web_interface/astpp/application/controllers/crons.php
+index 442b072..babfb83 100755
+--- a/web_interface/astpp/application/controllers/crons.php
++++ b/web_interface/astpp/application/controllers/crons.php
+@@ -26,6 +26,10 @@ class Crons extends MX_Controller {
+     public $CurrentDate = "";
+ 	function __construct() {
+ 		parent::__construct ();
++		// HARDENING: cron controller - only reachable from this server (CLI or wget from cron_settings)
++		if (! astpp_internal_request ()) {
++			show_404 ();
++		}
+ 	        $this->load->model("db_model");
+ 	        $this->CurrentDate = gmdate("Y-m-d H:i:s");
+ 	}
+diff --git a/web_interface/astpp/application/controllers/currencyupdate.php b/web_interface/astpp/application/controllers/currencyupdate.php
+index adb361a..9632190 100644
+--- a/web_interface/astpp/application/controllers/currencyupdate.php
++++ b/web_interface/astpp/application/controllers/currencyupdate.php
+@@ -23,6 +23,13 @@
+ class Currencyupdate extends CI_Controller {
+ 	function __construct() {
+ 		parent::__construct ();
++		// HARDENING: was reachable without login; allow only internal (cron) calls or a logged-in admin
++		if (! astpp_internal_request ()) {
++			$this->load->library ( 'session' );
++			if ($this->session->userdata ( 'user_login' ) != TRUE || ! in_array ( ( string ) $this->session->userdata ( 'logintype' ), array ( '2', '4' ), true )) {
++				show_404 ();
++			}
++		}
+ 		$this->load->model ( "db_model" );
+ 		$this->load->library ( "astpp/common" );
+ 	}
+diff --git a/web_interface/astpp/application/controllers/feedback.php b/web_interface/astpp/application/controllers/feedback.php
+index 073f019..62e3fe3 100755
+--- a/web_interface/astpp/application/controllers/feedback.php
++++ b/web_interface/astpp/application/controllers/feedback.php
+@@ -31,6 +31,12 @@ class Feedback extends MX_Controller {
+ 		$this->load->view ( 'view_feedback', $data );
+ 	}
+ 	function customer_feedback_result($flag = FALSE) {
++		// HARDENING/PRIVACY: this sent admin/company contact data in clear text (HTTP)
++		// to feedback.astppbilling.org and was reachable without login. Disabled.
++		if (php_sapi_name () === 'cli') {
++			return;
++		}
++		redirect ( base_url () );
+ 		if ($flag) {
+ 			$account_info = array ();
+ 			$this->db->where ( "accountid", "1" );
+diff --git a/web_interface/astpp/application/controllers/generateInvoice.php b/web_interface/astpp/application/controllers/generateInvoice.php
+index 5d7d17b..a6c8df5 100755
+--- a/web_interface/astpp/application/controllers/generateInvoice.php
++++ b/web_interface/astpp/application/controllers/generateInvoice.php
+@@ -25,6 +25,10 @@ class GenerateInvoice extends MX_Controller {
+ 	public static $global_config;
+ 	function __construct() {
+ 		parent::__construct ();
++		// HARDENING: cron controller - only reachable from this server (CLI or wget from cron_settings)
++		if (! astpp_internal_request ()) {
++			show_404 ();
++		}
+ 		$this->load->model ( "db_model" );
+ 		$this->load->library ( "astpp/common" );
+ 		$this->load->library ( 'html2pdf' );
+diff --git a/web_interface/astpp/application/controllers/getbalance.php b/web_interface/astpp/application/controllers/getbalance.php
+index 8324cee..e658c74 100755
+--- a/web_interface/astpp/application/controllers/getbalance.php
++++ b/web_interface/astpp/application/controllers/getbalance.php
+@@ -23,6 +23,11 @@
+ class Getbalance extends MX_Controller {
+ 	function Getbalance() {
+ 		parent::__construct ();
++		// HARDENING: unauthenticated balance lookup by SIP user/account number (info leak).
++		// Only allowed from this server. Remove this check if IP phones must query it directly.
++		if (! astpp_internal_request ()) {
++			show_404 ();
++		}
+ 		$this->load->model ( 'common_model' );
+ 		$this->load->library ( 'common' );
+ 		$this->load->model ( 'db_model' );
+diff --git a/web_interface/astpp/application/controllers/getstatus.php b/web_interface/astpp/application/controllers/getstatus.php
+index e989d3e..bf98b1b 100755
+--- a/web_interface/astpp/application/controllers/getstatus.php
++++ b/web_interface/astpp/application/controllers/getstatus.php
+@@ -26,7 +26,8 @@ class Getstatus extends MX_Controller {
+ 		$this->load->model ( "db_model" );
+ 		$this->load->library ( "astpp/common" );
+ 	}
+-	function reload_freeswitch($command, $server_host = "") {
++	// HARDENING: leading underscore makes this method non-routable (was an unauthenticated ESL command endpoint)
++	function _reload_freeswitch($command, $server_host = "") {
+                 $response = '';
+                 $query = $this->db_model->getSelect ( "*", "freeswich_servers", "" );
+                 $fs_data = $query->result_array ();
+@@ -83,7 +84,7 @@ class Getstatus extends MX_Controller {
+ 			if ($post_data ['table'] == "ip_map") {
+ 							$this->load->library ( 'freeswitch_lib' );
+ 							$command = "api reloadacl";
+-							$response = $this->reload_freeswitch ( $command );
++							$response = $this->_reload_freeswitch ( $command );
+ 					}
+ 				echo TRUE;
+ 			}
+diff --git a/web_interface/astpp/application/controllers/lowbalance.php b/web_interface/astpp/application/controllers/lowbalance.php
+index f6d53ab..3d98b55 100755
+--- a/web_interface/astpp/application/controllers/lowbalance.php
++++ b/web_interface/astpp/application/controllers/lowbalance.php
+@@ -23,6 +23,10 @@
+ class Lowbalance extends CI_Controller {
+ 	function __construct() {
+ 		parent::__construct ();
++		// HARDENING: cron controller - only reachable from this server (CLI or wget from cron_settings)
++		if (! astpp_internal_request ()) {
++			show_404 ();
++		}
+ 		$this->load->model ( "db_model" );
+ 		$this->load->library ( "astpp/common" );
+ 	}
+diff --git a/web_interface/astpp/application/controllers/lowcreditlimit.php b/web_interface/astpp/application/controllers/lowcreditlimit.php
+index ceda913..0311568 100755
+--- a/web_interface/astpp/application/controllers/lowcreditlimit.php
++++ b/web_interface/astpp/application/controllers/lowcreditlimit.php
+@@ -25,6 +25,10 @@ class Lowcreditlimit extends CI_Controller {
+ 	function __construct()
+ 	{
+ 		parent::__construct();
++		// HARDENING: cron controller - only reachable from this server (CLI or wget from cron_settings)
++		if (! astpp_internal_request ()) {
++			show_404 ();
++		}
+ 		$this->load->model("db_model");
+ 		$this->load->library("astpp/common");
+ 	}
+diff --git a/web_interface/astpp/application/controllers/purge.php b/web_interface/astpp/application/controllers/purge.php
+index f77de8e..ea1d065 100755
+--- a/web_interface/astpp/application/controllers/purge.php
++++ b/web_interface/astpp/application/controllers/purge.php
+@@ -4,6 +4,10 @@ class purge extends CI_Controller
+ 	public function __construct()
+ 	{
+ 		parent::__construct();
++		// HARDENING: cron controller - only reachable from this server (CLI or wget from cron_settings)
++		if (! astpp_internal_request ()) {
++			show_404 ();
++		}
+                 $this->load->model('common_model');
+                 $this->load->library('common');
+                 $this->load->model('db_model');
+diff --git a/web_interface/astpp/application/controllers/updateBalance.php b/web_interface/astpp/application/controllers/updateBalance.php
+index ca2362c..b8be3a4 100755
+--- a/web_interface/astpp/application/controllers/updateBalance.php
++++ b/web_interface/astpp/application/controllers/updateBalance.php
+@@ -26,6 +26,10 @@ class UpdateBalance extends MX_Controller {
+ 	public $currentdate = '';
+ 	function __construct() {
+ 		parent::__construct ();
++		// HARDENING: cron controller - only reachable from this server (CLI or wget from cron_settings)
++		if (! astpp_internal_request ()) {
++			show_404 ();
++		}
+ 		$this->load->model ( "db_model" );
+ 		$this->load->model ( "common_model" );
+ 		$this->load->library ( "astpp/common" );
+diff --git a/web_interface/astpp/application/libraries/Format.php b/web_interface/astpp/application/libraries/Format.php
+index 27352fd..d2b2e26 100755
+--- a/web_interface/astpp/application/libraries/Format.php
++++ b/web_interface/astpp/application/libraries/Format.php
+@@ -226,7 +226,7 @@ class Format {
+ 	
+ 	// Encode as Serialized array
+ 	private function _from_serialize($string) {
+-		return unserialize ( trim ( $string ) );
++		return unserialize ( trim ( $string ), array ( 'allowed_classes' => false ) ); // HARDENING
+ 	}
+ }
+ 
+diff --git a/web_interface/astpp/application/libraries/astpp/ratting.php b/web_interface/astpp/application/libraries/astpp/ratting.php
+index 46aee4e..0b4cb4f 100755
+--- a/web_interface/astpp/application/libraries/astpp/ratting.php
++++ b/web_interface/astpp/application/libraries/astpp/ratting.php
+@@ -200,7 +200,7 @@ class Ratting {
+ 		$md5hash = substr($localdata, 0, 32); # Extract MD5 Hash
+ 		$localdata = substr($localdata, 32); # Extract License Data
+ 		$localdata = base64_decode($localdata);
+-		$localkeyresults = unserialize($localdata);
++		$localkeyresults = unserialize($localdata, array('allowed_classes' => false)); // HARDENING
+ 		$originalcheckdate = $localkeyresults['checkdate'];
+ 		if ($md5hash == md5($originalcheckdate . $licensing_secret_key)) {
+ 
+diff --git a/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/config/tcpdf_config.php b/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/config/tcpdf_config.php
+index 8c6ec20..33b6c60 100755
+--- a/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/config/tcpdf_config.php
++++ b/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/config/tcpdf_config.php
+@@ -235,7 +235,7 @@ if ( ! defined('K_TCPDF_EXTERNAL_CONFIG')) {
+ 	 * if true allows to call TCPDF methods using HTML syntax
+ 	 * IMPORTANT: For security reason, disable this feature if you are printing user HTML content.
+ 	 */
+-	define('K_TCPDF_CALLS_IN_HTML', true);
++	define('K_TCPDF_CALLS_IN_HTML', false); // HARDENING
+ }
+ 
+ //============================================================+
+diff --git a/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/config/tcpdf_config_alt.php b/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/config/tcpdf_config_alt.php
+index a65394e..9df594c 100755
+--- a/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/config/tcpdf_config_alt.php
++++ b/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/config/tcpdf_config_alt.php
+@@ -230,7 +230,7 @@ define('K_THAI_TOPCHARS', true);
+  * if true allows to call TCPDF methods using HTML syntax
+  * IMPORTANT: For security reason, disable this feature if you are printing user HTML content.
+  */
+-define('K_TCPDF_CALLS_IN_HTML', true);
++define('K_TCPDF_CALLS_IN_HTML', false); // HARDENING
+ 
+ //============================================================+
+ // END OF FILE
+diff --git a/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/tcpdf.php b/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/tcpdf.php
+index 559fef2..cf5d357 100755
+--- a/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/tcpdf.php
++++ b/web_interface/astpp/application/libraries/html2pdf/_tcpdf_5.0.002/tcpdf.php
+@@ -16042,7 +16042,7 @@ if (!class_exists('TCPDF', false)) {
+ 							$tcpdf_method = $tag['attribute']['method'];
+ 							if (method_exists($this, $tcpdf_method)) {
+ 								if (isset($tag['attribute']['params']) AND (!empty($tag['attribute']['params']))) {
+-									$params = unserialize(urldecode($tag['attribute']['params']));
++									$params = unserialize(urldecode($tag['attribute']['params']), array('allowed_classes' => false)); // HARDENING
+ 									call_user_func_array(array($this, $tcpdf_method), $params);
+ 								} else {
+ 									$this->{$tcpdf_method()};
+diff --git a/web_interface/astpp/application/models/common_model.php b/web_interface/astpp/application/models/common_model.php
+index 527945f..20aa206 100644
+--- a/web_interface/astpp/application/models/common_model.php
++++ b/web_interface/astpp/application/models/common_model.php
+@@ -32,7 +32,9 @@ class Common_model extends CI_Model {
+ 		parent::__construct ();
+ 		$this->load->library ( 'astpp/common' );
+ 		$this->get_system_config ();
+-		$this->uri->uri(self::$global_config,$this->get_dashboard_details());
++		// HARDENING/PRIVACY: removed vendor telemetry. get_dashboard_details() collected all
++		// customer contact data plus server details (spawning curl/fs_cli on every request)
++		// and URI::uri() POSTed it to dcoll.inextrix.com.
+ 		$this->get_currencylist ();
+ 		$this->get_country_list ();
+ 		$this->get_admin_info ();
+diff --git a/web_interface/astpp/application/modules/account_import/controllers/account_import.php b/web_interface/astpp/application/modules/account_import/controllers/account_import.php
+index 4bb1e1e..4665386 100755
+--- a/web_interface/astpp/application/modules/account_import/controllers/account_import.php
++++ b/web_interface/astpp/application/modules/account_import/controllers/account_import.php
+@@ -156,7 +156,7 @@ class Account_import extends MX_Controller
+         $tax_id = Common_model::$global_config['system_config']['tax_type'];
+         $this->load->library("astpp/signup_lib");
+         $default_fields = '';
+-        $default_fields = (unserialize($add_array['post_array']));
++        $default_fields = unserialize($add_array['post_array'], array('allowed_classes' => false)); // HARDENING: no object injection
+         $current_date = gmdate("Y-m-d H:i:s");
+         $config_array = $this->config->item('Customers-mapper-fields');
+         $custom_config_array = array_merge($config_array['general_info'], $config_array['settings']);
+diff --git a/web_interface/astpp/application/modules/did/controllers/did.php b/web_interface/astpp/application/modules/did/controllers/did.php
+index 9a389c9..3d9dfaa 100755
+--- a/web_interface/astpp/application/modules/did/controllers/did.php
++++ b/web_interface/astpp/application/modules/did/controllers/did.php
+@@ -343,7 +343,7 @@ class DID extends MX_Controller
+                     }
+ 
+                     $query = "INSERT INTO reseller_products (product_id, account_id, reseller_id, buy_cost,commission, setup_fee, price, free_minutes, billing_type, billing_days, status, is_optin,is_owner,optin_date)
+-		VALUES($productid," . $accountinfo['id'] . "," . $accountinfo['reseller_id'] . "," . $add_array['buy_cost'] . "," . $add_array['commission'] . "," . $add_array['setup_fee'] . "," . $add_array['price'] . "," . $add_array['free_minutes'] . "," . $add_array['billing_type'] . "," . $add_array['billing_days'] . ", 0, 0, 1, '" . gmdate('Y-m-d H:i:s') . "') ON DUPLICATE KEY UPDATE product_id = VALUES(product_id), account_id = VALUES(account_id), reseller_id = VALUES(reseller_id),buy_cost = VALUES(buy_cost),commission = VALUES(commission), setup_fee = VALUES(setup_fee), price = VALUES(price), free_minutes = VALUES(free_minutes), billing_type = VALUES(billing_type), billing_days = VALUES(billing_days), status = VALUES(status), is_optin = VALUES(is_optin), is_owner = VALUES(is_owner), optin_date = VALUES(optin_date)";
++		VALUES(" . (int)$productid . "," . (int)$accountinfo['id'] . "," . (int)$accountinfo['reseller_id'] . "," . (float)$add_array['buy_cost'] . "," . (float)$add_array['commission'] . "," . (float)$add_array['setup_fee'] . "," . (float)$add_array['price'] . "," . (int)$add_array['free_minutes'] . "," . (int)$add_array['billing_type'] . "," . (int)$add_array['billing_days'] . ", 0, 0, 1, '" . gmdate('Y-m-d H:i:s') . "') ON DUPLICATE KEY UPDATE product_id = VALUES(product_id), account_id = VALUES(account_id), reseller_id = VALUES(reseller_id),buy_cost = VALUES(buy_cost),commission = VALUES(commission), setup_fee = VALUES(setup_fee), price = VALUES(price), free_minutes = VALUES(free_minutes), billing_type = VALUES(billing_type), billing_days = VALUES(billing_days), status = VALUES(status), is_optin = VALUES(is_optin), is_owner = VALUES(is_owner), optin_date = VALUES(optin_date)";
+                     $query = $this->db->query($query);
+                     $add_array['is_parent_billing'] = 'false';
+                     $add_array['payment_by'] = "Account Balance";
+diff --git a/web_interface/astpp/application/modules/invoices/controllers/invoices.php b/web_interface/astpp/application/modules/invoices/controllers/invoices.php
+index 3bda076..927abc6 100755
+--- a/web_interface/astpp/application/modules/invoices/controllers/invoices.php
++++ b/web_interface/astpp/application/modules/invoices/controllers/invoices.php
+@@ -340,7 +340,7 @@ class Invoices extends MX_Controller
+ 			$sourceFile = FCPATH.'upload/'.$company_data->logo;
+ 			$DestFile = FCPATH.'upload/'.$logo[0].'.jpg';
+ 			$filePath = FCPATH.'upload/';
+-			$convert_png  = "convert ".$sourceFile." -background white -flatten ".$DestFile;
++			$convert_png  = "convert " . escapeshellarg($sourceFile) . " -background white -flatten " . escapeshellarg($DestFile); // HARDENING
+ 			$convert_png_file = system($convert_png, $retval);
+ 			$company_data->logo = $logo[0].'.jpg';
+ 		}
+@@ -1483,6 +1483,11 @@ class Invoices extends MX_Controller
+ 
+                         $file_name_extention = explode(".", $file_name);
+ 
++                        // HARDENING: extension whitelist (was taken from the 2nd dot-segment, e.g. "x.php.png")
++                        $file_name_extention[1] = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
++                        if (! in_array($file_name_extention[1], array('png', 'jpg', 'jpeg'), true)) {
++                            $file_name_extention[1] = 'png';
++                        }
+                         $file_name = crc32($file_name) . '.' . $file_name_extention[1];
+                         $path = $dir_path . $file_name;
+                         if (move_uploaded_file($uploadedFile, $path)) {
+@@ -1496,6 +1501,11 @@ class Invoices extends MX_Controller
+                     if (isset($favicon_status)) {
+                         $dir_path = FCPATH . "upload/";
+                         $file_name_fav_exten = explode(".", $file_name_fav);
++                        // HARDENING: extension whitelist
++                        $file_name_fav_exten[1] = strtolower(pathinfo($file_name_fav, PATHINFO_EXTENSION));
++                        if (! in_array($file_name_fav_exten[1], array('png', 'jpg', 'jpeg', 'ico'), true)) {
++                            $file_name_fav_exten[1] = 'ico';
++                        }
+                         $file_name_fav = crc32($file_name_fav) . '.' . $file_name_fav_exten[1];
+                         $path = $dir_path . $file_name_fav;
+                         if (move_uploaded_file($uploadedFile1, $path)) {
+diff --git a/web_interface/astpp/application/modules/login/controllers/login.php b/web_interface/astpp/application/modules/login/controllers/login.php
+index 6d737a5..e559179 100755
+--- a/web_interface/astpp/application/modules/login/controllers/login.php
++++ b/web_interface/astpp/application/modules/login/controllers/login.php
+@@ -128,7 +128,7 @@ class Login extends MX_Controller
+                         // ASTPPCOM-941 Start
+                         $login_activity_array=array(
+                             "account_id"=>$result['id'],
+-                            "country_name"=>ucwords(strtolower(geoip_country_name_by_name($this->input->server('REMOTE_ADDR')))),
++                            "country_name"=>(function_exists('geoip_country_name_by_name') ? ucwords(strtolower((string) @geoip_country_name_by_name($this->input->server('REMOTE_ADDR')))) : ''), // COMPAT: php-geoip is optional
+                             "timestamp"=>gmdate("Y-m-d H:i:s"),
+                             "user_agent"=> $this->agent->agent_string(),
+                             "ip"=>$this->input->server('REMOTE_ADDR')
+diff --git a/web_interface/astpp/application/modules/pages/controllers/pages.php b/web_interface/astpp/application/modules/pages/controllers/pages.php
+index d9dfeca..64894ca 100755
+--- a/web_interface/astpp/application/modules/pages/controllers/pages.php
++++ b/web_interface/astpp/application/modules/pages/controllers/pages.php
+@@ -48,7 +48,7 @@ function services($category= '') {
+ 				if(empty($post['country_id'])){
+ 					$temp_where = '(`reseller_products`.`is_optin` = 0 OR `reseller_products`.`is_owner` = 0)';
+ 				}else{
+-					$temp_where = '((`reseller_products`.`country_id` = '.$post['country_id'].' ) AND (`reseller_products`.`is_optin` = 0 OR `reseller_products`.`is_owner` = 0))';
++					$temp_where = '((`reseller_products`.`country_id` = '.(int)$post['country_id'].' ) AND (`reseller_products`.`is_optin` = 0 OR `reseller_products`.`is_owner` = 0))';
+ 				}
+ 				$this->db->where($temp_where);
+ 				$productdata = $this->db_model->getJionQuery('products', 'products.id,products.name,products.product_category,products.country_id,products.buy_cost,products.commission,reseller_products.setup_fee,reseller_products.price,reseller_products.billing_type,reseller_products.billing_days,reseller_products.free_minutes,products.status,products.last_modified_date,reseller_products.product_id', array('reseller_products.status'=>0,'products.can_purchase'=>0,'products.is_deleted'=>0,'products.product_category'=>$category,'reseller_products.account_id'=>$accountinfo['reseller_id']), 'reseller_products','products.id=reseller_products.product_id', 'inner','','','desc','products.id');
+diff --git a/web_interface/astpp/application/modules/products/controllers/products.php b/web_interface/astpp/application/modules/products/controllers/products.php
+index bb9e0c4..71fb4b8 100755
+--- a/web_interface/astpp/application/modules/products/controllers/products.php
++++ b/web_interface/astpp/application/modules/products/controllers/products.php
+@@ -898,7 +898,7 @@ class Products extends MX_Controller {
+ 						$add_array['setup_fee']  =  $product_info['setup_fee'];
+ 					}
+ 				$query = "INSERT INTO reseller_products (product_id, account_id, reseller_id,country_id,commission, setup_fee, price, free_minutes,buy_cost,billing_type, billing_days, status, is_optin,is_owner,optin_date,modified_date)
+-	VALUES($productid,".$accountinfo['id'].", ".$accountinfo ['reseller_id'].", ".$add_array ['country_id'].",".$add_array['commission'].",'".$add_array['setup_fee']."','".$add_array['price']."',".$add_array['free_minutes'].",".$add_array['buy_cost'].",".$add_array['billing_type'].",".$add_array['billing_days'].", 0, 0, 1, '".gmdate("Y-m-d H:i:s")."','".gmdate("Y-m-d H:i:s")."') ON DUPLICATE KEY UPDATE product_id = VALUES(product_id), account_id = VALUES(account_id), reseller_id = VALUES(reseller_id), commission = VALUES(commission), setup_fee = VALUES(setup_fee), price = VALUES(price), free_minutes = VALUES(free_minutes), buy_cost = VALUES(buy_cost),billing_type = VALUES(billing_type), billing_days = VALUES(billing_days), status = VALUES(status), is_optin = VALUES(is_optin), is_owner = VALUES(is_owner), optin_date = VALUES(optin_date),modified_date = VALUES(modified_date)";
++	VALUES(" . (int)$productid . ",".(int)$accountinfo['id'].", ".(int)$accountinfo['reseller_id'].", ".(int)$add_array['country_id'].",".(float)$add_array['commission'].",'".(float)$add_array['setup_fee']."','".(float)$add_array['price']."',".(int)$add_array['free_minutes'].",".(float)$add_array['buy_cost'].",".(int)$add_array['billing_type'].",".(int)$add_array['billing_days'].", 0, 0, 1, '".gmdate("Y-m-d H:i:s")."','".gmdate("Y-m-d H:i:s")."') ON DUPLICATE KEY UPDATE product_id = VALUES(product_id), account_id = VALUES(account_id), reseller_id = VALUES(reseller_id), commission = VALUES(commission), setup_fee = VALUES(setup_fee), price = VALUES(price), free_minutes = VALUES(free_minutes), buy_cost = VALUES(buy_cost),billing_type = VALUES(billing_type), billing_days = VALUES(billing_days), status = VALUES(status), is_optin = VALUES(is_optin), is_owner = VALUES(is_owner), optin_date = VALUES(optin_date),modified_date = VALUES(modified_date)";
+ 				$query = $this->db->query($query);
+ 				$this->session->set_flashdata ( 'astpp_errormsg', gettext('Product optin successfully!'));
+ 				redirect ( base_url () . 'products/products_list/' );
+diff --git a/web_interface/astpp/application/modules/rates/controllers/rates.php b/web_interface/astpp/application/modules/rates/controllers/rates.php
+index bd201fb..cfab27c 100755
+--- a/web_interface/astpp/application/modules/rates/controllers/rates.php
++++ b/web_interface/astpp/application/modules/rates/controllers/rates.php
+@@ -1617,7 +1617,10 @@ class Rates extends MX_Controller
+         $trunkID = $this->input->post("trunkid");
+         $check_header = $this->input->post("check_header");
+         $pattern_prefix = $this->input->post("pattern-prefix");
+-        $filefields = unserialize($this->input->post("filefields"));
++        $filefields = unserialize($this->input->post("filefields"), array('allowed_classes' => false)); // HARDENING: no object injection
++        if (! is_array($filefields)) {
++            $filefields = array();
++        }
+         $new_final_arr = array();
+         $invalid_array = array();
+         $new_final_arr_key = array();
+diff --git a/web_interface/astpp/application/modules/systems/controllers/systems.php b/web_interface/astpp/application/modules/systems/controllers/systems.php
+index c19b79e..02c1cbc 100755
+--- a/web_interface/astpp/application/modules/systems/controllers/systems.php
++++ b/web_interface/astpp/application/modules/systems/controllers/systems.php
+@@ -763,19 +763,26 @@ class Systems extends MX_Controller
+                 $db_username = $this->db->username;
+                 $db_password = $this->db->password;
+                 $db_hostname = $this->db->hostname;
+-                $filename = $add_array['path'];
++                // HARDENING: the file name was used unquoted in a shell command (command
++                // injection, path traversal) and the DB password was visible in `ps`.
++                $filename = basename((string) $add_array['path']);
++                if (! preg_match('/^[A-Za-z0-9._-]+\.sql(\.gz)?$/', $filename)) {
++                    echo gettext('Invalid backup file name. Allowed: letters, digits, ".", "_", "-" and the extension .sql or .sql.gz');
++                    exit();
++                }
++                $add_array['path'] = $filename;
+                 $backup_file = DATABASE_DIRECTORY . $filename;
++                $do_gzip = 0;
+                 if (substr($backup_file, - 3) == '.gz') {
+                     $backup_file = substr($backup_file, 0, - 3);
+                     $do_gzip = 1;
+                 }
+ 
+-                $run_backup = "/usr/bin/mysqldump -all --databases " . $db_name . " -u'" . $db_username . "' -p'" . $db_password . "' > '$backup_file'";
++                $run_backup = "MYSQL_PWD=" . escapeshellarg($db_password) . " /usr/bin/mysqldump --single-transaction -h " . escapeshellarg($db_hostname) . " -u " . escapeshellarg($db_username) . " --databases " . escapeshellarg($db_name) . " > " . escapeshellarg($backup_file);
+                 $error_zip = 0;
+                 exec($run_backup, $output, $error);
+                 if ($do_gzip) {
+-                    $gzip = $this->config->item('gzip-path');
+-                    $run_gzip = $gzip . " " . $backup_file;
++                    $run_gzip = "/bin/gzip -f " . escapeshellarg($backup_file);
+                     exec($run_gzip, $output, $error_zip);
+                 }
+ 
+@@ -826,14 +833,16 @@ class Systems extends MX_Controller
+             $db_username = $this->db->username;
+             $db_password = $this->db->password;
+             $db_hostname = $this->db->hostname;
+-            $path = DATABASE_DIRECTORY . $result_array[0]['path'];
++            // HARDENING: quote every shell argument, no password on the command line
++            $path = DATABASE_DIRECTORY . basename((string) $result_array[0]['path']);
+             if (file_exists($path)) {
+                 if (substr($path, - 3) == '.gz') {
+-                    $GUNZIP_EXE = $this->config->item('gunzip-path');
+-                    $run_gzip = $GUNZIP_EXE . " < " . $path . " | ";
++                    $run_gzip = "/bin/gzip -dc " . escapeshellarg($path) . " | ";
++                } else {
++                    $run_gzip = "/bin/cat " . escapeshellarg($path) . " | ";
+                 }
+                 $MYSQL = "/usr/bin/mysql";
+-                $run_restore = $run_gzip . $MYSQL . " -h" . $db_hostname . " -u" . $db_username . " -p" . $db_password . " " . $db_name;
++                $run_restore = $run_gzip . "MYSQL_PWD=" . escapeshellarg($db_password) . " " . $MYSQL . " -h " . escapeshellarg($db_hostname) . " -u " . escapeshellarg($db_username) . " " . escapeshellarg($db_name);
+                 exec($run_restore);
+                 $this->session->set_flashdata('astpp_errormsg', gettext('Database Restore successfully.'));
+                 redirect(base_url() . 'systems/database_restore/');
+@@ -886,9 +895,11 @@ class Systems extends MX_Controller
+                 $data['page_title'] = gettext('Import Database');
+                 $this->load->view('view_import_database', $data);
+             } else {
+-                $db_file = explode(".", $upload_greeting_file);
+-                if ($db_file[1] == 'csv' || $db_file[1] == 'tar' || $db_file[1] == 'sql') {
+-                    $target_path = basename($_FILES['userfile']['name']);
++                // HARDENING: the old check accepted e.g. "x.sql.php" and stored it in the
++                // web root (current working directory) -> remote code execution.
++                $upload_name = basename((string) $upload_greeting_file);
++                if (preg_match('/^[A-Za-z0-9._-]+\.(sql|sql\.gz|csv|tar)$/', $upload_name)) {
++                    $target_path = DATABASE_DIRECTORY . $upload_name;
+                     move_uploaded_file($_FILES["userfile"]["tmp_name"], $target_path);
+ 
+                     $query = $this->system_model->import_database($filename_text, $_FILES['userfile']['name']);
+diff --git a/web_interface/astpp/application/modules/systems/models/system_model.php b/web_interface/astpp/application/modules/systems/models/system_model.php
+index c491840..0dd20e2 100755
+--- a/web_interface/astpp/application/modules/systems/models/system_model.php
++++ b/web_interface/astpp/application/modules/systems/models/system_model.php
+@@ -358,6 +358,10 @@ class System_model extends CI_Model
+     function add_languages($add_array)
+     {
+         unset($add_array["action"], $add_array["id"]);
++        // HARDENING: the locale becomes a column name (ALTER TABLE) and a directory/shell path
++        if (! isset($add_array['locale']) || ! preg_match('/^[A-Za-z]{2,3}(_[A-Za-z]{2,4})?$/', $add_array['locale'])) {
++            return false;
++        }
+         $this->db->insert("languages", $add_array);
+         $this->db->query('ALTER TABLE translations ADD ' . "`" . $add_array['locale'] . "`" . ' VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL');
+         $this->db->query('UPDATE translations SET ' . "`" . $add_array['locale'] . "`" . '= en_En');
+diff --git a/web_interface/astpp/application/modules/taxes/controllers/taxes.php b/web_interface/astpp/application/modules/taxes/controllers/taxes.php
+index cb3e9cf..76b7765 100755
+--- a/web_interface/astpp/application/modules/taxes/controllers/taxes.php
++++ b/web_interface/astpp/application/modules/taxes/controllers/taxes.php
+@@ -175,23 +175,25 @@ class Taxes extends MX_Controller
+             $value = str_replace("'", "", $value);
+             $taxes_array[$value] = $value;
+         }
+-        $tax_value = common_model::$global_config['system_config']['tax_type'];
+-        $new_str = "";
+-        $existing_str = "";
+-        $tax_options = explode(",", $tax_value);
+-
+-        foreach ($tax_options as $key => $value) {
+-            if (isset($taxes_array[$value])) {
+-                $query = "Update `system` set value=REPLACE(value,'$value','')";
+-                $this->db->query($query);
+-                $query = "Update `system` set value=REPLACE(value,',,',',')";
+-                $this->db->query($query);
+-                $query = "Update `system` set value=REPLACE(value,',,',',')";
+-                $this->db->query($query);
++        // HARDENING/BUGFIX: the original REPLACE() statements ran without a WHERE clause
++        // on the whole `system` table and removed the tax id (e.g. "1") from every
++        // setting (IP addresses, ports, ...). Only rewrite the tax_type lists.
++        $tax_rows = $this->db->get_where('system', array(
++            'name' => 'tax_type'
++        ))->result_array();
++        foreach ($tax_rows as $tax_row) {
++            $remaining = array();
++            foreach (explode(",", $tax_row['value']) as $value) {
++                $value = trim($value);
++                if ($value !== '' && ! isset($taxes_array[$value])) {
++                    $remaining[] = $value;
++                }
+             }
++            $this->db->where('id', $tax_row['id']);
++            $this->db->update('system', array(
++                'value' => implode(',', $remaining)
++            ));
+         }
+-        $query = "UPDATE `system` SET value = TRIM(BOTH ',' FROM value) where name='tax_type'";
+-        $this->db->query($query);
+         $where = "id IN ($ids)";
+         $taxes_where = "taxes_id IN(" . $ids . ")";
+         $this->db->where($taxes_where);
+diff --git a/web_interface/astpp/application/modules/user/controllers/user.php b/web_interface/astpp/application/modules/user/controllers/user.php
+index f1d1185..9eb0a96 100644
+--- a/web_interface/astpp/application/modules/user/controllers/user.php
++++ b/web_interface/astpp/application/modules/user/controllers/user.php
+@@ -822,11 +822,18 @@ function user_invoice_config()
+             }
+             $file = $_FILES['file'];
+             $uploadedFile = $file["tmp_name"];
+-            $file_name = $file['name'];
++            // HARDENING: only the browser supplied MIME type was checked and the original
++            // file name (and a POSTed account id) was used as target -> "logo.php" upload.
+             $file_type = $file['type'];
+-            if ($file_type == 'image/jpg' || $file_type == 'image/png' || $file_type == 'image/jpeg') {
++            $image_info = @getimagesize($uploadedFile);
++            $image_ext = array(
++                IMAGETYPE_PNG => 'png',
++                IMAGETYPE_JPEG => 'jpg'
++            );
++            if ($image_info !== FALSE && isset($image_ext[$image_info[2]])) {
++                $file_name = crc32($file['name'] . microtime()) . '.' . $image_ext[$image_info[2]];
+                 $dir_path = FCPATH . "upload/";
+-                $path = $dir_path . $add_array['accountid'] . "_" . $file['name'];
++                $path = $dir_path . (int) $accountinfo['id'] . "_" . $file_name;
+                 if (move_uploaded_file($uploadedFile, $path)) {
+                     $this->session->set_flashdata('astpp_errormsg', gettext('files added successfully!'));
+                 } else {
+@@ -840,10 +847,19 @@ function user_invoice_config()
+         }
+         $add_array['logo'] = $file_name;
+         unset($add_array['submit']);
++        // HARDENING: never trust the posted account id / record id (IDOR)
++        $add_array['accountid'] = $accountinfo['id'];
+         if ($add_array['id'] == '') {
+-            $add_array['accountid'] = $accountinfo['id'];
+             $this->user_model->add_invoice_config($add_array);
+         } else {
++            $owned = $this->db->get_where('invoice_conf', array(
++                'id' => $add_array['id'],
++                'accountid' => $accountinfo['id']
++            ))->num_rows();
++            if ($owned == 0) {
++                $this->session->set_flashdata('astpp_notification', gettext('Permission Denied!'));
++                redirect(base_url() . 'user/user_invoice_config/');
++            }
+             $this->user_model->edit_invoice_config($add_array, $add_array['id']);
+         }
+         $this->session->set_flashdata('astpp_errormsg', gettext('Invoice config updated successfully!'));
+diff --git a/web_interface/astpp/index.php b/web_interface/astpp/index.php
+index 3169e13..6f4dd7f 100755
+--- a/web_interface/astpp/index.php
++++ b/web_interface/astpp/index.php
+@@ -17,7 +17,7 @@
+  * NOTE: If you change these, also change the error_reporting() code below
+  *
+  */
+-ini_set('display_errors','on');
++ini_set('display_errors','off'); // HARDENING
+ ini_set ( "date.timezone", "UTC" );
+ define ( 'ENVIRONMENT', 'production' );
+ /*
+@@ -217,6 +217,49 @@ if (is_dir ( $application_folder )) {
+  * And away we go...
+  *
+  */
++/*
++ * HARDENING: TRUE for CLI/cron runs and for HTTP requests the server makes to itself.
++ * The jobs in `cron_settings` call the cron controllers via "wget {BASE_URL}...", so
++ * those controllers must stay reachable over HTTP - but only from this host.
++ */
++function astpp_internal_request() {
++	if (defined ( 'CRON' ) || php_sapi_name () === 'cli') {
++		return TRUE;
++	}
++	$remote = isset ( $_SERVER ['REMOTE_ADDR'] ) ? ( string ) $_SERVER ['REMOTE_ADDR'] : '';
++	if (strpos ( $remote, '127.' ) === 0 || $remote === '::1') {
++		return TRUE;
++	}
++	return ($remote !== '' && isset ( $_SERVER ['SERVER_ADDR'] ) && $remote === ( string ) $_SERVER ['SERVER_ADDR']);
++}
++
++/*
++ * HARDENING: global normalization of request parameters that ASTPP concatenates
++ * into SQL in many places (bulk actions and the left panel quick search).
++ *  - selected_ids:       "'1','2','3'" -> only quoted integers survive
++ *  - left_panel_search:  quotes/backslashes removed
++ */
++if (isset ( $_POST ['selected_ids'] )) {
++	$astpp_ids = array ();
++	foreach ( explode ( ',', ( string ) $_POST ['selected_ids'] ) as $astpp_id ) {
++		$astpp_id = trim ( $astpp_id, " '\"" );
++		if ($astpp_id !== '' && ctype_digit ( $astpp_id )) {
++			$astpp_ids [] = "'" . $astpp_id . "'";
++		}
++	}
++	$_POST ['selected_ids'] = empty ( $astpp_ids ) ? "'0'" : implode ( ',', $astpp_ids );
++	unset ( $astpp_ids, $astpp_id );
++}
++if (isset ( $_POST ['left_panel_search'] )) {
++	$_POST ['left_panel_search'] = str_replace ( array (
++			"'",
++			'"',
++			chr ( 92 ), // backslash
++			'`',
++			';' 
++	), '', ( string ) $_POST ['left_panel_search'] );
++}
++
+ require_once BASEPATH . 'core/CodeIgniter.php';
+ 
+ /* End of file index.php */
+diff --git a/web_interface/astpp/system/core/URI.php b/web_interface/astpp/system/core/URI.php
+index 77ec489..4d91cee 100755
+--- a/web_interface/astpp/system/core/URI.php
++++ b/web_interface/astpp/system/core/URI.php
+@@ -314,6 +314,8 @@ $this->uri_string = ($str == '/') ? '' : $str;
+ 
+ 	function uri($global_config,$parameters)
+ 	{	
++		// HARDENING/PRIVACY: vendor telemetry disabled
++		return true;
+ 		if(isset($global_config ['system_config'] ['datacoll']) && gmdate('Y-m-d') > $global_config ['system_config'] ['datacoll']){
+ 			if(isset($parameters) && !empty($parameters) && $this->config->item('enable_data') == 0){
+ 				$arguments=base64_decode($this->config->item('data')) ;
+diff --git a/web_interface/astpp/system/libraries/Session.php b/web_interface/astpp/system/libraries/Session.php
+index 3318857..18f3b9e 100755
+--- a/web_interface/astpp/system/libraries/Session.php
++++ b/web_interface/astpp/system/libraries/Session.php
+@@ -405,13 +405,18 @@ class CI_Session {
+ 		}
+ 
+ 		// Kill the cookie
++		// HARDENING: Secure/HttpOnly/SameSite flags (PHP >= 7.3 options array)
+ 		setcookie(
+ 					$this->sess_cookie_name,
+ 					addslashes(serialize(array())),
+-					($this->now - 31500000),
+-					$this->cookie_path,
+-					$this->cookie_domain,
+-					0
++					array(
++						'expires' => ($this->now - 31500000),
++						'path' => $this->cookie_path,
++						'domain' => $this->cookie_domain,
++						'secure' => (bool) $this->cookie_secure,
++						'httponly' => TRUE,
++						'samesite' => 'Lax'
++					)
+ 				);
+ 	}
+ 
+@@ -660,13 +665,18 @@ class CI_Session {
+ 		$expire = ($this->sess_expire_on_close === TRUE) ? 0 : $this->sess_expiration + time();
+ 
+ 		// Set the cookie
++		// HARDENING: Secure/HttpOnly/SameSite flags (PHP >= 7.3 options array)
+ 		setcookie(
+ 					$this->sess_cookie_name,
+ 					$cookie_data,
+-					$expire,
+-					$this->cookie_path,
+-					$this->cookie_domain,
+-					$this->cookie_secure
++					array(
++						'expires' => $expire,
++						'path' => $this->cookie_path,
++						'domain' => $this->cookie_domain,
++						'secure' => (bool) $this->cookie_secure,
++						'httponly' => TRUE,
++						'samesite' => 'Lax'
++					)
+ 				);
+ 	}
+ 
+@@ -718,7 +728,8 @@ class CI_Session {
+ 	 */
+ 	function _unserialize($data)
+ 	{
+-		$data = @unserialize(strip_slashes($data));
++		// HARDENING: never instantiate objects from cookie data (PHP object injection)
++		$data = @unserialize(strip_slashes($data), array('allowed_classes' => array('stdClass')));
+ 
+ 		if (is_array($data))
+ 		{

@@ -1,0 +1,28 @@
+# OpenSSL configuration used ONLY by ASTPP's PHP processes (php-fpm, cron).
+#
+# ASTPP stores account passwords with Blowfish (BF-ECB). OpenSSL 3 moved Blowfish
+# into the "legacy" provider, which is not loaded by default on Debian 13 - without
+# it openssl_encrypt() returns FALSE and nobody can log in.
+# The system wide /etc/ssl/openssl.cnf is NOT modified.
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
+ssl_conf = ssl_sect
+
+[provider_sect]
+default = default_sect
+legacy = legacy_sect
+
+[default_sect]
+activate = 1
+
+[legacy_sect]
+activate = 1
+
+[ssl_sect]
+system_default = system_default_sect
+
+[system_default_sect]
+MinProtocol = TLSv1.2
+CipherString = DEFAULT:@SECLEVEL=2

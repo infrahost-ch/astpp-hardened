@@ -1,0 +1,9 @@
+# ASTPP scheduler - managed by astpp-debian13/install.sh
+# Runs the jobs configured in the "cron_settings" table (invoices, purge, low
+# balance, e-mail broadcast, ...). Runs as www-data - the upstream installer
+# installed this for root, which turned every web-to-code bug into root access.
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+OPENSSL_CONF=@OPENSSL_LEGACY_CNF@
+
+* * * * * www-data cd @ASTPP_WEB@/cron && /usr/bin/php@PHP_VER@ cron.php crons >>/var/log/astpp/cron.log 2>&1
