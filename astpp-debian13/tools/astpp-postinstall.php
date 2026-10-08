@@ -13,7 +13,7 @@
  *  5. Disables the vendor telemetry switch (`datacoll`) in the `system` table.
  *
  * Usage (as root, OPENSSL_CONF must load the legacy provider for Blowfish):
- *   ASTPP_ADMIN_PASSWORD=... ASTPP_ESL_PASSWORD=... php7.4 astpp-postinstall.php
+ *   ASTPP_ADMIN_PASSWORD=... ASTPP_ESL_PASSWORD=... php8.5 astpp-postinstall.php
  */
 
 error_reporting(E_ALL);

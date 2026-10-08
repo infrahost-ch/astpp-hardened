@@ -5,7 +5,8 @@
 #
 #  Unterschiede zum Hersteller-Installer (install.sh aus dem ZIP):
 #   - nur Debian 13; MariaDB 11.8 aus Debian statt Oracle-MySQL-Repo
-#   - PHP 7.4 von packages.sury.org (ASTPP 6 / CodeIgniter 2.1 ist nicht PHP-8-faehig)
+#   - PHP 8.5 von packages.sury.org; ASTPP 6 (CodeIgniter 2.1) ist dafuer portiert
+#     (patches/astpp-v6-php85.patch, PHP-7-Semantik ueber application/php7compat.php)
 #   - ASTPP-Quellcode auf einen geprueften Commit gepinnt + Sicherheits-Patchset
 #   - keine Telemetrie (Upstream-Installer schickte E-Mail/IP an astppbilling.org,
 #     die Anwendung selbst alle Kundenkontaktdaten an dcoll.inextrix.com)
@@ -49,7 +50,7 @@ FS_VERSION="${FS_VERSION:-v1.11.3}"
 SOFIA_VERSION="${SOFIA_VERSION:-v1.13.18}"
 SPANDSP_VERSION="${SPANDSP_VERSION:-v3.1.1}"
 
-PHP_VER="7.4"
+PHP_VER="8.5"
 PHP_SOCK="/run/php/php${PHP_VER}-fpm-astpp.sock"
 PHP_FS_SOCK="/run/php/php${PHP_VER}-fpm-astpp-fs.sock"
 ASTPP_SRC="/opt/ASTPP"
@@ -129,7 +130,7 @@ preflight() {
 		|| die "Nur Debian 13 (trixie) wird unterstuetzt - gefunden: ${PRETTY_NAME:-unbekannt}"
 	[ "$(dpkg --print-architecture)" = "amd64" ] || die "Nur amd64 wird unterstuetzt."
 	[ -d /run/systemd/system ] || die "systemd wird benoetigt."
-	for f in patches/astpp-v6-hardening.patch tools/astpp-postinstall.php files/nginx/astpp.conf; do
+	for f in patches/astpp-v6-hardening.patch patches/astpp-v6-php85.patch tools/astpp-postinstall.php files/nginx/astpp.conf; do
 		[ -f "${SCRIPT_DIR}/${f}" ] || die "Datei fehlt im Installationspaket: ${f}"
 	done
 	[[ "${ASTPP_FQDN}" =~ ^([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$ ]] \
@@ -224,7 +225,7 @@ SQL
 	log "MariaDB $(mariadb -N -e 'SELECT VERSION()') bereit"
 }
 
-# ------------------------------------------------------------------- PHP 7.4 ---
+# ------------------------------------------------------------------- PHP 8.5 ---
 install_php() {
 	step "PHP ${PHP_VER} (packages.sury.org) installieren"
 	local deb=/tmp/debsuryorg-archive-keyring.deb
@@ -234,14 +235,16 @@ install_php() {
 	echo "deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ trixie main" \
 		>/etc/apt/sources.list.d/php-sury.list
 	apt-get update
+	# OPcache und JSON sind ab PHP 8 fest eingebaut (keine eigenen Pakete mehr)
 	apt_install "php${PHP_VER}-fpm" "php${PHP_VER}-cli" "php${PHP_VER}-common" "php${PHP_VER}-mysql" \
 		"php${PHP_VER}-xml" "php${PHP_VER}-curl" "php${PHP_VER}-gd" "php${PHP_VER}-mbstring" \
-		"php${PHP_VER}-opcache" "php${PHP_VER}-imap" "php${PHP_VER}-json" "php${PHP_VER}-readline" \
-		"php${PHP_VER}-zip" "php${PHP_VER}-bcmath"
+		"php${PHP_VER}-readline" "php${PHP_VER}-zip" "php${PHP_VER}-bcmath"
 	# NICHT php-intl installieren: ASTPP definiert eine eigene Klasse "Locale"
 	# (application/libraries/locale.php) -> Fatal Error "Cannot declare class Locale".
 	if dpkg -l "php${PHP_VER}-intl" 2>/dev/null | grep -q '^ii'; then phpdismod -v "${PHP_VER}" intl; fi
-	for p in "php${PHP_VER}-geoip" "php${PHP_VER}-imagick"; do
+	# optional: imap ist seit PHP 8.4 eine PECL-Erweiterung, geoip gibt es fuer PHP 8 nicht mehr
+	# (ASTPP prueft function_exists('geoip_country_name_by_name'))
+	for p in "php${PHP_VER}-imap" "php${PHP_VER}-imagick"; do
 		if pkg_available "${p}"; then apt_install "${p}" || warn "${p} konnte nicht installiert werden (optional)"; fi
 	done
 
@@ -448,9 +451,15 @@ install_astpp_source() {
 	git -C "${ASTPP_SRC}" -c advice.detachedHead=false checkout -q --detach FETCH_HEAD
 	[ "$(git -C "${ASTPP_SRC}" rev-parse HEAD)" = "${ASTPP_COMMIT}" ] || die "Commit-Pruefung fehlgeschlagen."
 
-	git -C "${ASTPP_SRC}" apply --check "${SCRIPT_DIR}/patches/astpp-v6-hardening.patch" \
-		|| die "Patchset passt nicht auf den ASTPP-Commit."
-	git -C "${ASTPP_SRC}" apply "${SCRIPT_DIR}/patches/astpp-v6-hardening.patch"
+	local p
+	for p in astpp-v6-hardening.patch astpp-v6-php85.patch; do
+		# (Upstream-Code enthaelt Leerzeichen am Zeilenende - die bleiben unveraendert)
+		git -C "${ASTPP_SRC}" apply --whitespace=nowarn --check "${SCRIPT_DIR}/patches/${p}" \
+			|| die "Patchset ${p} passt nicht auf den ASTPP-Commit."
+		git -C "${ASTPP_SRC}" apply --whitespace=nowarn "${SCRIPT_DIR}/patches/${p}"
+	done
+	# Upstream liefert unter web_interface/astpp/index.html eine Kopie der Google-Startseite aus
+	rm -f "${ASTPP_WEB}/index.html"
 	# Dateirechte werden unten neu gesetzt - "git status" soll nur Inhaltsaenderungen zeigen
 	git -C "${ASTPP_SRC}" config core.fileMode false
 
@@ -637,7 +646,8 @@ configure_php_fpm() {
 	mem_mb="$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)"
 	pm_max=$((mem_mb / 160)); [ "${pm_max}" -lt 8 ] && pm_max=8; [ "${pm_max}" -gt 60 ] && pm_max=60
 	if [ "${PHP_OPEN_BASEDIR}" = "yes" ]; then
-		obd_line="php_admin_value[open_basedir] = ${ASTPP_SRC}/:/var/www/html/:${ASTPP_CONF_DIR}/:${ASTPP_LOG_DIR}/:/tmp/:/usr/share/php/:/var/lib/freeswitch/recordings/:${FS_SHARE}/sounds/"
+		# /proc/version: Kernel-Version im Admin-Dashboard
+		obd_line="php_admin_value[open_basedir] = ${ASTPP_SRC}/:/var/www/html/:${ASTPP_CONF_DIR}/:${ASTPP_LOG_DIR}/:/tmp/:/usr/share/php/:/var/lib/freeswitch/recordings/:${FS_SHARE}/sounds/:/proc/version"
 	else
 		obd_line="; open_basedir deaktiviert (PHP_OPEN_BASEDIR=no)"
 	fi
