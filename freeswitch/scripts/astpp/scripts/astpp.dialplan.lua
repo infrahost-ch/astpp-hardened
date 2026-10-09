@@ -168,6 +168,29 @@ userinfo = doauthorization("number",accountcode,call_direction,destination_numbe
 --end
 -----------------------------------------------------------------------------------------
 
+-- ASTPP fork: apply the customer's origination localization (number_originate) here, before the
+-- DID check, the blocked-prefix check and the package lookup. Upstream translated the number only
+-- further down, so a number dialled in national, 00 or + format never matched the package patterns
+-- (call refused for lack of funds) or the blocked prefixes, and the CDR counted no package minutes.
+local number_originate_applied = false
+if (userinfo ~= nil and call_direction == 'outbound' and (tonumber(userinfo['localization_id']) or 0) > 0) then
+	local early_localization = get_localization(userinfo['localization_id'],'O')
+	if (early_localization and early_localization['number_originate'] ~= nil and early_localization['number_originate'] ~= '') then
+		number_originate_applied = true
+		local translated_number = do_number_translation((early_localization['number_originate']:gsub(" ", "")),destination_number)
+		if (translated_number ~= destination_number) then
+			Logger.info("[Dialplan] Localization : "..destination_number.." -> "..translated_number)
+			destination_number = translated_number
+			call_direction = define_call_direction(destination_number,accountcode,config)
+			if (call_direction == 'outbound' and (userinfo['ACCOUNT_ERROR'] == '' or userinfo['ACCOUNT_ERROR'] == 'NO_SUFFICIENT_FUND')
+				and check_blocked_prefix(userinfo,destination_number,number_loop(destination_number,'blocked_patterns')) == "false") then
+				Logger.warning("[Dialplan] ["..accountcode.."] Destination blocked after localization : "..destination_number)
+				userinfo['ACCOUNT_ERROR'] = 'DESTINATION_BLOCKED'
+			end
+		end
+	end
+end
+
 -- @TODO : Need to confirm with Rushika for fraud feature
 --Added for fraud detection checking
 --if fraud_check then fraud_check(accountcode,destination_number) end
@@ -254,7 +277,7 @@ if (userinfo ~= nil) then
     end
 
 	-- If call is pstn and dialed modify defined then do number translation
-	if (call_direction == 'outbound' and tonumber(userinfo['localization_id']) > 0 and or_localization and or_localization['number_originate'] ~= nil) then	
+	if (not number_originate_applied and call_direction == 'outbound' and tonumber(userinfo['localization_id']) > 0 and or_localization and or_localization['number_originate'] ~= nil) then
 		or_localization['number_originate'] = or_localization['number_originate']:gsub(" ", "")			
 		destination_number = do_number_translation(or_localization['number_originate'],destination_number)
 	end
@@ -344,6 +367,12 @@ if (userinfo ~= nil) then
 
 	    if(reseller_userinfo['ACCOUNT_ERROR'] == 'NO_SUFFICIENT_FUND') then
 		    error_xml_without_cdr(destination_number,"NO_SUFFICIENT_FUND",calltype,config['playback_audio_notification'],reseller_userinfo['id'])
+		    return 0
+	    end
+
+	    -- ASTPP fork: blocked prefixes of a reseller were looked up but never enforced
+	    if(reseller_userinfo['ACCOUNT_ERROR'] == 'DESTINATION_BLOCKED') then
+		    error_xml_without_cdr(destination_number,"DESTINATION_BLOCKED",calltype,config['playback_audio_notification'],reseller_userinfo['id'])
 		    return 0
 	    end
     
