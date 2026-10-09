@@ -16,7 +16,7 @@
     if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '') {
         echo gettext("Log In")." | ";echo $invoiceconf['website_title'];
     } else {
-        echo gettext("Log In")." | ".gettext("ASTPP - A Smart TelePhony Platform");
+        echo gettext("Log In")." | "."ASTPP";
     }
     ?>
     </title>
@@ -195,6 +195,12 @@ body {
             </p>
 
 			</div>
+			<?php // ASTPP fork: operator, origin and license (the login page had no footer) ?>
+			<p class="text-center small text-muted mt-4 mb-0 astpp-login-legal">
+				&copy; <?php echo date('Y'); ?> <a class="text-muted" href="https://infrahost.ch" target="_blank" rel="noopener">infrahost</a>
+				&middot; <?php echo gettext('Based on'); ?> <a class="text-muted" href="https://github.com/iNextrix/ASTPP" target="_blank" rel="noopener">ASTPP</a>
+				&middot; <a class="text-muted" href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL v3</a>
+			</p>
 
 		</form>
 

@@ -1,0 +1,26 @@
+ASTPP 6.1 - infrahost fork
+==========================
+
+This directory contains a modified version of ASTPP, the open source VoIP billing solution
+by iNextrix Technologies Pvt. Ltd. (https://github.com/iNextrix/ASTPP, branch V6.0,
+commit d5108ec6fb7a1ba7842155fb4e06632c629f3a63).
+
+Modified by infrahost since 2026-10-08: security hardening, port to PHP 8.5, updated and
+self-hosted third-party libraries, removal of telemetry, vendor advertising and dead code,
+infrahost branding. Every change is recorded in the git history of this directory.
+
+ASTPP and this modified version are free software, licensed under the GNU Affero General
+Public License version 3 (see LICENSE). There is NO WARRANTY, to the extent permitted by law.
+The copyright notices of the original authors are kept in the source files (see also Authors).
+
+  Copyright (C) iNextrix Technologies Pvt. Ltd. and the ASTPP contributors
+  Modifications Copyright (C) 2026 infrahost
+
+Third-party components keep their own licenses, see the LICENSE files in
+web_interface/astpp/assets/vendor/*/ and web_interface/astpp/application/libraries/html2pdf/.
+
+The infrahost logos in web_interface/astpp/assets/images/brand/ and the default images made
+from them (web_interface/astpp/upload/logo.png, logo.jpg, logo_1.png, logo_1.jpg, 1_logo.png,
+favicon.ico and web_interface/astpp/assets/images/logo.png, favicon.ico) are trademarks of
+infrahost. They are not covered by the AGPL; whoever redistributes this software has to
+replace them with their own.

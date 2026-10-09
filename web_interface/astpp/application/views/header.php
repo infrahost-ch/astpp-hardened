@@ -12,7 +12,7 @@
 		<? start_block_marker('page-title') ?><? end_block_marker() ?> | <?php echo $user_header; ?>
 	<?php
 	} else { ?>
-		<? start_block_marker('page-title') ?><? end_block_marker() ?> | ASTPP - Open Source Voip Billing Solution
+		<? start_block_marker('page-title') ?><? end_block_marker() ?> | ASTPP
 	<?php
 	}
 	?>
@@ -206,12 +206,14 @@ function PopupCenter(url, title, w, h) {
 			$this->db->or_where("domain LIKE '%$http_host%'");
 			$user_logo=(array)$this->db->get_where("invoice_conf")->first_row();
 			if ((empty($user_logo['logo'])) || (!isset($user_logo['logo']))) { 
-				 $user_logo['logo']="logo.png";
+				 $user_logo_src = base_url() . "assets/images/brand/infrahost_horizontal_color.svg"; // ASTPP fork: default logo (own logos of resellers: upload/)
+				 } else {
+				 $user_logo_src = base_url() . "upload/" . $user_logo["logo"];
 			}
 			?>
 			
 			<a class="navbar-brand p-lg-0 m-0" href="<?php echo base_url(); ?>dashboard/">
-                	<img id="logo" class="img-fluid" alt="dashboard" src="<?php echo base_url(); ?>upload/<?= $user_logo['logo']?>" >
+                	<img id="logo" class="img-fluid" alt="dashboard" src="<?= $user_logo_src ?>" style="max-height:56px;width:auto">
 	      <? } else {
 			$http_host=$_SERVER["HTTP_HOST"];
 			if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on"){
@@ -224,11 +226,13 @@ function PopupCenter(url, title, w, h) {
 			$this->db->or_where("domain LIKE '%$http_host%'");
 			$user_logo=(array)$this->db->get_where("invoice_conf")->first_row();
 			if ((empty($user_logo['logo'])) || (!isset($user_logo['logo']))) { 
-				 $user_logo['logo']="logo.png";
+				 $user_logo_src = base_url() . "assets/images/brand/infrahost_horizontal_color.svg"; // ASTPP fork: default logo (own logos of resellers: upload/)
+				 } else {
+				 $user_logo_src = base_url() . "upload/" . $user_logo["logo"];
 			}
 		?> 
                 	<a class="navbar-brand p-lg-0 m-0" href="<?php echo base_url(); ?>user/user/">
-                	<img id="logo" class="img-fluid" alt="user_logo" src="<?php echo base_url(); ?>upload/<?= $user_logo['logo']?>" width="187" height="71" border="0">
+                	<img id="logo" class="img-fluid" alt="user_logo" src="<?= $user_logo_src ?>" style="max-height:56px;width:auto" border="0">
 		<? }?>
                 </a>
   <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#main_menu" aria-controls="main_menu" aria-expanded="false" aria-label="Toggle navigation">
@@ -435,18 +439,7 @@ function PopupCenter(url, title, w, h) {
 		      <?
 }?>
 	    
-		    <? if($this->session->userdata('userlevel_logintype') == '-1'){?>
-
-		    
-		    <li><a class="dropdown-item" href="https://docs.astppbilling.org/display/itplmars" target="_blank"><i class="fa fa-file-text"></i> &nbsp;<?php echo gettext('Documentation'); ?></a></li>
-
-<li><a class="dropdown-item" href="https://jira.astppbilling.org/projects/ASTPPCOM/" target="_blank"><i class= "fa fa-bug"></i> &nbsp;<?php echo gettext('Report a Bug'); ?></a></li>
-
-
-
-
-<li><a class="dropdown-item" href="/addons/addons_list/Community"><i class="fa fa-plus"></i> &nbsp;<?php echo gettext('Get Addons'); ?></a></li>
-<?}?>
+		    <?php // ASTPP fork: vendor links removed (documentation, bug tracker, "Get Addons" - addons are not installed from the web interface) ?>
 <li><a class="dropdown-item" href="<?php echo base_url();?>logout"><i class="fa fa-power-off"></i> &nbsp;<?php echo gettext('Log out'); ?></a></li>
         </ul>
               </div>  

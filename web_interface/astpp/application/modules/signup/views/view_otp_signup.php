@@ -16,7 +16,7 @@
 				if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '') {    
 					echo gettext("OTP Verification")." | "; echo $invoiceconf['website_title']; 
 				} else {
-					echo gettext("OTP Verification")." | ".gettext("ASTPP - A Smart TelePhony Platform");
+					echo gettext("OTP Verification")." | "."ASTPP";
 				}
 	?>
 
@@ -234,7 +234,7 @@ $(document).ready(function() {
 										<a class="logo_title" href="<?php echo base_url(); ?>"><img class="mb-2 img-fluid" id="logo" alt="dashboard" src="<?php echo base_url(); ?>upload/<?php echo$logo;?>"></a>
 								<? } else {?> 
 										
-										<a class="logo_title" href="<?php echo base_url(); ?>"><img class="mb-2 img-fluid" id="logo" title='ASTPP - Open Source Voip Billing Solution' alt='ASTPP - Open Source Voip Billing Solution' src="<?php echo base_url(); ?>upload/<?php echo$logo;?>"></a>
+										<a class="logo_title" href="<?php echo base_url(); ?>"><img class="mb-2 img-fluid" id="logo" title='ASTPP' alt='ASTPP' src="<?php echo base_url(); ?>upload/<?php echo$logo;?>"></a>
 								<? }?>
 								
 						</h2>

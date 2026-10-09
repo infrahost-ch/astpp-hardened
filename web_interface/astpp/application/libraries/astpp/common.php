@@ -1260,15 +1260,15 @@ class common {
 
 		if (isset ( $button_params->layout )) {
 			if ($button_params->mode == 'popup') {
-				return '<a href="' . $link . '" style="color:#3b3280" rel="facebox_medium" title="Update">' . $field . '</a>&nbsp;';
+				return '<a href="' . $link . '" style="color:#347CCB" rel="facebox_medium" title="Update">' . $field . '</a>&nbsp;';
 			} else {
-				return '<a href="' . $link . '" style="color:#3b3280" title="Edit">' . $field . '</a>&nbsp;';
+				return '<a href="' . $link . '" style="color:#347CCB" title="Edit">' . $field . '</a>&nbsp;';
 			}
 		} else {
 			if ($button_params->mode == 'popup') {
-				return '<a href="' . $link . '" style="color:#3b3280" rel="facebox" title="Update">' . $field . '</a>&nbsp;';
+				return '<a href="' . $link . '" style="color:#347CCB" rel="facebox" title="Update">' . $field . '</a>&nbsp;';
 			} else {
-				return '<a href="' . $link . '" style="color:#3b3280" title="Edit">' . $field . '</a>&nbsp;';
+				return '<a href="' . $link . '" style="color:#347CCB" title="Edit">' . $field . '</a>&nbsp;';
 			}
 		}
 	}
@@ -1383,7 +1383,7 @@ class common {
 	}
 	function build_add_payment_button($url, $linkid) {
 		$link = base_url () . $url . "" . $linkid;
-		return '<a href="' . $link . '" style="cursor:pointer;color:#3b3280" rel="facebox_medium" title="Refill">PAYMENT</a>&nbsp;';
+		return '<a href="' . $link . '" style="cursor:pointer;color:#347CCB" rel="facebox_medium" title="Refill">PAYMENT</a>&nbsp;';
 	}
 	function build_add_download_button($url, $linkid) {
 		$link = base_url () . $url . "" . $linkid;

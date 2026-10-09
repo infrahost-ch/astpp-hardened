@@ -363,7 +363,7 @@ class Freeswitch extends MX_Controller
             $edit_permission=$value['username'];
             if ((isset($permissioninfo['freeswitch']['fssipdevices']['edit']) && astpp_eq0($permissioninfo['freeswitch']['fssipdevices']['edit']) or $permissioninfo['login_type'] == '-1' )) {
                 $base_url = base_url().'freeswitch/fssipdevices_edit/'.$value['id'];
-                $edit_permission="<span style='margin-right:8px' id='live_status_".$value['username']."'>".$live_status."</span><a href='/freeswitch/fssipdevices_edit/" . $value['id'] . "' style='cursor:pointer;color:#3b3280' rel='facebox_medium' title='".gettext('User Name')."'>" . $value['username'] . "</a>";
+                $edit_permission="<span style='margin-right:8px' id='live_status_".$value['username']."'>".$live_status."</span><a href='/freeswitch/fssipdevices_edit/" . $value['id'] . "' style='cursor:pointer;color:#347CCB' rel='facebox_medium' title='".gettext('User Name')."'>" . $value['username'] . "</a>";
             }
             // ASTPPCOM-943 END
             $current_row = array(
@@ -458,7 +458,7 @@ class Freeswitch extends MX_Controller
                 'cell' => array(
 
                     '<input type="checkbox" name="chkAll" id="' . $value['id'] . '" class="ace chkRefNos" onclick="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>',
-                    '<a href="' . base_url() . 'accounts/' . $entity_type . '_fssipdevices_action/edit/' . $value['id'] . '/' . $accountid . '/" rel="facebox_medium" style="cursor:pointer;color:#3b3280" title="Edit"><span title="Edit">' . $value['username'] . '</span></a>',
+                    '<a href="' . base_url() . 'accounts/' . $entity_type . '_fssipdevices_action/edit/' . $value['id'] . '/' . $accountid . '/" rel="facebox_medium" style="cursor:pointer;color:#347CCB" title="Edit"><span title="Edit">' . $value['username'] . '</span></a>',
                     $value['password'],
                     $this->common->get_field_name('name', '`sip_profiles', array(
                         'id' => $value['sip_profile_id']
@@ -594,7 +594,7 @@ class Freeswitch extends MX_Controller
             "Unknown" => "#DC3545"
         );
         $org_color = "#D6D8D9";
-        $term_color = "#3B3280";
+        $term_color = "#347CCB";
 
         foreach ($calls as $key => $value) {
             if (isset($value['state']) && ($value['state'] == 'CS_EXCHANGE_MEDIA' || $value['state'] == 'CS_CONSUME_MEDIA')) {

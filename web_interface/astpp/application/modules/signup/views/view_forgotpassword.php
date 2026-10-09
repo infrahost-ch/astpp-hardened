@@ -17,7 +17,7 @@ $invoiceconf = (array) $invoiceconf->first_row();
 if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '') {    
 	echo gettext("Forgot Password")." |"; echo $invoiceconf['website_title']; 
 } else {
-	echo gettext("Forgot Password")." | ".gettext("ASTPP - A Smart TelePhony Platform");
+	echo gettext("Forgot Password")." | "."ASTPP";
 }
 ?>
 </title>
@@ -158,8 +158,8 @@ body {
 														
 														<a class="logo_title" href="<?php echo base_url(); ?>"><img
 								class="mb-2 img-fluid" id="logo"
-								title='ASTPP - Open Source Voip Billing Solution'
-								alt='ASTPP - Open Source Voip Billing Solution'
+								title='ASTPP'
+								alt='ASTPP'
 								src="<?php echo base_url(); ?>upload/<?php echo $logo;?>"></a>
 												<? }?>
 											

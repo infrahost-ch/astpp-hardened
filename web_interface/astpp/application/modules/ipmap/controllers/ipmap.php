@@ -226,10 +226,10 @@ class IPMAP extends MX_Controller
         foreach ($query as $key => $value) {
              $edit_permission = $value['name'];
              if($account_data['type'] == -1){
-                $edit_permission = "<a href='/ipmap/ipmap_edit/" . $value['id'] . "' style='cursor:pointer;color:#3b3280' rel='facebox_medium' title='Edit'><span class='col-md-12 p-0'>" . $value['name'] . "</span>" . $this->common->ipsettigs_account_number_icon("", "", $number) . "</a>";
+                $edit_permission = "<a href='/ipmap/ipmap_edit/" . $value['id'] . "' style='cursor:pointer;color:#347CCB' rel='facebox_medium' title='Edit'><span class='col-md-12 p-0'>" . $value['name'] . "</span>" . $this->common->ipsettigs_account_number_icon("", "", $number) . "</a>";
              }else{
                 if ((isset($permissioninfo['ipmap']['ipmap_detail']['edit']) && astpp_eq0($permissioninfo['ipmap']['ipmap_detail']['edit']))) {
-                    $edit_permission = "<a href='/ipmap/ipmap_edit/" . $value['id'] . "' style='cursor:pointer;color:#3b3280' rel='facebox_medium' title='Edit'><span class='col-md-12 p-0'>" . $value['name'] . "</span>" . $this->common->ipsettigs_account_number_icon("", "", $number) . "</a>";
+                    $edit_permission = "<a href='/ipmap/ipmap_edit/" . $value['id'] . "' style='cursor:pointer;color:#347CCB' rel='facebox_medium' title='Edit'><span class='col-md-12 p-0'>" . $value['name'] . "</span>" . $this->common->ipsettigs_account_number_icon("", "", $number) . "</a>";
                 }
              }
             $number = $this->common->get_field_name("number", "accounts", $value['accountid']);
@@ -240,7 +240,7 @@ class IPMAP extends MX_Controller
                 $json_data['rows'][] = array(
                     'cell' => array(
                         $ipmap_checkbox,
-                        "<a href='/ipmap/ipmap_edit/" . $value['id'] . "' style='cursor:pointer;color:#3b3280' rel='facebox_medium' title='Edit'><span class='col-md-12 p-0'>" . $value['name'] . "</span>" . $this->common->ipsettigs_account_number_icon("", "", $number) . "</a>",
+                        "<a href='/ipmap/ipmap_edit/" . $value['id'] . "' style='cursor:pointer;color:#347CCB' rel='facebox_medium' title='Edit'><span class='col-md-12 p-0'>" . $value['name'] . "</span>" . $this->common->ipsettigs_account_number_icon("", "", $number) . "</a>",
                         $value['ip'],
                         $value['prefix'],
                         $account_name,
@@ -258,7 +258,7 @@ class IPMAP extends MX_Controller
                 $json_data['rows'][] = array(
                     'cell' => array(
                         $ipmap_checkbox,
-                        "<a href='/ipmap/ipmap_edit/" . $value['id'] . "' style='cursor:pointer;color:#3b3280' rel='facebox_medium' title='Edit'><span class='col-md-12 p-0'>" . $value['name'] . "</span>" . $this->common->ipsettigs_account_number_icon("", "", $number) . "</a>",
+                        "<a href='/ipmap/ipmap_edit/" . $value['id'] . "' style='cursor:pointer;color:#347CCB' rel='facebox_medium' title='Edit'><span class='col-md-12 p-0'>" . $value['name'] . "</span>" . $this->common->ipsettigs_account_number_icon("", "", $number) . "</a>",
                         $value['ip'],
                         $value['prefix'],
                         $account_name,
@@ -283,7 +283,7 @@ class IPMAP extends MX_Controller
                 $json_data['rows'][] = array(
                     'cell' => array(
                         $ipmap_checkbox,
-                        // "<a href='/ipmap/ipmap_edit/" . $value['id'] . "' style='cursor:pointer;color:#3b3280' rel='facebox_medium' title='Edit'><span class='col-md-12 p-0'>" . $value['name'] . "</span>" . $this->common->ipsettigs_account_number_icon("", "", $number) . "</a>",
+                        // "<a href='/ipmap/ipmap_edit/" . $value['id'] . "' style='cursor:pointer;color:#347CCB' rel='facebox_medium' title='Edit'><span class='col-md-12 p-0'>" . $value['name'] . "</span>" . $this->common->ipsettigs_account_number_icon("", "", $number) . "</a>",
                         $edit_permission,
                         $value['ip'],
                         $value['prefix'],

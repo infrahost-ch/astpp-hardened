@@ -15,7 +15,7 @@ $invoiceconf = (array) $invoiceconf->first_row();
 if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '') {    
 	echo gettext("Signup")." | "; echo $invoiceconf['website_title']; 
 } else {
-	echo gettext("Signup")." | ".gettext("ASTPP - A Smart TelePhony Platform");
+	echo gettext("Signup")." | "."ASTPP";
 }
 ?>
 </title>
@@ -89,8 +89,8 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 							<? } else {?> 
 							<a class="col-md-9 logo_title" style="padding: 0px 0px 20px 0px"
 							href="<?php echo base_url(); ?>"> <img class="my-2 img-fluid"
-								id="logo" title='ASTPP - Open Source Voip Billing Solution'
-								alt='ASTPP - Open Source Voip Billing Solution'
+								id="logo" title='ASTPP'
+								alt='ASTPP'
 								src="<?php echo base_url(); ?>upload/<?php echo$logo;?>">
 							<? }?>	
 							</a>

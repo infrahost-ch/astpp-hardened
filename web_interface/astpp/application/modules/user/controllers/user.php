@@ -1596,7 +1596,7 @@ function user_sipdevices_json()
         $json_data['rows'][] = array(
             'cell' => array(
                 '<input type="checkbox" name="chkAll" id="' . $value['id'] . '" class="ace chkRefNos" onclick="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>',
-                '<a href="' . base_url() . 'user/user_sipdevices_edit/' . $value['id'] . '/" style="cursor:pointer;color:#3b3280" rel="facebox" title="Edit">' . $value['username'] . '</a>',
+                '<a href="' . base_url() . 'user/user_sipdevices_edit/' . $value['id'] . '/" style="cursor:pointer;color:#347CCB" rel="facebox" title="Edit">' . $value['username'] . '</a>',
                 $value['password'],
                 $value['effective_caller_id_name'],
                 $value['effective_caller_id_number'],
@@ -2945,7 +2945,7 @@ function user_get_order_list_json()
     $json_data = $paging_data["json_paging"];
     $query = $this->orders_model->get_reseller_orders_list(true, $paging_data["paging"]["start"], $paging_data["paging"]["page_no"]);
     foreach ($query->result_array() as $key => $value) {
-        $order_url = '<a href="' . base_url() . '/user/user_orders_complete/' . $value['order_id'] . '" style="color:#3b3280"  title="Edit" >' . $this->common->get_order_id("order_id", "orders", $value['id']) . '</a>';
+        $order_url = '<a href="' . base_url() . '/user/user_orders_complete/' . $value['order_id'] . '" style="color:#347CCB"  title="Edit" >' . $this->common->get_order_id("order_id", "orders", $value['id']) . '</a>';
         $json_data['rows'][] = array(
             'cell' => array(
                 $value['order_date'],

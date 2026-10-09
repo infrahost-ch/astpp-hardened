@@ -176,10 +176,10 @@ class Animap extends MX_Controller
             $edit_permission = $value['number'];
 
             if($account_data['type'] == -1){
-               $edit_permission =  "<a href='/animap/animap_edit/" . $value['id'] . "' style='cursor:pointer;color:#3b3280' rel='facebox_medium' title='Edit'>" . $value['number'] . "</a>";
+               $edit_permission =  "<a href='/animap/animap_edit/" . $value['id'] . "' style='cursor:pointer;color:#347CCB' rel='facebox_medium' title='Edit'>" . $value['number'] . "</a>";
             }else{
                 if ((isset($permissioninfo['animap']['animap_detail']['edit']) && astpp_eq0($permissioninfo['animap']['animap_detail']['edit']))) {
-                    $edit_permission =  "<a href='/animap/animap_edit/" . $value['id'] . "' style='cursor:pointer;color:#3b3280' rel='facebox_medium' title='Edit'>" . $value['number'] . "</a>";
+                    $edit_permission =  "<a href='/animap/animap_edit/" . $value['id'] . "' style='cursor:pointer;color:#347CCB' rel='facebox_medium' title='Edit'>" . $value['number'] . "</a>";
                 }
              }
 
@@ -196,7 +196,7 @@ class Animap extends MX_Controller
                 $json_data['rows'][] = array(
                     'cell' => array(
                         $ipmap_checkbox,
-                        // "<a href='/animap/animap_edit/" . $value['id'] . "' style='cursor:pointer;color:#3b3280' rel='facebox_medium' title='Edit'>" . $value['number'] . "</a>",
+                        // "<a href='/animap/animap_edit/" . $value['id'] . "' style='cursor:pointer;color:#347CCB' rel='facebox_medium' title='Edit'>" . $value['number'] . "</a>",
                         $edit_permission,
                         $account_name,
                         $reseller_name,
@@ -210,7 +210,7 @@ class Animap extends MX_Controller
                 $json_data['rows'][] = array(
                     'cell' => array(
                         $ipmap_checkbox,
-                        // "<a href='/animap/animap_edit/" . $value['id'] . "' style='cursor:pointer;color:#3b3280' rel='facebox_medium' title='Edit'>" . $value['number'] . "</a>",
+                        // "<a href='/animap/animap_edit/" . $value['id'] . "' style='cursor:pointer;color:#347CCB' rel='facebox_medium' title='Edit'>" . $value['number'] . "</a>",
                         $edit_permission,
                         $account_name,
                         $this->common->convert_GMT_to('', '', $value['creation_date']),

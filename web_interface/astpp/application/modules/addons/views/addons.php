@@ -72,7 +72,7 @@ $addon_type = substr($_SERVER['REQUEST_URI'], strrpos($_SERVER['REQUEST_URI'], '
 							<div class="card-body py-3 pl-0 pr-3">
 							<a class="btn p-0 addon_title" href="#"><h3 class="text-dark card-title mb-1"><?= $elements->name ?></h3></a>
 									<?php if($package_name == 'language_demo'){?>
-										<p class="card-text"><a href="https://docs.astppbilling.org/pages/viewpage.action?pageId=4197155"><?= $elements->description ?></a></p>
+										<p class="card-text"><?= $elements->description ?></p>
 											<?php } else { ?> 
 											<p class="card-text" style="text-align:left;"><?= $elements->description ?></p>	
 											<?php } ?>
@@ -87,16 +87,16 @@ $addon_type = substr($_SERVER['REQUEST_URI'], strrpos($_SERVER['REQUEST_URI'], '
 																$request_uri = explode("/", $_SERVER['REQUEST_URI']);
 																 if(isset($request_uri) && $request_uri[3] == 'Premium') { 
 																		if($package_name == 'whmcs') /* PHP8: was an undefined constant */{?>
-																			<a href="https://astppbilling.org/astpp-whmcs-integration/"
+																			<a href="#"
 																						class="btn btn-block btn-index btn-outline-primary" target="_blank">More Information</a> 
 																		<?php }else if($package_name == 'zoho') /* PHP8: was an undefined constant */{ ?>
-																			<a href="https://astppbilling.org/zoho-integration/"
+																			<a href="#"
 																						class="btn btn-block btn-index btn-outline-primary" target="_blank">More Information</a> 
 																		<?php } else if($package_name == 'salesforce') /* PHP8: was an undefined constant */{?>
-																			<a href="https://astppbilling.org/salesforce-integration/"
+																			<a href="#"
 																						class="btn btn-block btn-index btn-outline-primary" target="_blank">More Information</a> 
 																		<?php } else {?>
-																			<a href="https://astppbilling.org/stir-shaken-solution/"
+																			<a href="#"
 																						class="btn btn-block btn-index btn-outline-primary" target="_blank">More Information</a> 
 																		<?php }
 																 }else {?>
@@ -142,7 +142,7 @@ $addon_type = substr($_SERVER['REQUEST_URI'], strrpos($_SERVER['REQUEST_URI'], '
 												<?php } ?></h3>
 											</a>
 											<?php if($package_name == 'language_demo'){?>
-												<p class="card-text"><a href="https://docs.astppbilling.org/pages/viewpage.action?pageId=4197155"><?= $elements->description ?></a></p>
+												<p class="card-text"><?= $elements->description ?></p>
 											<?php } else { ?> 
 											<p class="card-text"><?= $elements->description ?></p>	
 											<?php }?>

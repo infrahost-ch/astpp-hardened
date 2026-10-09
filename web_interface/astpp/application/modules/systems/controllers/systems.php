@@ -1365,12 +1365,7 @@ class Systems extends MX_Controller
             $this->load->view('view_systemconf', $data);
         }
     }
-    // ASTPPCOM-975 Start
-    function systems_list()
-    {
-        $this->load->view('system_enterprise_license');
-    }
-    // ASTPPCOM-975 END
+    // ASTPP fork: systems_list (advertisement page for the vendor's commercial mobile dialer) removed
 
 }
 

@@ -59,39 +59,12 @@
   </button>
 <div class="sidebar collapse">
 	
-	<?php if(isset($addon_detail_flag) && $addon_detail_flag){?>
+	<?php // ASTPP fork: only Community addons - the "Enterprise" and "Premium" tabs advertised commercial vendor modules ?>
+	<?php if((isset($addon_detail_flag) && $addon_detail_flag) || (isset($addon_flag) && $addon_flag)){?>
 	<ul class="sidemenu">
-		<?php 
-		if ($this->uri->segment(3) == 'Community'){
-		?>
 		<li class="active"><a href="<?php echo base_url();?>addons/addons_list/Community">Community</a></li>
-		<li><a href="<?php echo base_url();?>addons/addons_list/Enterprise">Enterprise</a></li>
-		<li><a href="<?php echo base_url();?>addons/addons_list/Premium">Premium</a></li> 	<!-- ASTPPCOM-1374 mittal start -->
-		<?php
-		} else if($this->uri->segment(3) == 'Enterprise')  {
-		?>
-		<li><a href="<?php echo base_url();?>addons/addons_list/Community">Community</a></li>
-		<li class="active"><a href="<?php echo base_url();?>addons/addons_list/Enterprise">Enterprise</a></li>
-		<li><a href="<?php echo base_url();?>addons/addons_list/Premium">Premium</a></li> 	<!-- ASTPPCOM-1374 mittal start-end-->
-		<?php
-		} else{ ?>
-		<li><a href="<?php echo base_url();?>addons/addons_list/Community">Community</a></li>
-		<li ><a href="<?php echo base_url();?>addons/addons_list/Enterprise">Enterprise</a></li>
-		<li class="active"><a href="<?php echo base_url();?>addons/addons_list/Premium">Premium</a></li> 	
-		<?php }
-		?><!-- ASTPPCOM-1374 mittal end-->
-		</ul>
+	</ul>
 	<?php } ?>
-
-
-	<?php if(isset($addon_flag) && $addon_flag){?>
-	  <ul class="sidemenu">
-		<li><a href="<?php echo base_url();?>addons/addons_list/Community">Community</a></li>
-	    <li><a href="<?php echo base_url();?>addons/addons_list/Enterprise">Enterprise</a></li>
-		<li><a href="<?php echo base_url();?>addons/addons_list/Premium">Premium</a></li> 	<!-- ASTPPCOM-1374 mittal start-end-->
-
-	  </ul>
-  	<?php } ?>
              <?php 
 			 $uri_string= uri_string();
 			 $uri_arr=explode("/",$uri_string);

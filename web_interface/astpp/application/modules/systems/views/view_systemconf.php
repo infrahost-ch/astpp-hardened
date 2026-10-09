@@ -318,13 +318,7 @@ function check_validation()
                           if($group_title!="term_and_condition"){?>
 														</div>
                             <?php }
-                            // ASTPPCOM-975 Start
-                            	if($group_title == 'global' && $key1 == 'Dialer Configuration' && $val['name'] == 'voip_pem'){
-														?>
-														<i style="font-family: 'Montserrat', sans-serif !important;font-size: 14px;position: relative;border: 0px solid #eee;color: #333232;text-decoration: none;background-color: #fff;">ASTPP offers custom Mobile VoIP Dialer jam-packed with exciting features to deliver quality calls round the globe.<a href="<?=base_url()?>/systems/systems_list" rel="facebox"><b>View Details</b></a></i>
-														<?php 
-														}
-                            // ASTPPCOM-975 END
+                            // ASTPP fork: vendor advertisement for its commercial mobile dialer removed
 
                             ?>
 														</div>

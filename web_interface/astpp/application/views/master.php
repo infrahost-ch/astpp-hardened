@@ -22,15 +22,7 @@ if (strpos($url, 'customer_cdrs') != true) {
 	        
                 <span id="error_msg" class=" success"></span>
               </div>
-                  <?php if(isset($dashboard_flag) && $dashboard_flag){?>
-                  <div class="col-4 float-right pl-2 align-self-center dashboard-right">
-                      <ul class="">
-                          <li class="active float-right">
-                          <a data-ripple=" " class="btn text-light" href="/addons/addons_list/Community" style="position: relative;background: #3b3280;"> <i class="fa fa-plus-circle fa-lg" aria-hidden="true"></i> <?php echo gettext('Get Addons'); ?></a>
-                          </li>
-                      </ul>       
-                  </div>
-                  <?php } ?>
+                  <?php // ASTPP fork: dashboard "Get Addons" button removed (addon marketplace of the vendor) ?>
                   <?php if(isset($back) && $back){?>
                   <div class="col-4 float-right pl-2 align-self-center dashboard-right">
 					  

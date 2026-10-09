@@ -206,86 +206,28 @@ jQuery(function($) {
 <footer class="site-footer border_box"> 
    <div class="col text-center">
    <div class="row">
-	
   <?php
- 
-    $this->db->select('*');
-	$this->db->where('domain',$_SERVER['HTTP_HOST']);
-	$result=$this->db->get('invoice_conf');
-	if($result->num_rows() > 0){
-		$result=$result->result_array();
-		$footer = $result[0]['website_footer'];
-	}else{
-		$footer = '';
-	}
-
-  	 // start ASTPPENT-3818
-    if($this->session->userdata['logintype'] == 2 || $this->session->userdata['logintype'] == -1 || $this->session->userdata['logintype'] == 1 || astpp_eq0($this->session->userdata['logintype']) ){
-     $user_footer = $this->session->userdata('user_footer');  
-     if(isset($user_footer) && $user_footer != '') {  
-      if ($user_footer == 'Inextrix Technologies Pvt. Ltd All Rights Reserved.'){
-        $user_footer = '';
-         } ?>
-       <div  class="pull-left col-3 text-left">
-       <!--  <a href="https://inextrix.com" target="_blank">
-        <span class="text-warning">
-            <strong><?=gettext($user_footer); ?></strong>
-          </span>
-      </a><br> -->
-     <strong> <span class="text-warning"><?php echo gettext('ASTPP - #1 Open Source VoIP Solution<br>
-      Powered by Inextrix Technologies Pvt. Ltd.<br>')?> </span></strong>
-      </div>
-      <?php } ?>
-      <!-- // end ASTPPENT-3818 -->
-
-		<div class="col py-2">
-  	   		 <label class="text-light" style="margin-top:3px;"><i> <?php echo gettext('Follow us on:')?> </i></label>
-  	   		 <div class="social-media">
-  	   		  <a target="_blank" href="https://www.facebook.com/astpp.official/" title="Facebook"> <i class="facebook fa fa-facebook"></i></a>
-  	   		  <a target="_blank" href="https://in.linkedin.com/company/astpp-billing" title="Linkedin"> <i class="linkin fa fa-linkedin"></i></a>
-  	   		  <a target="_blank" href="https://twitter.com/astpp_official" title="Twitter"> <i class="twitter fa fa-twitter "></i></a>
-  	   		 
-  	   		</div>
-		 </div>
-
-	<?php	} else  if(astpp_eq0($this->session->userdata['logintype']) || $this->session->userdata['logintype'] == 1){
-		
-		$user_footer = $this->session->userdata('user_footer');	
-		if ($user_footer != '') { 
-		
-			?>
-     <div class="col-md-4 py-2 px-2 text-md-left text-light"><?=$user_footer ?></div>
-     <div class="col-md-4 py-2 px-2 text-md-left text-light"></div>
-    <?} else {  ?>
-      <div class="col-md-5 py-2 px-2 text-md-left text-light">Copyright @ <?php echo date("Y"); ?> <a class="text-warning" href="http://www.inextrix.com" target="_blank"> <?php echo gettext("Inextrix Technologies Pvt. Ltd.")?></a>. <?php echo gettext("All Rights Reserved.")?>
-     <div class="col-md-3 py-2 px-2 text-md-left text-light"></div>
-	    
-	    </div>
-	    
-	<? } } else{ ?>
-			 <div  class="col-md-5 py-2 px-2 text-md-left">
-			<span class="text-light"><?php echo gettext('Powered by ')?> </span>
-			<a href="https://inextrix.com/" target="_blank">
-				<span class="text-warning">
-					<strong><?php echo gettext("Inextrix Technologies Pvt. Ltd.")?></strong>
-				</span>
-			</a>
-	    </div>
-		
-
-		<div class="col-md-3 py-2 text-md-center">
-
-  	   		 <div class="social-media">
-  	   		  <a target="_blank" href="https://www.facebook.com/astppbilling" title="Facebook"> <i class="facebook fa fa-facebook"></i></a>
-  	   		  <a target="_blank" href="https://in.linkedin.com/in/astpp-opensource-voip-billing-bb9301b5" title="Linkedin"> <i class="linkin fa fa-linkedin"></i></a>
-  	   		  <a target="_blank" href="https://twitter.com/astppbilling" title="Twitter"> <i class="twitter fa fa-twitter "></i></a>
-  	   		
-  	   		</div>
-		 </div>
-
-    
-    <?php } ?>
-  
+	/*
+	 * ASTPP fork: footer without vendor branding (social media, "Powered by Inextrix").
+	 * Left: operator - or the footer text a reseller set for its customers (white label).
+	 * Middle: origin and license (GNU AGPL v3 "Appropriate Legal Notices": copyright, no
+	 * warranty, where to find the license) - shown on every page, also in reseller portals.
+	 */
+	$astpp_footer_text = (string) $this->session->userdata('user_footer');
+	$astpp_logintype = $this->session->userdata('logintype');
+	$astpp_show_operator = ($astpp_footer_text === '' || $astpp_footer_text === 'Inextrix Technologies Pvt. Ltd All Rights Reserved.' || $astpp_logintype == 2 || $astpp_logintype == -1);
+  ?>
+   <div class="col-md-4 py-2 px-2 text-md-left text-light astpp-footer-operator">
+	<?php if ($astpp_show_operator) { ?>
+		&copy; <?php echo date('Y'); ?> <a href="https://infrahost.ch" target="_blank" rel="noopener">infrahost</a>
+	<?php } else { ?>
+		<?php echo htmlspecialchars($astpp_footer_text, ENT_QUOTES, 'UTF-8'); ?>
+	<?php } ?>
+   </div>
+   <div class="col-md-4 py-2 px-2 text-md-center text-light astpp-footer-legal">
+	<?php echo gettext('Based on'); ?> <a href="https://github.com/iNextrix/ASTPP" target="_blank" rel="noopener">ASTPP</a> &copy; iNextrix Technologies Pvt. Ltd.<br>
+	<?php echo gettext('Free software under the'); ?> <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL v3</a>, <?php echo gettext('without any warranty'); ?>.
+   </div>
    <div class="col-md-4 py-2 px-2 text-md-right" id="floating-label">
      <select class="col-lg-3 col-md-6 form-control selectpicker language" data-live-search='false' data-live-search-style='begins' id="language_drp_sown" onchange="get_lang(this.value)">
   <?php
@@ -306,7 +248,7 @@ if (isset($selected_locale) && $value['locale'] == $selected_locale) {
 
 
 
-<div class="col-md-12 float-right pt-4 pr-0 text-light text-md-right version_size"><?php echo gettext("Version")?>  <?php echo common_model::$global_config['system_config']['version'] .' '.gettext('Community') ;?>
+<div class="col-md-12 float-right pt-4 pr-0 text-light text-md-right version_size"><?php echo gettext("Version")?> <?php echo common_model::$global_config["system_config"]["version"]; ?>
 <?php
 
 ?>

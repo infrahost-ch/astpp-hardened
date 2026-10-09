@@ -117,7 +117,7 @@ class Form {
 			   }
 			}
 			// ASTPPCOM-941 Start
-			if (astpp_in_array ( $module [0], $module_info ) || (isset($url_explode[3]) && $url_explode[3] == 'dashboard') || (isset($url_explode[3]) && $url_explode[3] == 'login_activity') || (isset($url_explode[3]) && $url_explode[4] == 'systems_list') ) {
+			if (astpp_in_array ( $module [0], $module_info ) || (isset($url_explode[3]) && $url_explode[3] == 'dashboard') || (isset($url_explode[3]) && $url_explode[3] == 'login_activity') ) {
 			// ASTPPCOM-941 END
 
 				if (astpp_eq0($this->CI->session->userdata ( 'userlevel_logintype' )) && $module [0] == 'customer' && isset ( $url_array [1] ) && $url_array [1] != 'customer_transfer') {
