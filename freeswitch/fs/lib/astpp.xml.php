@@ -57,7 +57,7 @@ function load_acl($logger, $db, $config) {
                                 $res_acl_value ['ip'] = $value . "/32";
                         }
                 }
-		$xml .= "       <node type=\"allow\" cidr=\"" . $res_acl_value ['ip'] . "\"/>\n";
+		$xml .= "       <node type=\"allow\" cidr=\"" . astpp_xml_attr ( $res_acl_value ['ip'] ) . "\"/>\n";
 	}
 	
 	// For gateways
@@ -130,7 +130,7 @@ function load_sofia($logger, $db, $config) {
 	if ($config['homer_capture_server'] != "") {
 		$xml .= " <global_settings>\n";
 		$xml .= " <param name=\"sip-capture\" value=\"yes\"/>\n";
-		$xml .= " <param name=\"capture-server\" value=\"".$config['homer_capture_server']."\"/>\n";
+		$xml .= " <param name=\"capture-server\" value=\"" . astpp_xml_attr ( $config['homer_capture_server'] ) . "\"/>\n";
 		$xml .= " </global_settings>\n";
 	}
 
@@ -145,10 +145,12 @@ function load_sofia($logger, $db, $config) {
 		
 		$settings = json_decode ( $sp_value ['profile_data'], true );
 		// $logger->log(print_r($settings,true));
-		$xml .= "   <profile name=\"" . $sp_value ['name'] . "\">\n";
-		
+		// ASTPP fork: profile and gateway values are escaped - a gateway password containing
+		// & < or " used to break the whole sofia.conf, and passwords are masked in the debug log
+		$xml .= "   <profile name=\"" . astpp_xml_attr ( $sp_value ['name'] ) . "\">\n";
+
 		$xml .= "   <domains>\n";
-		$xml .= "       <domain name=\"" . $sp_value ['sip_ip'] . "\" alias=\"true\" parse=\"true\"/>\n";
+		$xml .= "       <domain name=\"" . astpp_xml_attr ( $sp_value ['sip_ip'] ) . "\" alias=\"true\" parse=\"true\"/>\n";
 		$xml .= "   </domains>\n";
 		/*
 		 * $xml .= " <aliases>\n";
@@ -156,10 +158,10 @@ function load_sofia($logger, $db, $config) {
 		 * $xml .= " </aliases>\n";
 		 */
 		$xml .= "   <settings>\n";
-		$xml .= "       <param name=\"sip-ip\" value=\"" . $sp_value ['sip_ip'] . "\"/>\n";
-		$xml .= "       <param name=\"sip-port\" value=\"" . $sp_value ['sip_port'] . "\"/>\n";
-		foreach ( $settings as $set_key => $set_val ) {
-			$xml .= "       <param name=\"" . $set_key . "\" value=\"" . $set_val . "\"/>\n";
+		$xml .= "       <param name=\"sip-ip\" value=\"" . astpp_xml_attr ( $sp_value ['sip_ip'] ) . "\"/>\n";
+		$xml .= "       <param name=\"sip-port\" value=\"" . astpp_xml_attr ( $sp_value ['sip_port'] ) . "\"/>\n";
+		foreach ( ( array ) $settings as $set_key => $set_val ) {
+			$xml .= "       <param name=\"" . astpp_xml_attr ( $set_key ) . "\" value=\"" . astpp_xml_attr ( $set_val ) . "\"/>\n";
 		}
 		$xml .= "       <param name=\"user-agent-string\" value=\"ASTPP\"/>\n";
 
@@ -172,12 +174,12 @@ function load_sofia($logger, $db, $config) {
 		$sp_gw = $db->run ( $query );
 		$logger->log ( $sp_gw );
 		foreach ( $sp_gw as $sp_gw_key => $sp_gw_value ) {
-			$xml .= "       <gateway name=\"" . $sp_gw_value ['name'] . "\">\n";
-			
+			$xml .= "       <gateway name=\"" . astpp_xml_attr ( $sp_gw_value ['name'] ) . "\">\n";
+
 			$sp_gw_settings = json_decode ( $sp_gw_value ['gateway_data'], true );
-			foreach ( $sp_gw_settings as $sp_gw_settings_key => $sp_gw_settings_value ) {
+			foreach ( ( array ) $sp_gw_settings as $sp_gw_settings_key => $sp_gw_settings_value ) {
 				if ($sp_gw_settings_value != "")
-					$xml .= "           <param name=\"" . $sp_gw_settings_key . "\" value=\"" . $sp_gw_settings_value . "\"/>\n";
+					$xml .= "           <param name=\"" . astpp_xml_attr ( $sp_gw_settings_key ) . "\" value=\"" . astpp_xml_attr ( $sp_gw_settings_value ) . "\"/>\n";
 			}
 			$xml .= "       </gateway>\n";
 		}
@@ -191,7 +193,7 @@ function load_sofia($logger, $db, $config) {
 	$xml .= "   </configuration>\n";
 	$xml .= "   </section>\n";
 	$xml .= "</document>\n";
-	$logger->log ( $xml );
+	$logger->log ( preg_replace ( '/(<param name="[^"]*password[^"]*" value=")[^"]*"/i', '$1***"', $xml ) );
 	return $xml;
 }
 function update_vm_data($logger, $db, $password, $user) {
