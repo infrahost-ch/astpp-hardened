@@ -208,6 +208,19 @@ deploy_nginx() {
 	fi
 }
 
+# Datenbank-Anpassungen des Forks (database/astpp-fork-*.sql, jede Anweisung wiederholbar)
+deploy_database() {
+	step "Datenbank-Anpassungen des Forks"
+	local db f
+	db="$(sed -n 's/^[[:space:]]*dbname[[:space:]]*=[[:space:]]*"\{0,1\}\([A-Za-z0-9_]*\)"\{0,1\}.*/\1/p' "${ASTPP_CONFIG}" | head -1)"
+	[ -n "${db}" ] || die "dbname nicht in ${ASTPP_CONFIG} gefunden."
+	for f in "${ASTPP_SRC}"/database/astpp-fork-*.sql; do
+		[ -f "${f}" ] || continue
+		mariadb "${db}" <"${f}"
+		log "angewendet: $(basename "${f}")"
+	done
+}
+
 # fail2ban-Filter aus dem Paket (die Jail-Datei enthaelt installationsspezifische Werte und bleibt)
 deploy_fail2ban() {
 	step "fail2ban-Filter"
@@ -291,6 +304,7 @@ main() {
 	backup
 	deploy_code
 	if [ "${SERVICES}" = "yes" ]; then
+		deploy_database
 		deploy_nginx
 		deploy_fail2ban
 		reload_php

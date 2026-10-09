@@ -170,6 +170,21 @@ try {
     // 5. vendor telemetry switch off (code path is removed by the patch as well)
     $db->query("UPDATE `system` SET value = '2099-12-31' WHERE name = 'datacoll'");
 
+    // 6. company profile of the operator (database/astpp-fork-6.1.sql cleared the vendor's details)
+    $company = (string) getenv('ASTPP_COMPANY_NAME');
+    if ($company !== '') {
+        $website = (string) getenv('ASTPP_COMPANY_WEBSITE');
+        $email = (string) getenv('ASTPP_COMPANY_EMAIL');
+        $country = (string) getenv('ASTPP_COMPANY_COUNTRY');
+        $stmt = $db->prepare("SELECT id FROM countrycode WHERE country = ?");
+        $stmt->bind_param('s', $country);
+        $stmt->execute();
+        $country_id = (string) ($stmt->get_result()->fetch_row()[0] ?? '');
+        $stmt = $db->prepare("UPDATE invoice_conf SET company_name = ?, website = ?, emailaddress = ?, country = IF(? = '', country, ?), website_title = 'ASTPP' WHERE accountid = 1 AND company_name = ''");
+        $stmt->bind_param('sssss', $company, $website, $email, $country_id, $country_id);
+        $stmt->execute();
+    }
+
     $db->commit();
     echo "astpp-postinstall: OK ($converted Passwoerter umgeschluesselt, Admin-Passwort gesetzt, Demo-Konten gesperrt)\n";
 } catch (Throwable $e) {

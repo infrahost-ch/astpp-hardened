@@ -88,7 +88,26 @@ astpp_sync_tree() {
 		[ -d "${tree}/${p}" ] || continue
 		install -d "${ASTPP_SRC}/${p}"
 		rsync -rlt --ignore-existing "${tree}/${p}/" "${ASTPP_SRC}/${p}/"
+		astpp_refresh_stock_files "${tree}" "${p}"
 	done < <(astpp_runtime_paths)
+}
+
+# Mitgelieferte Dateien in einem Laufzeitverzeichnis (Standardlogos, Favicon ...) auf den neuen
+# Stand bringen - aber nur, wenn sie am Server unveraendert sind, d.h. ihr Inhalt einer frueheren
+# Version derselben Datei im Repository entspricht. Hochgeladene eigene Dateien bleiben.
+astpp_refresh_stock_files() {
+	local tree="$1" p="$2" f rel cur
+	git -C "${tree}" rev-parse --git-dir >/dev/null 2>&1 || return 0
+	while IFS= read -r -d '' f; do
+		rel="${f#"${tree}"/}"
+		[ -f "${ASTPP_SRC}/${rel}" ] || continue
+		cmp -s "${f}" "${ASTPP_SRC}/${rel}" && continue
+		cur="$(git hash-object "${ASTPP_SRC}/${rel}")"
+		if git -C "${tree}" log --format= --raw --no-abbrev -- "${rel}" | awk '{print $3; print $4}' | grep -qxF "${cur}"; then
+			cp -p "${f}" "${ASTPP_SRC}/${rel}"
+			log "Standarddatei aktualisiert: ${rel}"
+		fi
+	done < <(find "${tree}/${p}" -maxdepth 1 -type f -print0)
 }
 
 # Besitz und Rechte: Code gehoert root und ist fuer PHP nur lesbar, schreibbar sind nur die

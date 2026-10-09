@@ -35,6 +35,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # ---------------------------------------------------------------- settings ---
 ASTPP_FQDN="${ASTPP_FQDN:-}"                 # Pflicht: oeffentlicher Hostname (install.conf)
 ADMIN_EMAIL="${ADMIN_EMAIL:-}"
+COMPANY_NAME="${COMPANY_NAME:-}"                     # Betreiber: Firmenprofil (Rechnungen, E-Mails), leer = nicht setzen
+COMPANY_WEBSITE="${COMPANY_WEBSITE:-}"
+COMPANY_COUNTRY="${COMPANY_COUNTRY:-SWITZERLAND}"     # Name wie in der Tabelle countrycode
 LETSENCRYPT="${LETSENCRYPT:-yes}"            # yes = Zertifikat via certbot (akzeptiert LE Subscriber Agreement)
 FS_INSTALL_METHOD="${FS_INSTALL_METHOD:-auto}"  # auto | packages | source
 FS_TOKEN="${FS_TOKEN:-}"                     # SignalWire Personal Access Token (nur fuer packages)
@@ -529,15 +532,17 @@ EOF
 import_database() {
 	step "Datenbank importieren"
 	local f
-	for f in astpp-6.0.sql astpp-6.0.1.sql; do
+	for f in astpp-6.0.sql astpp-6.0.1.sql astpp-fork-6.1.sql; do
 		log "Importiere ${f}"
 		# MySQL-8-Kollation -> MariaDB-kompatibel
 		sed -e 's/utf8mb4_0900_ai_ci/utf8mb4_unicode_ci/g' "${ASTPP_SRC}/database/${f}" | mariadb astpp
 	done
 	mariadb astpp -e "UPDATE \`system\` SET value='${ASTPP_LOG_DIR}/' WHERE name='log_path';" || true
 
-	step "Seed-Daten absichern (Passwoerter, Demo-Konten, ESL)"
+	step "Seed-Daten absichern (Passwoerter, Demo-Konten, ESL) und Betreiberdaten setzen"
 	OPENSSL_CONF="${OPENSSL_LEGACY_CNF}" ASTPP_ADMIN_PASSWORD="${ADMIN_PASS}" ASTPP_ESL_PASSWORD="${ESL_PASS}" \
+		ASTPP_COMPANY_NAME="${COMPANY_NAME}" ASTPP_COMPANY_WEBSITE="${COMPANY_WEBSITE}" \
+		ASTPP_COMPANY_EMAIL="${ADMIN_EMAIL}" ASTPP_COMPANY_COUNTRY="${COMPANY_COUNTRY}" \
 		"php${PHP_VER}" "${SCRIPT_DIR}/tools/astpp-postinstall.php"
 }
 
