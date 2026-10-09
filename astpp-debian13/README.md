@@ -339,6 +339,7 @@ Regeln direkt in `/etc/nftables.conf` (Sets `ssh_allow4/6`, `sip_allow4/6`) pfle
 - `/getbalance/<nummer>` (Guthabenabfrage ohne Login) ist nur noch vom Server selbst erreichbar.
 - Mehrfach-Domains (Reseller-Branding mit eigener Domain) brauchen zusätzliche `server_name`-Einträge
   und Zertifikate in `/etc/nginx/sites-available/astpp.conf`.
+- Die öffentliche Selbstregistrierung (`/signup/`) ist ab Installation abgeschaltet; bei Bedarf unter Configuration einschalten.
 - Session-Cookies sind `Secure; HttpOnly; SameSite=Lax`. Zahlungsanbieter, die per **POST** auf
   ASTPP zurückleiten, sehen danach evtl. keine Sitzung (Rückleitung per GET ist unproblematisch).
 - Die Schnellsuche entfernt Anführungszeichen/Backslashes aus Suchbegriffen.

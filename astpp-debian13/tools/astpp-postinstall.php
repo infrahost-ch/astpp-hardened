@@ -170,7 +170,10 @@ try {
     // 5. vendor telemetry switch off (code path is removed by the patch as well)
     $db->query("UPDATE `system` SET value = '2099-12-31' WHERE name = 'datacoll'");
 
-    // 6. company profile of the operator (database/astpp-fork-6.1.sql cleared the vendor's details)
+    // 6. public self-signup off by default (1 = disabled); enable under Configuration if needed
+    $db->query("UPDATE `system` SET value = '1' WHERE name = 'enable_signup'");
+
+    // 7. company profile of the operator (database/astpp-fork-6.1.sql cleared the vendor's details)
     $company = (string) getenv('ASTPP_COMPANY_NAME');
     if ($company !== '') {
         $website = (string) getenv('ASTPP_COMPANY_WEBSITE');
