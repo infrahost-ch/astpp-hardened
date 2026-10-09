@@ -83,6 +83,8 @@ class Addons extends MX_Controller
     // Main function for all addon activities
     function addons_list($type = "opensource")
     {
+        // ASTPP fork: only the Community addons ship with the fork; the directory came from the URL
+        $type = "Community";
 
         // Set page information
         // echo $type; exit;
@@ -95,8 +97,7 @@ class Addons extends MX_Controller
         $addons_path = $this->config->item('addons_path');
         $dir = $addons_path . $type;
 
-        $shared_file_permission = "chmod -Rf 777  " . $dir;
-        $shared_file_permission = system($shared_file_permission, $retval);
+        // ASTPP fork: removed system("chmod -Rf 777 <dir from the URL>")
 
         $a = scandir($dir);
         // 77
@@ -128,7 +129,19 @@ class Addons extends MX_Controller
         $this->load->view('addons', $data);
     }
 
-    public function addons_install($type = '', $module = '', $action = '', $version = "", $current_version = "")
+    /*
+     * ASTPP fork: addons are not installed, updated or removed from the web interface. The code
+     * tree is read-only for PHP (a writable tree turns every upload bug into code execution) and the
+     * upstream code copied files with shell commands built from URL segments. A needed addon is
+     * ported and committed to the fork. The upstream implementation is kept non-routable below.
+     */
+    public function addons_install($type = "", $module = "", $action = "", $version = "", $current_version = "")
+    {
+        $this->session->set_flashdata("astpp_notification", gettext("Addons are not installed from the web interface in this edition - required addons are shipped with the application."));
+        redirect(base_url() . "addons/addons_list/Community/");
+    }
+
+    function _addons_install_upstream($type = "", $module = "", $action = "", $version = "", $current_version = "")
     {
         $addons_path = $this->config->item('addons_path');
         $astpp_path = FCPATH;
@@ -499,6 +512,10 @@ class Addons extends MX_Controller
 
     public function addons_details($type, $package_name, $old_version)
     {
+        $type = "Community"; // ASTPP fork: see addons_list
+        if (! preg_match("/^[A-Za-z0-9_.-]+$/", (string) $package_name) || strpos((string) $package_name, "..") !== false) {
+            redirect(base_url() . "addons/addons_list/Community/");
+        }
         $addons_path = $this->config->item('addons_path');
         $data_array['page_title'] = ucwords(str_replace('_', ' ', $package_name));
         $val = '';
@@ -570,15 +587,6 @@ class Addons extends MX_Controller
         return substr($sub, 0, strpos($sub, $to));
     }
 
-    function addons_enterprise_license($type, $package_name, $action, $new_version, $old_version)
-    {
-        $data['type'] = $type;
-        $data['package_name'] = $package_name;
-        $data['action'] = $action;
-        $data['new_version'] = $new_version;
-        $data['old_version'] = $old_version;
-
-        $this->load->view('view_enterprise_license', $data);
-    }
+    // ASTPP fork: addons_enterprise_license (sales form for commercial vendor addons) removed
 }
  
