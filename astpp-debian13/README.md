@@ -163,6 +163,28 @@ bootstrap-datepicker, SyntaxHighlighter, excanvas, respond.js, Bootstrap 3, jQue
 SQL-Dumps von ASTPP 1.7–4.0, 53-MB-Partner-Upgrade-Dump, MySQL-ODBC-Tarball, ungenutzte Bilder,
 macOS-Dateien, Duplikate, die sich nur in Gross-/Kleinschreibung unterschieden.
 
+**Erscheinungsbild (Version 6.1)**
+
+- Produktname bleibt **ASTPP**, Betreiber ist infrahost: Logo und Favicon von infrahost
+  (`assets/images/brand/`, Standardbilder in `upload/`), Farben in der infrahost-CI (Blau #347CCB,
+  Navy #0E2638), Login/Signup mit CI-Verlauf statt der ASTPP-Illustration. Reseller können weiter
+  eigene Logos und Fusszeilen hinterlegen (White Label).
+- Herstellerwerbung entfernt: Social-Media-Links, „Powered by Inextrix“, Hersteller-Copyright,
+  Dashboard-Kasten (News, Forum, Dienstleistungen, Spenden), Profilmenü-Links (Doku, Bugtracker,
+  „Get Addons“), Werbung für die Hersteller-App, Enterprise-/Premium-Addon-Platzhalter,
+  Slogans in Seitentiteln; Firmendaten des Herstellers im Seed (`database/astpp-fork-6.1.sql`).
+- Lizenz: ASTPP steht unter der GNU AGPL v3 ohne Zusatzbedingungen. Jede Seite zeigt
+  „© infrahost“, „Based on ASTPP © iNextrix Technologies Pvt. Ltd.“, Lizenz und Gewährleistungs-
+  ausschluss (Login-Seite in Kurzform). Die Copyright-Zeilen der Originalautoren in den
+  Quelldateien bleiben; `astpp/NOTICE` beschreibt Herkunft, Änderungen und dass die
+  infrahost-Logos nicht unter die AGPL fallen.
+- **Noch offen (AGPL §13):** Nutzer, die die veränderte Version über das Netz verwenden, müssen den
+  Quellcode genau dieser Version beziehen können. Das Angebot (z. B. Download-Link in der
+  Fusszeile) wird eingerichtet, bevor externe Kunden/Reseller das System nutzen – zusammen mit
+  der Meldung der Sicherheitslücken an den Hersteller, da der Quellcode die Korrekturen zeigt.
+- Statische eigene Dateien (CSS, JS, Logos) werden vom Browser bei jeder Nutzung revalidiert, damit
+  ein Deploy sofort sichtbar ist; nach der Umstellung einmal hart neu laden (Strg+F5).
+
 **Weitere Korrekturen:** Konfigurationsdatei per `ASTPP_CONFIG` umstellbar (Testinstanzen),
 Signup-Seite (verirrte PHP-Ausgaben brachen die Vorbelegung von Land/Zeitzone/Währung),
 DID-Listen und Kontrollkästchen unter jQuery 3.

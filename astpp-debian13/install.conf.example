@@ -7,6 +7,12 @@ ASTPP_FQDN="astpp.example.com"
 # Fuer Let's Encrypt (Ablaufwarnungen) und fail2ban-Absender/Empfaenger
 ADMIN_EMAIL=""
 
+# Betreiber im Firmenprofil (Rechnungen, E-Mails); Adresse, Telefon, UID danach in der
+# Oberflaeche unter Configuration / Company Profile ergaenzen. Land wie in Tabelle countrycode.
+COMPANY_NAME=""            # z.B. "Beispiel Telecom AG"; leer = Firmenprofil nicht setzen
+COMPANY_WEBSITE=""         # z.B. "https://www.example.com"
+COMPANY_COUNTRY="SWITZERLAND"
+
 # yes = TLS-Zertifikat via Let's Encrypt (certbot, HTTP-01 ueber Port 80).
 # Mit "yes" akzeptieren Sie das Let's Encrypt Subscriber Agreement.
 # no  = selbstsigniertes Zertifikat
