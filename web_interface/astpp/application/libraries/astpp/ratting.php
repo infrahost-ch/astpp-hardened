@@ -24,6 +24,7 @@ if (!defined('BASEPATH'))
     exit('No direct script access allowed');
 
 
+#[\AllowDynamicProperties]
 class Ratting {
 
     protected $CI; 
@@ -62,7 +63,7 @@ class Ratting {
 			redirect(base_url() . 'web2fax/web2fax_list/');
 			exit;
 		}	
-		if($balance <= 0){
+		if(astpp_le($balance, 0)){
 			$this->CI->session->set_flashdata('astpp_notification', 'Insuficient belance!');
 			redirect(base_url() . 'web2fax/web2fax_list/');
 			exit;
@@ -100,7 +101,7 @@ class Ratting {
 	$field = "pattern";
     	$max_len_prefix  = strlen($destination);
 	$number_prefix = '(';
-	while ($max_len_prefix  > 0){
+	while (astpp_gt($max_len_prefix, 0)){
 		$number_prefix .= "$field='^".substr($destination,0,$max_len_prefix).".*' OR ";
 		$max_len_prefix--;
 	}
@@ -116,12 +117,12 @@ class Ratting {
        $file_name=$data['text'];
  	$rate_group =$account_arr['pricelist_id'];
 	$balance =$account_arr['balance'];
-	if($balance <= 0)
+	if(astpp_le($balance, 0))
 	{
 
 	 $this->CI->session->set_flashdata('astpp_notification', 'Insuficient belance!');
         $logintype = $this->CI->session->userdata('logintype');	 
-		if($logintype == 0){
+		if(astpp_eq0($logintype)){
 			redirect(base_url() . 'user/user_web2fax_list/');
 
 		}else{
@@ -147,10 +148,10 @@ class Ratting {
 	$status = $results['status'];
 	if ($results['status'] == 'Invalid') {
 		$logintype = $this->CI->session->userdata('logintype');	 
-		if($logintype == 0 && $module_name == 'web2fax' ){
+		if(astpp_eq0($logintype) && $module_name == 'web2fax' ){
 			redirect(base_url() . 'web2fax/web2fax_list_authentication/');
 		}else{
-			if($logintype == 0 && $module_name == 'authemail' ){
+			if(astpp_eq0($logintype) && $module_name == 'authemail' ){
 				redirect(base_url() . 'authemail/user_authemail_list_authentication/');
 			}else{
 				redirect(base_url() . 'authemail/authemail_list_authentication/');
@@ -204,7 +205,7 @@ class Ratting {
 		$originalcheckdate = $localkeyresults['checkdate'];
 		if ($md5hash == md5($originalcheckdate . $licensing_secret_key)) {
 
-		$localexpiry = date("Ymd", mktime(0, 0, 0, date("m"), date("d") - $localkeydays, date("Y")));
+		$localexpiry = astpp_date("Ymd", mktime(0, 0, 0, date("m"), astpp_n(date("d")) - astpp_n($localkeydays), date("Y")));
 		if ($originalcheckdate > $localexpiry) {
 
 		$localkeyvalid = true;
@@ -212,14 +213,14 @@ class Ratting {
 		$validdomains = explode(',', $results['validdomain']);
 
 
-		if (!in_array($_SERVER['SERVER_NAME'], $validdomains)) {
+		if (!astpp_in_array($_SERVER['SERVER_NAME'], $validdomains)) {
 
 		$localkeyvalid = false;
 		$localkeyresults['status'] = "Invalid";
 		$results = array();
 		}
 		$validips = explode(',', $results['validip']);
-		if (!in_array($usersip, $validips)) {
+		if (!astpp_in_array($usersip, $validips)) {
 
 		$localkeyvalid = false;
 		$localkeyresults['status'] = "Invalid";
@@ -229,7 +230,7 @@ class Ratting {
 		$validdirs = explode(',', $results['validdirectory']);
 
 
-		if (!in_array($dirpath, $validdirs)) {
+		if (!astpp_in_array($dirpath, $validdirs)) {
 		$localkeyvalid = false;
 		$localkeyresults['status'] = "Invalid";
 		$results = array();
@@ -259,7 +260,7 @@ class Ratting {
 			curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			$data = curl_exec($ch);
-			curl_close($ch);
+			PHP_VERSION_ID < 80000 && curl_close($ch);
 		} else {
 			$fp = fsockopen($whmcsurl, 80, $errno, $errstr, 5);
 			if ($fp) {
@@ -282,7 +283,7 @@ class Ratting {
 			}
 		}
 		if (!$data) {
-			$localexpiry = date("Ymd", mktime(0, 0, 0, date("m"), date("d") - ($localkeydays + $allowcheckfaildays), date("Y")));
+			$localexpiry = astpp_date("Ymd", mktime(0, 0, 0, date("m"), astpp_n(date("d")) - (astpp_n($localkeydays) + astpp_n($allowcheckfaildays)), date("Y")));
 			if ($originalcheckdate > $localexpiry) {
 				$results = $localkeyresults;
 			} else {

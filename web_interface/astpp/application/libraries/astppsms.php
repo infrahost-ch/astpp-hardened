@@ -24,7 +24,7 @@
 
 		if ($template_name == 'send_sms_otp' || $template_name == 'otp_add_user' ){
 				$numberlength=6;
-				$uniq_rendno = rand(pow(10, $numberlength - 1), pow(10, $numberlength) - 1);
+				$uniq_rendno = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
 				$body ="Your otp number is ".$uniq_rendno." ";
 				
 				$otp_array= array(
@@ -81,7 +81,7 @@
 
 				$first_name    = $accountinfo ['first_name'];
 		    		$auto_recharge_amt  = $accountinfo ['auto_recharge_amt'];
-				$balance=  = $accountinfo ['balance'];
+				$balance = $accountinfo ['balance']; // BUGFIX: syntax error "=  =" (file never compiled)
 				$to_account    = $accountinfo ['to_account'];
 				$COMPANY_NAME  = 'LUGERTEL INC';
 				$template      = str_replace("#NAME#,",$first_name,$template);

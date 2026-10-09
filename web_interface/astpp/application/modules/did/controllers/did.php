@@ -21,6 +21,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 // ##############################################################################
+#[\AllowDynamicProperties]
 class DID extends MX_Controller
 {
 
@@ -142,7 +143,7 @@ class DID extends MX_Controller
             unset($action['advance_search']);
             $accountinfo = $this->session->userdata('accountinfo');
 
-            if ($accountinfo['reseller_id'] == 0) {
+            if (astpp_eq0($accountinfo['reseller_id'])) {
                 if (isset($action['number']['number']) && $action['number']['number'] != '') {
                     $action['dids.number']['dids.number'] = $action['number']['number'];
                     $action['dids.number']['dids.number-string'] = $action['number']['number-string'];
@@ -287,7 +288,7 @@ class DID extends MX_Controller
             $data['currency'] = $this->common->get_field_name("currency", "currency", array(
                 "id" => $accountinfo['currency_id']
             ));
-            if ($accountinfo['reseller_id'] > 0) {
+            if (astpp_gt($accountinfo['reseller_id'], 0)) {
                 $did_info = $this->db_model->getJionQuery('dids', 'dids.id,dids.number as name,reseller_products.buy_cost,reseller_products.commission,reseller_products.setup_fee,reseller_products.price,reseller_products.billing_type,reseller_products.billing_days,reseller_products.status,dids.last_modified_date,dids.product_id', array(
                     'dids.number' => $number,
                     'reseller_products.account_id' => $accountinfo['reseller_id']
@@ -312,7 +313,7 @@ class DID extends MX_Controller
 
         $productid = $this->input->post('product_id');
         $accountinfo = $this->session->userdata("accountinfo");
-        if ($productid != '' && $productid != 0) {
+        if ($productid != '' && (!astpp_eq0($productid))) {
             $did_id = $this->common->get_field_name("id", "dids", array(
                 "product_id" => $productid
             ));
@@ -328,13 +329,13 @@ class DID extends MX_Controller
                     $add_array['billing_days'] = $product_info['billing_days'];
                     $add_array['commission'] = $product_info['commission'];
                     $add_array['free_minutes'] = isset($product_info['free_minutes']) ? $product_info['free_minutes'] : 0;
-                    if (($accountinfo['reseller_id'] > 0 || $accountinfo['type'] == 1) && $accountinfo['is_distributor'] == 0) {
+                    if ((astpp_gt($accountinfo['reseller_id'], 0) || $accountinfo['type'] == 1) && astpp_eq0($accountinfo['is_distributor'])) {
                         $add_array['buy_cost'] = $this->common_model->add_calculate_currency($add_array['product_buy_cost'], "", '', false, false);
                     } else {
                         $add_array['buy_cost'] = $product_info['buy_cost'];
                     }
 
-                    if ($accountinfo['is_distributor'] == 0) {
+                    if (astpp_eq0($accountinfo['is_distributor'])) {
                         $add_array['price'] = isset($add_array['price']) ? $this->common_model->add_calculate_currency($add_array['price'], "", '', false, false) : $this->common_model->add_calculate_currency($product_info['price'], "", '', false, false);
                         $add_array['setup_fee'] = isset($add_array['setup_fee']) ? $this->common_model->add_calculate_currency($add_array['setup_fee'], "", '', false, false) : $this->common_model->add_calculate_currency($product_info['setup_fee'], "", '', false, false);
                     } else {
@@ -404,7 +405,7 @@ class DID extends MX_Controller
     function did_assign_number()
     {
         $add_array = $this->input->post();
-        if (! empty($add_array) && $add_array['accountid'] > 0) {
+        if (! empty($add_array) && astpp_gt($add_array['accountid'], 0)) {
             $accountinfo = $this->session->userdata("accountinfo");
             $add_array['is_parent_billing'] = 'false';
             $add_array['payment_by'] = 0;
@@ -415,7 +416,7 @@ class DID extends MX_Controller
             ));
             if ($account_info->num_rows > 0) {
                 $accountdata = $account_info->result_array()[0];
-                $balance = $accountdata['posttoexternal'] == 1 ? $accountdata['credit_limit'] - ($accountdata['balance']) : $accountdata['balance'];
+                $balance = $accountdata['posttoexternal'] == 1 ? astpp_n($accountdata['credit_limit']) - (astpp_n($accountdata['balance'])) : $accountdata['balance'];
                 if ($this->session->userdata('logintype') == 1 || $this->session->userdata('logintype') == 5) {
                     $where = array(
                         'product_id' => $add_array['product_id']
@@ -428,7 +429,7 @@ class DID extends MX_Controller
                     $product_info = (array) $this->db->get_where("products", $where)->result_array()[0];
                 }
                 if (! empty($product_info)) {
-                    $total_amt = $product_info['price'] + $product_info['setup_fee'];
+                    $total_amt = astpp_n($product_info['price']) + astpp_n($product_info['setup_fee']);
 
                     $total_amt = $this->common->convert_to_currency('', '', $total_amt);
                     $did_id = $this->common->get_field_name("id","dids",array("product_id"=>$add_array['product_id']));
@@ -441,7 +442,7 @@ class DID extends MX_Controller
                         $add_array['charge_type'] = "DID";
                         $add_array['is_update_balance'] = "true";
                         $order_id = $this->order->confirm_order($add_array, $add_array['accountid'], $accountinfo);
-                        if ($order_id > 0) {
+                        if (astpp_gt($order_id, 0)) {
                             $this->db->where("product_id", $add_array['product_id']);
                             $this->db->update("dids", array(
                                 "accountid" => $add_array['accountid']
@@ -468,7 +469,7 @@ class DID extends MX_Controller
             'id' => $id
         );
         $did_info = (array) $this->db->get_where("dids", $where)->result_array()[0];
-        if($did_info['accountid'] > 0){
+        if(astpp_gt($did_info['accountid'], 0)){
             $where = array(
             'id' => $did_info['accountid']
             );
@@ -482,7 +483,7 @@ class DID extends MX_Controller
         $this->did_model->did_number_release($did_info, $accountinfo, 'release');
         $did_info['product_name'] = $did_info['number'];
 
-        $final_array = array_merge($did_info, $accountinfo);
+        $final_array = astpp_array_merge($did_info, $accountinfo);
         $final_array['id'] = $accountinfo['id'];
         $final_array['next_billing_date'] = gmdate('Y-m-d H:i:s');
         $this->did_lib->did_release($final_array);
@@ -500,7 +501,7 @@ class DID extends MX_Controller
         foreach ($did_info as $key => $value) {
             $this->did_model->did_number_release($value, $accountinfo, 'remove');
             if ($this->session->userdata['userlevel_logintype'] == '1' || $this->session->userdata['userlevel_logintype'] == '5') {
-                if ($accountinfo['reseller_id'] > 0) {
+                if (astpp_gt($accountinfo['reseller_id'], 0)) {
                     $this->db->where($where);
                     $this->db->where('reseller_id', $accountinfo['reseller_id']);
                     $this->db->where('account_id', $accountinfo['id']);
@@ -556,7 +557,7 @@ class DID extends MX_Controller
 
                         if ($acc_info->num_rows > 0) {
                             $acc_info_result = $acc_info->result_array()[0];
-                            $final_array = array_merge($acc_info_result, $did_delete);
+                            $final_array = astpp_array_merge($acc_info_result, $did_delete);
                             $this->common->mail_to_users('product_release', $final_array);
                         }
                     }
@@ -630,7 +631,7 @@ class DID extends MX_Controller
         $add_array = $this->input->post();
         $did_forward = $this->did_model->update_did_forward($add_array);
         $this->session->set_flashdata('astpp_errormsg', gettext('DID forwading set sucessfully!'));
-        if ($this->session->userdata('logintype') == 0 || $this->session->userdata('logintype') == 3) {
+        if (astpp_eq0($this->session->userdata('logintype')) || $this->session->userdata('logintype') == 3) {
             redirect(base_url() . 'user/user_didlist/');
         } else {
             redirect(base_url() . 'did/did_list/');
@@ -646,7 +647,7 @@ class DID extends MX_Controller
         ))->first_row();
         $field_name = $accounttype == "reseller" ? "parent_id" : 'accountid';
 	
-        if ($account_arr['reseller_id'] != 0) {
+        if ((!astpp_eq0($account_arr['reseller_id']))) {
            
         if ($accounttype == 'reseller') {
 	$like_str ="";
@@ -792,9 +793,9 @@ class DID extends MX_Controller
         $invalid_flag = false;
         if (isset($_FILES['didimport']['name']) && $_FILES['didimport']['name'] != "") {
             list ($txt, $ext) = explode(".", $_FILES['didimport']['name']);
-            if ($ext == "csv" && $_FILES["didimport"]['size'] > 0) {
+            if ($ext == "csv" && astpp_gt($_FILES["didimport"]['size'], 0)) {
                 $error = $_FILES['didimport']['error'];
-                if ($error == 0) {
+                if (astpp_eq0($error)) {
                     $uploadedFile = $_FILES["didimport"]["tmp_name"];
                     $full_path = $this->config->item('rates-file-path');
                     $actual_file_name = "ASTPP-DIDs-" . date("Y-m-d H:i:s") . "." . $ext;
@@ -856,14 +857,14 @@ class DID extends MX_Controller
                 $csv_data['country_id'] = isset($csv_data['country_id']) ? $csv_data['country_id'] : 0;
                 $csv_data['city'] = isset($csv_data['city']) ? $csv_data['city'] : '';
                 $csv_data['province'] = isset($csv_data['province']) ? $csv_data['province'] : '';
-                $csv_data['provider_id'] = ($provider_id > 0)?$provider_id:0;
+                $csv_data['provider_id'] = (astpp_gt($provider_id, 0))?$provider_id:0;
                 $csv_data['call_type'] = $call_type;
                 $csv_data['extensions'] = isset($csv_data['extensions']) ? $csv_data['extensions'] : '';
                 $csv_data['includedseconds'] = isset($csv_data['includedseconds']) ? $csv_data['includedseconds'] : 0;
                 $csv_data['cost'] = ! empty($csv_data['cost']) && is_numeric($csv_data['cost']) && $csv_data['cost'] ? $csv_data['cost'] : 0;
-                $csv_data['setup'] = ! empty($csv_data['setup']) && is_numeric($csv_data['setup']) && $csv_data['setup'] > 0 ? $csv_data['setup'] : 0;
-                $csv_data['monthlycost'] = ! empty($csv_data['monthlycost']) && is_numeric($csv_data['monthlycost']) && $csv_data['monthlycost'] > 0 ? $csv_data['monthlycost'] : 0;
-                $csv_data['connectcost'] = ! empty($csv_data['connectcost']) && is_numeric($csv_data['connectcost']) && $csv_data['connectcost'] > 0 ? $csv_data['connectcost'] : 0;
+                $csv_data['setup'] = ! empty($csv_data['setup']) && is_numeric($csv_data['setup']) && astpp_gt($csv_data['setup'], 0) ? $csv_data['setup'] : 0;
+                $csv_data['monthlycost'] = ! empty($csv_data['monthlycost']) && is_numeric($csv_data['monthlycost']) && astpp_gt($csv_data['monthlycost'], 0) ? $csv_data['monthlycost'] : 0;
+                $csv_data['connectcost'] = ! empty($csv_data['connectcost']) && is_numeric($csv_data['connectcost']) && astpp_gt($csv_data['connectcost'], 0) ? $csv_data['connectcost'] : 0;
                 $csv_data['inc'] = isset($csv_data['inc']) ? $csv_data['inc'] : 0;
                 $str = $this->data_validate($csv_data);
                 if ($str != "") {
@@ -871,15 +872,15 @@ class DID extends MX_Controller
                     $invalid_array[$i]['error'] = $str;
                 } else {
                     if (! empty($csv_data['country_id'])) {
-                        if (! in_array($csv_data['number'], $number_arr)) {
+                        if (! astpp_in_array($csv_data['number'], $number_arr)) {
                             $number_count = $this->db_model->countQuery('id', 'dids', array(
                                 'number' => $csv_data['number']
                             ));
-                            if ($number_count > 0) {
+                            if (astpp_gt($number_count, 0)) {
                                 $invalid_array[$i] = $csv_data;
                                 $invalid_array[$i]['error'] = 'Duplicate DID found from database';
                             } else {
-                                if ($csv_data['accountid'] > 0) {
+                                if (astpp_gt($csv_data['accountid'], 0)) {
                                     $this->db->where('type IN(0,1,3)');
                                     $this->db->where('reseller_id', 0);
                                     $this->db->where('deleted', 0);
@@ -963,7 +964,7 @@ class DID extends MX_Controller
         }
 
         unlink($full_path . $did_file_name);
-        $count = count($invalid_array);
+        $count = astpp_count($invalid_array);
         if ($count > 0) {
             $session_id = "-1";
             $fp = fopen($full_path . $session_id . '.csv', 'w');
@@ -971,7 +972,7 @@ class DID extends MX_Controller
                 $custom_array[0][$key] = ucfirst($key);
             }
             $custom_array[0]['error'] = "Error";
-            $invalid_array = array_merge($custom_array, $invalid_array);
+            $invalid_array = astpp_array_merge($custom_array, $invalid_array);
             foreach ($invalid_array as $err_data) {
                 fputcsv($fp, $err_data);
             }
@@ -979,12 +980,12 @@ class DID extends MX_Controller
             $this->session->set_userdata('import_did_csv_error', $session_id . ".csv");
             $data["error"] = $invalid_array;
             $data['provider_id'] = $provider_id;
-            $data['import_record_count'] = count($new_final_arr) + count($reseller_array);
-            $data['failure_count'] = count($invalid_array) - 1;
+            $data['import_record_count'] = astpp_count($new_final_arr) + astpp_count($reseller_array);
+            $data['failure_count'] = astpp_count($invalid_array) - 1;
             $data['page_title'] = gettext('DID Import Error');
             $this->load->view('view_import_error', $data);
         } else {
-            $this->session->set_flashdata('astpp_errormsg', gettext('Total').' ' . count($new_final_arr) .' '. gettext('DIDs Imported Successfully!'));
+            $this->session->set_flashdata('astpp_errormsg', gettext('Total').' ' . astpp_count($new_final_arr) .' '. gettext('DIDs Imported Successfully!'));
             redirect(base_url() . "did/did_list/");
         }
     }
@@ -1004,7 +1005,7 @@ class DID extends MX_Controller
             if ($str) {
                 $str = rtrim($str, ',');
                 $error_field = explode(',', $str);
-                $count = count($error_field);
+                $count = astpp_count($error_field);
                 $str .= $count > 1 ? ' are not valid' : ' is not Valid';
                 return $str;
             } else {
@@ -1013,7 +1014,7 @@ class DID extends MX_Controller
         } else {
             $str = rtrim($str, ',');
             $error_field = explode(',', $str);
-            $count = count($error_field);
+            $count = astpp_count($error_field);
             $str .= $count > 1 ? ' are required' : ' is Required';
             return $str;
         }

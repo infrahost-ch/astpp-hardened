@@ -21,6 +21,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 // ##############################################################################
+#[\AllowDynamicProperties]
 class Signup extends MX_Controller
 {
 
@@ -94,7 +95,7 @@ class Signup extends MX_Controller
                  $reseller_id = $this->common->decode($this->common->decode_params(trim($signup_key)));
             }
             // ASTPPCOM-1352_gautam_end
-            if ((! empty($account_id)) && ($account_id['accountid'] > 0)) {
+            if ((! empty($account_id)) && (astpp_gt($account_id['accountid'], 0))) {
                 $reseller_id = $account_id['accountid'];
                 $this->db->select("type");
                 $type = (array) $this->db->get_where("accounts", array(
@@ -118,7 +119,7 @@ class Signup extends MX_Controller
                 if (isset($account_arr) && empty($account_arr)) {
                     $data['error']['account_deleted'] = "<span class='text-danger'>".gettext("Please contact to administrator")."</span>";
                 } else {
-                    if ($account_generate == 0) {
+                    if (astpp_eq0($account_generate)) {
                         $number = $country_code . $add_array['telephone'];
                         $where = array(
                             'number' => $number
@@ -146,8 +147,8 @@ class Signup extends MX_Controller
                         ));
                         $cnt_result = (array) $this->db->get('accounts')->first_row();
                     }
-                    if ($cnt_result['count'] > 0) {
-                        if ($account_generate == 0) {
+                    if (astpp_gt($cnt_result['count'], 0)) {
+                        if (astpp_eq0($account_generate)) {
                             $data['error']['account_number'] = "<span class='text-danger'>".gettext("Requested number is already exist")."</span>";
                         } else {
                             $data['error']['account_email'] = "<span class='text-danger'>".gettext("Requested email is already exist")."</span>";
@@ -161,7 +162,7 @@ class Signup extends MX_Controller
                             if ($new_account_details['retries'] == common_model::$global_config['system_config']['allow_retires']) {
                                 $data['error']['account_deleted'] = "<span class='text-danger'>Please contact to administrator</span>";
                             } else {
-                                $attemp = ($new_account_details['retries'] + 1);
+                                $attemp = (astpp_n($new_account_details['retries']) + 1);
                                 $this->db->where($where);
                                 $data = array(
                                     'creation_date' => $current_date,
@@ -200,7 +201,7 @@ class Signup extends MX_Controller
                 $verification_by = common_model::$global_config['system_config']['verification_by'];
                 $numberlength = common_model::$global_config['system_config']['pinlength'];
                 $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-                $insert_array['otp'] = rand(pow(10, $numberlength - 1), pow(10, $numberlength) - 1);
+                $insert_array['otp'] = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
                 $this->db->where("id", $last_id);
                 $this->db->update("account_unverified", array(
                     "otp" => $insert_array['otp']
@@ -235,7 +236,7 @@ class Signup extends MX_Controller
                 redirect(base_url() . "otp_verification/");
                 exit();
             } else {
-                $random_number = substr(number_format(time() * rand(), 0, '', ''), 0, 6);
+                $random_number = substr(astpp_number_format(time() * rand(), 0, '', ''), 0, 6);
                 $vals = array(
                     'word' => $random_number,
                     'img_path' => getcwd() . '/assets/captcha/',
@@ -258,7 +259,7 @@ class Signup extends MX_Controller
             }
         } else {
 
-            $random_number = substr(number_format(time() * rand(), 0, '', ''), 0, 6);
+            $random_number = substr(astpp_number_format(time() * rand(), 0, '', ''), 0, 6);
             $vals = array(
                 'word' => $random_number,
                 'img_path' => getcwd() . '/assets/captcha/',
@@ -270,7 +271,7 @@ class Signup extends MX_Controller
             $data['captcha'] = create_captcha($vals);
             $this->session->set_userdata('captchaWord', $data['captcha']['word']);
 
-            $random_number = substr(number_format(time() * rand(), 0, '', ''), 0, 6);
+            $random_number = substr(astpp_number_format(time() * rand(), 0, '', ''), 0, 6);
             if ($key != '') {
                 $reseller_id = $this->common->decode($this->common->decode_params(trim($key)));
                 $data['key'] = $key;
@@ -389,7 +390,7 @@ class Signup extends MX_Controller
         $sms_api_key = Common_model::$global_config['system_config']['sms_api_key'];
         $sms_secret_key = Common_model::$global_config['system_config']['sms_secret_key'];
         $otp_expire_time = common_model::$global_config['system_config']['otp_expire'];
-        $otp_expire_min = ($otp_expire_time > 0) ? $otp_expire_time : 30;
+        $otp_expire_min = (astpp_gt($otp_expire_time, 0)) ? $otp_expire_time : 30;
         if ($template_name == 'signup_confirmation') {
             $sms_message = str_replace('#FIRST_NAME#', $user_data['first_name'], $sms_message);
             $sms_message = str_replace('#OTP#', $user_data['otp'], $sms_message);
@@ -461,7 +462,7 @@ class Signup extends MX_Controller
         $company_website = $invoice_arr["website"];
         $company_name = $invoice_arr["company_name"];
         $otp_expire_time = common_model::$global_config['system_config']['otp_expire'];
-        $otp_expire_min = ($otp_expire_time > 0) ? $otp_expire_time : 30;
+        $otp_expire_min = (astpp_gt($otp_expire_time, 0)) ? $otp_expire_time : 30;
         $TemplateData = array();
         $template = $EmailTemplate['template'];
         if (! empty($EmailTemplate)) {
@@ -528,7 +529,7 @@ class Signup extends MX_Controller
     {
         $numberlength = common_model::$global_config['system_config']['pinlength'];
         $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-        $uniq_rendno = rand(pow(10, $numberlength - 1), pow(10, $numberlength) - 1);
+        $uniq_rendno = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
         $otp_array = array(
             'otp_number' => $uniq_rendno,
             'user_number' => $username,
@@ -567,22 +568,22 @@ class Signup extends MX_Controller
         $account_details = (array) $this->db->get_where("account_unverified")->first_row();
         $otp_date = strtotime($account_details['creation_date']);
         $insert_date = strtotime($current_date);
-        $remain_time = $insert_date - $otp_date;
+        $remain_time = astpp_n($insert_date) - astpp_n($otp_date);
         $message = 'false';
         $otp_expire_time = common_model::$global_config['system_config']['otp_expire'];
-        $otp_expire_min = ($otp_expire_time > 0) ? $otp_expire_time : 30;
-        $otp_expire_sec = ($otp_expire_min * 60);
+        $otp_expire_min = (astpp_gt($otp_expire_time, 0)) ? $otp_expire_time : 30;
+        $otp_expire_sec = (astpp_n($otp_expire_min) * 60);
         if ($remain_time <= $otp_expire_sec) {
             $account_details['pin'] = '';
             $pin = Common_model::$global_config['system_config']['generate_pin'];
-            if ($pin == 0) {
+            if (astpp_eq0($pin)) {
                 $numberlength = common_model::$global_config['system_config']['pinlength'];
                 $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-                $account_details['pin'] = rand(pow(10, $numberlength - 1), pow(10, $numberlength) - 1);
+                $account_details['pin'] = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
             }
             if (empty($account_array)) {
                 $account_details['pricelist_id'] = Common_model::$global_config['system_config']['default_signup_rategroup'];
-                if ($account_details['reseller_id'] > 0) {
+                if (astpp_gt($account_details['reseller_id'], 0)) {
                     $this->db->select("id");
                     $pricelist_id = (array) $this->db->get_where("pricelists", array(
                         "reseller_id" => $account_details['reseller_id']
@@ -679,7 +680,7 @@ class Signup extends MX_Controller
             $email = $post['email'];
             $numberlength = common_model::$global_config['system_config']['pinlength'];
             $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-            $uniq_rendno = rand(pow(10, $numberlength - 1), pow(10, $numberlength) - 1);
+            $uniq_rendno = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
             $otp_array = array(
                 'otp' => $uniq_rendno,
                 'creation_date' => date('Y-m-d H:i:s')
@@ -759,7 +760,7 @@ class Signup extends MX_Controller
                     $this->load->view('view_forgotpassword', $data);
                     exit();
                 }
-                if ($user_data['status'] > 0) {
+                if (astpp_gt($user_data['status'], 0)) {
                     $data['error']['number'] = "<label class='error_label'><span id='error_mail' class='text-danger'>".gettext("Your account is inactive. Please contact administrator for more information.")."</span></label>";
                     $this->load->view('view_forgotpassword', $data);
                     exit();
@@ -785,7 +786,7 @@ class Signup extends MX_Controller
                 $user_data = $acountdata[0];
                 $numberlength = common_model::$global_config['system_config']['pinlength'];
                 $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-                $user_data['otp'] = rand(pow(10, $numberlength - 1), pow(10, $numberlength) - 1);
+                $user_data['otp'] = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
                 $account_unverified_array = (array) $this->db->get_where("account_unverified", array(
                     "number" => $user_data['number']
                 ))->first_row();

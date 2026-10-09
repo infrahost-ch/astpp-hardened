@@ -21,6 +21,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 // ##############################################################################
+#[\AllowDynamicProperties]
 class Payment extends MX_Controller
 {
 
@@ -42,7 +43,7 @@ class Payment extends MX_Controller
         $data["page_title"] = gettext("Recharge");
 
         $system_config = common_model::$global_config['system_config'];
-        if ($system_config["paypal_mode"] == 0) {
+        if (astpp_eq0($system_config["paypal_mode"])) {
             $data["paypal_url"] = $system_config["paypal_url"];
             $data["paypal_email_id"] = $system_config["paypal_id"];
         } else {
@@ -75,7 +76,7 @@ class Payment extends MX_Controller
     function convert_amount($amount)
     {
         $amount = $this->common_model->add_calculate_currency($amount, "", "", true, false);
-        echo number_format((float) $amount, 2);
+        echo astpp_number_format((float) $amount, 2);
     }
 }
 ?> 

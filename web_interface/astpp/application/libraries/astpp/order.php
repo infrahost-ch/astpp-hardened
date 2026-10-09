@@ -22,6 +22,7 @@
 // ##############################################################################
 if (! defined ( 'BASEPATH' ))
 	exit ( 'No direct script access allowed' );
+#[\AllowDynamicProperties]
 class order {
 	function __construct($library_name = '') {
 		$this->CI = & get_instance ();
@@ -48,14 +49,14 @@ class order {
 			}
 
 
-			if(isset($product_info->id) && $product_info->id > 0){
+			if(isset($product_info->id) && astpp_gt($product_info->id, 0)){
 				$account_currency_info = $this->CI->db_model->getSelect("*","currency",array("id"=>$accountdata->currency_id));
 				if($account_currency_info->num_rows > 0){
 					$account_currency_info = (array)$account_currency_info->result_array();
 					$account_currency_info = $account_currency_info[0];
 				}	
 				$product_info->payment_status = "PENDING";
-				$product_info->payment_by = $productarr['payment_by'] == 0 ? "paypal" : "card";
+				$product_info->payment_by = astpp_eq0($productarr['payment_by']) ? "paypal" : "card";
 				$product_info->quantity = $productarr['quantity'];
 
 				$parent_order_id = $this->generate_order($product_info,$accountdata,(array)$accountdata,$parent_order_id,$account_currency_info);
@@ -77,7 +78,7 @@ class order {
 			$accountarr[$temparray->id] = $temparray;
 			$tempkeyarr[] = $temparray->id;
 			$resellerid = $temparray->reseller_id;
-			while($resellerid > 0 && $is_parent_billing == 'true'){
+			while(astpp_gt($resellerid, 0) && $is_parent_billing == 'true'){
 				$temparray = $this->CI->db_model->getSelect($select,"accounts",array("id"=>$resellerid,"status"=>"0","deleted"=>"0"));
 				if($temparray->num_rows > 0){ 
 					$temparray = $temparray->first_row();
@@ -96,7 +97,7 @@ class order {
 	 	// Kinjal ASTPPCOM-1021 Start 
 		if($accountdata->type == '1' && $productdata['product_category'] != 3){
 	 	// Kinjal ASTPPCOM-1021 END 
-			if($accountdata->reseller_id > 0){ 
+			if(astpp_gt($accountdata->reseller_id, 0)){ 
 				$product_query = $this->CI->db_model->getJionQuery('products', 'products.id,products.name,products.release_no_balance,products.product_category,products.buy_cost,products.commission,reseller_products.price,reseller_products.setup_fee,products.billing_type,products.billing_days,reseller_products.free_minutes,products.status,products.last_modified_date,reseller_products.product_id,reseller_products.setup_fee,reseller_products.is_optin', array('products.status'=>0,'reseller_products.product_id'=>$productdata['product_id'],'reseller_products.account_id'=>$accountdata->reseller_id), 'reseller_products','products.id=reseller_products.product_id', 'inner','','','DESC','products.id');
 //commented for paypal commission
 	
@@ -113,16 +114,16 @@ class order {
 			}
 
 		}else{
-			if($accountdata->reseller_id > 0){
+			if(astpp_gt($accountdata->reseller_id, 0)){
 				$product_info = $this->CI->db_model->getJionQuery('products', 'products.id,products.name,products.release_no_balance,products.product_category,products.buy_cost,products.can_purchase,products.can_resell,products.commission,reseller_products.price,reseller_products.setup_fee,products.billing_type,products.billing_days,reseller_products.free_minutes,products.status,products.last_modified_date,reseller_products.product_id,reseller_products.setup_fee,reseller_products.is_optin', array('products.status'=>0,'reseller_products.product_id'=>$productdata['product_id'],'reseller_products.account_id'=>$accountdata->reseller_id), 'reseller_products','products.id=reseller_products.product_id', 'inner','','','DESC','products.id');
 
 				if($product_info->num_rows > 0 ){
 				    	$product_info = $product_info->first_row();
-					$product_info->price = (isset($productdata['price']) && $productdata['price'] > 0 && $productdata['price'] != $product_info->price)?$this->CI->common_model->add_calculate_currency($productdata['price'],'', '', true, false):$product_info->price;
-					$product_info->setup_fee = (isset($productdata['setup_fee']) && $productdata['setup_fee']> 0 && $productdata['setup_fee'] != $product_info->setup_fee)?$this->CI->common_model->add_calculate_currency($productdata['setup_fee'],'', '', true, false):$product_info->setup_fee;
+					$product_info->price = (isset($productdata['price']) && astpp_gt($productdata['price'], 0) && $productdata['price'] != $product_info->price)?$this->CI->common_model->add_calculate_currency($productdata['price'],'', '', true, false):$product_info->price;
+					$product_info->setup_fee = (isset($productdata['setup_fee']) && astpp_gt($productdata['setup_fee'], 0) && $productdata['setup_fee'] != $product_info->setup_fee)?$this->CI->common_model->add_calculate_currency($productdata['setup_fee'],'', '', true, false):$product_info->setup_fee;
 					$product_info->billing_days = (isset($productdata['billing_days']) && $productdata['billing_days']!= '')?$productdata['billing_days']:$product_info->billing_days;
 					$product_info->billing_type = (isset($productdata['billing_type']) && $productdata['billing_days']!= '')?$productdata['billing_type']:$product_info->billing_type;
-					$product_info->free_minutes = (isset($productdata['free_minutes']) && $productdata['free_minutes']> 0)?$productdata['free_minutes']:$product_info->free_minutes;
+					$product_info->free_minutes = (isset($productdata['free_minutes']) && astpp_gt($productdata['free_minutes'], 0))?$productdata['free_minutes']:$product_info->free_minutes;
 					
 				   	$orderobjArr['product'][$accountdata->id] = $product_info;
 				  	 return $orderobjArr['product'][$accountdata->id];
@@ -134,12 +135,12 @@ class order {
 				$product_info = $this->CI->db_model->getSelect("*","products",array("id"=>$productdata['product_id'],"status"=>"0"));
 				if($product_info->num_rows > 0 ){
 				    	$product_info = $product_info->first_row();
-					$product_info->price = (isset($productdata['price']) && $productdata['price'] > 0 && $productdata['price'] != $product_info->price)?$this->CI->common_model->add_calculate_currency($productdata['price'],'', '', true, false):$product_info->price;
+					$product_info->price = (isset($productdata['price']) && astpp_gt($productdata['price'], 0) && $productdata['price'] != $product_info->price)?$this->CI->common_model->add_calculate_currency($productdata['price'],'', '', true, false):$product_info->price;
 
-					$product_info->setup_fee = (isset($productdata['setup_fee']) && $productdata['setup_fee']> 0 && $productdata['setup_fee'] != $product_info->setup_fee)?$this->CI->common_model->add_calculate_currency($productdata['setup_fee'],'', '', true, false):$product_info->setup_fee;
+					$product_info->setup_fee = (isset($productdata['setup_fee']) && astpp_gt($productdata['setup_fee'], 0) && $productdata['setup_fee'] != $product_info->setup_fee)?$this->CI->common_model->add_calculate_currency($productdata['setup_fee'],'', '', true, false):$product_info->setup_fee;
 					$product_info->billing_days = (isset($productdata['billing_days']) && $productdata['billing_days']!= '')?$productdata['billing_days']:$product_info->billing_days;
 					$product_info->billing_type = (isset($productdata['billing_type']) && $productdata['billing_days']!= '')?$productdata['billing_type']:$product_info->billing_type;
-					$product_info->free_minutes = (isset($productdata['free_minutes']) && $productdata['free_minutes']> 0)?$productdata['free_minutes']:$product_info->free_minutes;
+					$product_info->free_minutes = (isset($productdata['free_minutes']) && astpp_gt($productdata['free_minutes'], 0))?$productdata['free_minutes']:$product_info->free_minutes;
 					$orderobjArr['product'][$accountdata->id] = $product_info;
 				  	 return $orderobjArr['product'][$accountdata->id];
 				}else{
@@ -163,13 +164,13 @@ class order {
 
 		foreach($orderobjArr['accounts'] as $key => $accountdata){
 
-			if(($accountdata->is_distributor == 1 && $accountdata->type == 1) || ($accountdata->type == 0 && $accountdata->reseller_id > 0 && isset($parent_array[$accountdata->reseller_id]) && $parent_array[$accountdata->reseller_id]->is_distributor == 1)){
+			if(($accountdata->is_distributor == 1 && $accountdata->type == 1) || (astpp_eq0($accountdata->type) && astpp_gt($accountdata->reseller_id, 0) && isset($parent_array[$accountdata->reseller_id]) && $parent_array[$accountdata->reseller_id]->is_distributor == 1)){
 				$parent_array[$accountdata->id] = $accountdata;
 				$parent_key_arr[] = $accountdata->id;
 			}
 			$product_info = $this->get_account_product_info($orderobjArr,$accountdata,$productdata);
 			$orderobjArr['accounts'][$key]->product_info=$product_info;
-			if(isset($product_info->id) && $product_info->id > 0){
+			if(isset($product_info->id) && astpp_gt($product_info->id, 0)){
 				
 				$account_currency_info = $this->CI->db_model->getSelect("*","currency",array("id"=>$accountdata->currency_id));
 				if($account_currency_info->num_rows > 0){
@@ -178,15 +179,15 @@ class order {
 					$orderobjArr['accounts'][$key]->currency_info=$account_currency_info;
 				}	
 				$product_info->payment_status = "PAID";
-				$product_info->payment_by = $productdata['payment_by'] == 0 ? "Account Balance" : "Card";
-				$product_info->quantity = (isset($productdata['quantity']) && $productdata['quantity'] > 0 )?$productdata['quantity']:'1';
+				$product_info->payment_by = astpp_eq0($productdata['payment_by']) ? "Account Balance" : "Card";
+				$product_info->quantity = (isset($productdata['quantity']) && astpp_gt($productdata['quantity'], 0) )?$productdata['quantity']:'1';
 
 				$parent_order_id = $this->generate_order($product_info,$accountdata,$created_by_accountinfo,$parent_order_id,$account_currency_info);
 
 				if($parent_order_id){ 
 					$product_info->order_item_id= $parent_order_id;
-					$product_info->price= ($product_info->price+$product_info->setup_fee);
-					$product_info->price= ($product_info->price * $product_info->quantity);
+					$product_info->price= (astpp_n($product_info->price)+astpp_n($product_info->setup_fee));
+					$product_info->price= (astpp_n($product_info->price) * astpp_n($product_info->quantity));
 					$product_info->invoice_type = ($product_info->product_category == 3) ? "credit":"debit";
 					$product_info->charge_type = $this->CI->common->get_field_name("code","category",array("id"=>$product_info->product_category)); 
 					$product_info->description= $product_info->charge_type." (".$product_info->name." X ".$product_info->quantity.") has been added.";
@@ -196,14 +197,14 @@ class order {
 					$orderobjArr['accounts'][$key]->invoiceid=$last_payment_id;
 					if($accountdata->type == 1 && !empty($parent_array)){ 
 
-						if($accountdata->reseller_id > 0){
+						if(astpp_gt($accountdata->reseller_id, 0)){
 							$parent_array[$accountdata->reseller_id]->commission = (isset($parent_array[$accountdata->reseller_id]->commission))?$parent_array[$accountdata->reseller_id]->commission:0;
-							$parent_commission = (($parent_array[$accountdata->reseller_id]->commission*$product_info->commission)/100);
-							$parent_array[$accountdata->reseller_id]->commission = ($parent_array[$accountdata->reseller_id]->commission - $parent_commission);
+							$parent_commission = ((astpp_n($parent_array[$accountdata->reseller_id]->commission)*astpp_n($product_info->commission))/100);
+							$parent_array[$accountdata->reseller_id]->commission = (astpp_n($parent_array[$accountdata->reseller_id]->commission) - astpp_n($parent_commission));
 							$parent_array[$accountdata->id]->commission = $parent_commission;
 
 						}else{
-							$parent_commission = (($product_info->price*$product_info->commission)/100);
+							$parent_commission = ((astpp_n($product_info->price)*astpp_n($product_info->commission))/100);
 							$parent_array[$accountdata->id]->commission = $parent_commission;
 						}
 						$parent_array[$accountdata->id]->currecny_info = $account_currency_info;
@@ -214,7 +215,7 @@ class order {
 // print_r($product_info); 
 					}
 					if(isset($product_info->is_optin)){
-						if($product_info->is_optin == '0' && $accountdata->type == 0 && $product_info->product_category != '4'){
+						if($product_info->is_optin == '0' && astpp_eq0($accountdata->type) && $product_info->product_category != '4'){
 							$parent_commission = true;
 						}
 					/*if($product_info->is_optin == '0' && $key > 0 && $product_info->product_category != '4' && $accountdata->is_distributor == 0){
@@ -247,8 +248,8 @@ class order {
 		array_multisort($parent_key_arr, SORT_DESC, $account_info);
 		foreach($account_info as $accountkey => $accountvalue){ 
 			$userdata = $accountvalue; 
-			if( $accountvalue->reseller_id > 0){
-				$accountvalue = $account_info[$accountkey+1];
+			if( astpp_gt($accountvalue->reseller_id, 0)){
+				$accountvalue = $account_info[astpp_n($accountkey)+1];
 				$accountvalue->product_info->invoice_type = "credit";
 				$accountvalue->product_info->is_apply_tax = "false";
 				$accountvalue->product_info->price = $accountvalue->commission;
@@ -307,15 +308,15 @@ class order {
 					"product_category" =>$product_info->product_category,
 					"product_id" =>$product_info->id,
 					"quantity"=>$product_info->quantity,
-					"price"=>($product_info->quantity*$product_info->price),
-					"setup_fee"=>($product_info->quantity*$product_info->setup_fee),
+					"price"=>(astpp_n($product_info->quantity)*astpp_n($product_info->price)),
+					"setup_fee"=>(astpp_n($product_info->quantity)*astpp_n($product_info->setup_fee)),
 					"billing_type"=>$product_info->billing_type,
 					"billing_days"=>$product_info->billing_days,
 					"free_minutes"=>$product_info->free_minutes,
 					"accountid"=>$account_info->id,
 					"reseller_id"=>$account_info->reseller_id,
 					"billing_date"=>gmdate("Y-m-d 00:00:01"),
-					"next_billing_date"=>($product_info->billing_days == 0)?gmdate('Y-m-d 23:59:59', strtotime('+10 years')):gmdate("Y-m-d 23:59:59",strtotime("+".($product_info->billing_days-1)." days")),
+					"next_billing_date"=>(astpp_eq0($product_info->billing_days))?astpp_gmdate('Y-m-d 23:59:59', strtotime('+10 years')):astpp_gmdate("Y-m-d 23:59:59",strtotime("+".(astpp_n($product_info->billing_days)-1)." days")),
 					"is_terminated"=>0,
 					"termination_date"=>"",
 					"from_currency"=>$from_currency,
@@ -348,14 +349,14 @@ order_items.billing_type,order_items.billing_days,order_items.free_minutes,order
 		$parent_key_arr[] =$userdata['id'];	
 
 		$temp_orderdata = $orderdata;
-		$temp_orderdata['price'] = $orderdata['price']+$orderdata['setup_fee'];
+		$temp_orderdata['price'] = astpp_n($orderdata['price'])+astpp_n($orderdata['setup_fee']);
 
 		$description = $temp_arr['description'];
-		if($parent_order_id > 0){
+		if(astpp_gt($parent_order_id, 0)){
 
 			$parent_comm_arr = array();
 
-			while($parent_order_id > 0){
+			while(astpp_gt($parent_order_id, 0)){
 				$order_data = $this->get_order_details($parent_order_id);
 				$where = array ('id' => $order_data['accountid']);
 				$account_info = ( array ) $this->CI->db->get_where( "accounts", $where )->result_array()[0]; 
@@ -368,10 +369,10 @@ order_items.billing_type,order_items.billing_days,order_items.free_minutes,order
 				$order_data['invoice_type'] = ($order_data['product_category'] == 3) ? "credit":"debit";
 				$order_data['is_update_balance'] = "true";
 				$order_data['payment_by'] = "Paypal";
-				$order_data['price']=$order_data['price']+$order_data['setup_fee'];
-				$order_data = array_merge($order_data,$temp_arr);
+				$order_data['price']=astpp_n($order_data['price'])+astpp_n($order_data['setup_fee']);
+				$order_data = astpp_array_merge($order_data,$temp_arr);
  				$invoiceid =$this->CI->payment->add_payments_transcation($order_data,$account_info,$currency_info);	
-				if($order_data['product_category'] != 3 && $account_info['posttoexternal'] == 0){
+				if($order_data['product_category'] != 3 && astpp_eq0($account_info['posttoexternal'])){
 					$order_data['INV_DIRECT_PAY'] = "true";
 					$order_data['invoiceid'] = $invoiceid;
 					$order_data['is_update_balance'] = "true";
@@ -383,7 +384,7 @@ order_items.billing_type,order_items.billing_days,order_items.free_minutes,order
 				// Kinjal ASTPPCOM-1021 Start
 				$product_info = $this->get_account_product_info($orderobjArr,(object)$account_info,array('product_id'=>$order_data['product_id'],'product_category'=> $order_data['product_category']));
 				// Kinjal ASTPPCOM-1021 END
-				if($parentdata->is_distributor == 1 && $parentdata->type == 1 && $product_info->is_optin == 0){
+				if($parentdata->is_distributor == 1 && $parentdata->type == 1 && astpp_eq0($product_info->is_optin)){
 
 						$parent_array[$userdata['id']]->product_info = $product_info;
 
@@ -394,34 +395,34 @@ order_items.billing_type,order_items.billing_days,order_items.free_minutes,order
 						$parent_array[$parentdata->id]->order_item_id= $order_data['order_item_id'];
 						$parent_array[$parentdata->id]->product_id= $order_data['product_id'];
 						$parent_array[$parentdata->id]->description= "Product (".$product_info->name.") commission has been credited";
-						$product_info->price = ($product_info->price+$product_info->setup_fee);
+						$product_info->price = (astpp_n($product_info->price)+astpp_n($product_info->setup_fee));
 
-						if($parentdata->reseller_id > 0){ 
+						if(astpp_gt($parentdata->reseller_id, 0)){ 
 							$tempcomm = 0.00;
 							$parent_reseller = $this->CI->common->get_parent_info($parentdata->id, 0);
-							$max_count = (count((explode(",",rtrim($parent_reseller,",")))));
+							$max_count = (astpp_count((explode(",",rtrim($parent_reseller,",")))));
 
 							$comm_rate = $product_info->commission;
-							$product_amount = ($product_info->price*$orderdata['quantity']);
+							$product_amount = (astpp_n($product_info->price)*astpp_n($orderdata['quantity']));
 
 							for($i=1; $i<=$max_count; $i++){
-								$tempcomm = (($product_amount*$comm_rate)/100);
+								$tempcomm = ((astpp_n($product_amount)*astpp_n($comm_rate))/100);
 								$product_amount =  $tempcomm;
 							}
 							$parent_array[$parentdata->id]->commission = $tempcomm;
 	
-							$total_commission = ($total_commission + $tempcomm);
+							$total_commission = (astpp_n($total_commission) + astpp_n($tempcomm));
 						}else{  
 
-							$parent_commission = (($product_info->price*$orderdata['quantity']*$product_info->commission)/100);
-							$parent_commission = ($parent_commission - $total_commission);
+							$parent_commission = ((astpp_n($product_info->price)*astpp_n($orderdata['quantity'])*astpp_n($product_info->commission))/100);
+							$parent_commission = (astpp_n($parent_commission) - astpp_n($total_commission));
 							$parent_array[$parentdata->id]->commission = $parent_commission;
 						}
 
 						$is_apply_commission = "true";
 					}
 
-				if($account_info['is_distributor'] == 0 && $account_info['type'] == 1 && $product_info->is_optin == 0 ){
+				if(astpp_eq0($account_info['is_distributor']) && $account_info['type'] == 1 && astpp_eq0($product_info->is_optin) ){
 
 					$orderobjArr = array();
 					$prev_amount = $temp_orderdata['price'];
@@ -429,7 +430,7 @@ order_items.billing_type,order_items.billing_days,order_items.free_minutes,order
 					$order_data['INV_DIRECT_PAY'] = "true";
 					$order_data['is_update_balance'] = "true";
 					$order_data['payment_by'] = "Paypal";
-					$order_data['price'] = ($order_data['quantity'] > 1)?(($order_data['price']*$order_data['quantity'])-$prev_amount):$prev_amount-$order_data['price'];
+					$order_data['price'] = ($order_data['quantity'] > 1)?((astpp_n($order_data['price'])*astpp_n($order_data['quantity']))-astpp_n($prev_amount)):astpp_n($prev_amount)-astpp_n($order_data['price']);
 					$order_data['invoice_type'] = "credit";
 					$order_data['invoiceid'] = $invoiceid;
 					$order_data['is_apply_tax'] = "false";
@@ -478,8 +479,8 @@ order_items.billing_type,order_items.billing_days,order_items.free_minutes,order
 			}
 
 		}else{
-			if($accountdata['reseller_id'] > 0){
-				if($accountdata['type'] == 0){
+			if(astpp_gt($accountdata['reseller_id'], 0)){
+				if(astpp_eq0($accountdata['type'])){
 					$product_info = $this->CI->db_model->getJionQuery('products', 'products.id,products.name,products.product_category,products.buy_cost,products.commission,reseller_products.price,reseller_products.setup_fee,products.billing_type,products.billing_days,reseller_products.free_minutes,products.status,products.last_modified_date,reseller_products.product_id,reseller_products.setup_fee,reseller_products.is_optin', array('products.status'=>0,'reseller_products.product_id'=>$product_id,'reseller_products.account_id'=>$accountdata['reseller_id'],'products.is_deleted'=>0), 'reseller_products','products.id=reseller_products.product_id', 'inner','','','DESC','products.id');
 
 				}else{

@@ -35,11 +35,11 @@ window.addEventListener('DOMContentLoaded', function(){
 			 $accountinfo = $this->session->userdata ( 'token' );
 			 $accountinfo = ((isset($accountinfo)) && $accountinfo != '')?$accountinfo:$this->session->userdata ( "accountinfo" );
 			 $system_config = common_model::$global_config ['system_config'];
-			 $reseller_id = ($accountinfo['reseller_id'] > 0) ? $accountinfo['reseller_id']: 0;
+			 $reseller_id = (astpp_gt($accountinfo['reseller_id'], 0)) ? $accountinfo['reseller_id']: 0;
 			 $paypal_info= $this->db_model->getSelect("*","system",array("sub_group"=>'Paypal',"reseller_id"=>$reseller_id));
 			 $accountinfo['from_currency'] = $this->common->get_field_name ( 'currency', 'currency', $accountinfo ["currency_id"] );
 			 $accountinfo['is_supported'] = $this->common->get_field_name ( 'is_supported', 'currency', $accountinfo ["currency_id"] );
-			 if($accountinfo['is_supported'] == 0){ ?>
+			 if(astpp_eq0($accountinfo['is_supported'])){ ?>
 				<input type="hidden" readonly name="currency_code" value="<?php echo $accountinfo['from_currency']; ?>">
 			 <?php } else { ?>
 			<input type="hidden" readonly name="currency_code" value="USD">
@@ -49,7 +49,7 @@ window.addEventListener('DOMContentLoaded', function(){
 			  <!-- ASTPPCOM-727 Ashish start -->
 			  <input type="hidden" readonly name="cancel_return" value="<?php echo(isset($cancel_return) && $cancel_return !='')?$cancel_return:base_url().'user/user_available_products/'; ?>">
 			  <!-- ASTPPCOM-727 end -->
-			  <input type="hidden" readonly name="custom" id='custom' value=<?php echo (isset($account_id) && $account_id > 0)?$account_id:$product_info['product_category']; ?>>
+			  <input type="hidden" readonly name="custom" id='custom' value=<?php echo (isset($account_id) && astpp_gt($account_id, 0))?$account_id:$product_info['product_category']; ?>>
           		</div>
 		</form>
 	</div>

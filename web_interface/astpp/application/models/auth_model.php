@@ -20,6 +20,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 // ##############################################################################
+#[\AllowDynamicProperties]
 class Auth_model extends CI_Model {
 	function __construct() {
 		parent::__construct ();
@@ -32,7 +33,7 @@ class Auth_model extends CI_Model {
 		$query = $this->db->query ( $q );
 		if ($query->num_rows () > 0) {
 			$row = $query->row ();
-			if ($row->cnt > 0) {
+			if (astpp_gt($row->cnt, 0)) {
 				$this->session->set_userdata ( 'user_name', $username );
 				return 1;
 			} else {

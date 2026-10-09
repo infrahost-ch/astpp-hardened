@@ -18,7 +18,14 @@
  *
  */
 ini_set('display_errors','off'); // HARDENING
+// PHP8: PHP 7 comparison semantics for rewritten comparisons (see application/php7compat.php)
+require_once __DIR__ . '/application/php7compat.php';
 ini_set ( "date.timezone", "UTC" );
+// PHP8: since PHP 8.1 mysqli throws exceptions by default. CodeIgniter 2 expects
+// FALSE return values and handles errors itself.
+if (function_exists ( 'mysqli_report' )) {
+	mysqli_report ( MYSQLI_REPORT_OFF );
+}
 define ( 'ENVIRONMENT', 'production' );
 /*
  * ---------------------------------------------------------------
@@ -37,7 +44,14 @@ if (defined ( 'ENVIRONMENT' )) {
 		
 		case 'testing' :
 		case 'production' :
-			error_reporting ( 0 );
+			// PHP8: errors are logged (never displayed, see _exception_handler()).
+			// Set env[ASTPP_DEBUG_LOG] = 1 in the php-fpm pool to also log warnings,
+			// notices and deprecations.
+			if (getenv ( 'ASTPP_DEBUG_LOG' ) == '1') {
+				error_reporting ( E_ALL );
+			} else {
+				error_reporting ( E_ALL & ~ E_DEPRECATED & ~ E_USER_DEPRECATED & ~ E_NOTICE & ~ E_USER_NOTICE & ~ E_WARNING );
+			}
 			break;
 		
 		default :
@@ -254,7 +268,7 @@ if (isset ( $_POST ['left_panel_search'] )) {
 	$_POST ['left_panel_search'] = str_replace ( array (
 			"'",
 			'"',
-			chr ( 92 ), // backslash
+			astpp_chr ( 92 ), // backslash
 			'`',
 			';' 
 	), '', ( string ) $_POST ['left_panel_search'] );

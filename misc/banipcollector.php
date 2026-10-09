@@ -18,7 +18,7 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 //curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
 $result = curl_exec($ch);
-curl_close($ch);
+PHP_VERSION_ID < 80000 && curl_close($ch);
 //print_r ($result);
 exit;
 ?>

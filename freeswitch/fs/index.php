@@ -1,4 +1,6 @@
 <?php
+// PHP8: PHP 7 comparison semantics for rewritten comparisons
+require_once __DIR__ . '/lib/astpp.php7compat.php';
 // ##############################################################################
 // ASTPP - Open Source VoIP Billing Solution
 //
@@ -59,7 +61,7 @@ $logger = new logger ( $lib );
 // Define file name
 // HARDENING: only allow known sections (prevents local file inclusion via "section")
 $section = isset ( $_REQUEST ['section'] ) ? ( string ) $_REQUEST ['section'] : '';
-if (! in_array ( $section, array (
+if (! astpp_in_array ( $section, array (
 		'configuration',
 		'directory'
 ), true )) {

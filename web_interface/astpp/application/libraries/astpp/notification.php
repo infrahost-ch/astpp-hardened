@@ -23,6 +23,7 @@
 if (! defined ( 'BASEPATH' ))
 	exit ( 'No direct script access allowed' );
 
+#[\AllowDynamicProperties]
 class notification {
 	protected $CI; 
 	public $email = '';
@@ -57,7 +58,7 @@ class notification {
 		$accountinfo = $query->result();
 		if(isset($accountinfo) && !empty($accountinfo)){
 			$accountinfo = (array)$accountinfo[0];
-			$reseller_id = $accountinfo['reseller_id'] > 0 ? $accountinfo['reseller_id'] : 1;
+			$reseller_id = astpp_gt($accountinfo['reseller_id'], 0) ? $accountinfo['reseller_id'] : 1;
 			$where = "accountid IN ('" . $reseller_id . "')";
 			$this->CI->db->where ( $where );
 			$this->CI->db->select ( '*' );
@@ -72,11 +73,11 @@ class notification {
 				$notification_template_data['attachment'] = $attachment;
 				$this->$notification_template($notification_template_data,$accountinfo,$email_params,$invoiceconf);
 
-				if(Common_model::$global_config ['system_config']['email']==0){
+				if(astpp_eq0(Common_model::$global_config ['system_config']['email'])){
 					$this->send_email_notification($notification_template_data,$accountinfo,$invoiceconf);
 				}
 
-				if(Common_model::$global_config ['system_config']['account_generate']==0){
+				if(astpp_eq0(Common_model::$global_config ['system_config']['account_generate'])){
 					$this->send_sms_notification($notification_template_data,$accountinfo,$invoiceconf);
 				}
 
@@ -107,7 +108,7 @@ class notification {
 	function send_sms_notification($notification_template_data,$accountinfo,$invoiceconf){
 		$numberlength=6;
 		$sms_details=$this->get_sms_settings_details();
-		$uniq_rendno = rand(pow(10, $numberlength - 1), pow(10, $numberlength) - 1);
+		$uniq_rendno = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
 		$message = str_replace ( "<p>", "", $notification_template_data['template'] );
 		$message = str_replace ( "</p>", "", $notification_template_data['template'] );
 

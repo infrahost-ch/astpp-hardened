@@ -20,6 +20,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 // ##############################################################################
+#[\AllowDynamicProperties]
 class Getstatus extends MX_Controller {
 	function __construct() {
 		parent::__construct ();
@@ -78,8 +79,20 @@ class Getstatus extends MX_Controller {
 				) );
 			}
 			// ASTPPCOM-923 Start
-			$result = $post_data ['table'] == 'accounts' && $post_data ['id'] == 1 ? null : $post_data ['table'] == 'dids' || $post_data ['table'] == 'accounts' || $post_data ['table'] == 'calltype' ? $this->db->update ( $post_data ['table'], $data, array ("id" => $post_data ['id']) ):$post_data ['table'] == 'localization' || $post_data ['table'] == 'call_barring' ? $this->db->update ( $post_data ['table'],array('status'=>$status,'modified_date'=>$last_modified_date), array ("id" => $post_data ['id']) ):  $post_data ['table'] == 'department' ? $this->db->update ( $post_data ['table'],array('status'=>$status), array ("id" => $post_data ['id'])) :
-				 $this->db->update ( $post_data ['table'],array('status'=>$status,'last_modified_date'=>$last_modified_date), array ("id" => $post_data ['id']) );
+			// PHP8: unparenthesized nested ternaries are a compile error. Written as the
+			// intended if/elseif chain - PHP 7 evaluated it left-associative, which skipped
+			// the protection of the admin account (id 1) and ran several UPDATEs in a row.
+			if ($post_data ['table'] == 'accounts' && $post_data ['id'] == 1) {
+				$result = null;
+			} elseif ($post_data ['table'] == 'dids' || $post_data ['table'] == 'accounts' || $post_data ['table'] == 'calltype') {
+				$result = $this->db->update ( $post_data ['table'], $data, array ("id" => $post_data ['id']) );
+			} elseif ($post_data ['table'] == 'localization' || $post_data ['table'] == 'call_barring') {
+				$result = $this->db->update ( $post_data ['table'],array('status'=>$status,'modified_date'=>$last_modified_date), array ("id" => $post_data ['id']) );
+			} elseif ($post_data ['table'] == 'department') {
+				$result = $this->db->update ( $post_data ['table'],array('status'=>$status), array ("id" => $post_data ['id']));
+			} else {
+				$result = $this->db->update ( $post_data ['table'],array('status'=>$status,'last_modified_date'=>$last_modified_date), array ("id" => $post_data ['id']) );
+			}
 			// ASTPPCOM-923 END
 			if ($post_data ['table'] == "ip_map") {
 							$this->load->library ( 'freeswitch_lib' );
