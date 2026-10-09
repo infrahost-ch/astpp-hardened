@@ -3,7 +3,7 @@
 <link rel="stylesheet"
 	href="<?php echo base_url(); ?>assets/css/style.css" type="text/css" />
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
 <script type="text/javascript" language="javascript">
   $(document).ready(function() {
     build_grid("ipsettings_list","<?php echo base_url()."accounts/customer_ipmap_json/$edit_id/$accounttype/"; ?>",<? echo $grid_fields; ?>,"");

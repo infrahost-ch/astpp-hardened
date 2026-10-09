@@ -45,7 +45,7 @@ rel="stylesheet" type="text/css">
 <script type="text/javascript"
 	src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"></script>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
 <!-- IE -->
 
 <script src="<?php echo base_url(); ?>assets/js/custome_index.js"></script>

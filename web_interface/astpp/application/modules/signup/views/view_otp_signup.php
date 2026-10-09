@@ -55,7 +55,7 @@
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>/assets/js/module_js/generate_grid.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/fileinput.js"></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/tabcontent.js"></script>
 <!-- IE -->

@@ -2,7 +2,7 @@
 <?php error_reporting(E_ERROR); ?>
 <? startblock('extra_head') ?>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
 
 <script type="text/javascript">
     $("#submit").click(function(){

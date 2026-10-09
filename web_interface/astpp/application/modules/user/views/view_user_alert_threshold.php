@@ -1,6 +1,6 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
 <script type="text/javascript">
 function form_submit(){
     var email = document.forms["reseller_form"]["notify_email"].value;

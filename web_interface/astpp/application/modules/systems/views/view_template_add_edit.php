@@ -2,7 +2,7 @@
 <? startblock('extra_head') ?>
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/tinymce-8.9.3/tinymce.min.js"></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/astpp_editor.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
 <script>
 $ (document).ready(function(){
 	$('[data-toggle="tooltip"]').tooltip();

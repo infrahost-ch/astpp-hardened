@@ -5,7 +5,7 @@
         margin-top:-10px;
     }
 </style>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
 <script type="text/javascript" language="javascript">
     $(document).ready(function() {
     

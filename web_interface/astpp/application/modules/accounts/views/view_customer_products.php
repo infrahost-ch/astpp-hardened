@@ -2,7 +2,7 @@
 <?php error_reporting(E_ERROR); ?>
 <? startblock('extra_head') ?>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
 <script type="text/javascript" language="javascript">
     $(document).ready(function() { 
         build_grid("products_list","<?php echo base_url()."accounts/customer_details_json/products/$edit_id/"; ?>",<? echo $grid_fields; ?>,"");
