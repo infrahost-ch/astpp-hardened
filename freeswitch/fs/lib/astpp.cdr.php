@@ -550,8 +550,17 @@ function package_calculation($destination_number, $package_id, $duration, $call_
 	$query = "SELECT *,P.id as package_id,P.product_id as product_id FROM packages_view  as P inner join package_patterns as PKGPTR on P.product_id = PKGPTR.product_id WHERE " . $custom_destination . " AND accountid = " . $accountid . " ORDER BY LENGTH(PKGPTR.patterns) DESC";
 	$logger->log ( "Package query  : " . $query );
 	$package_info_arr = $db->run ( $query );
+	// ASTPP fork: the packages covering the destination form one pool. Seconds a package cannot
+	// take any more are counted on the next one (upstream dropped them, while the dialplan now
+	// allows a call as long as the minutes left in all packages). package_id = first package used.
+	$seconds_left = astpp_n ( $duration );
+	$seen_packages = array ();
 	if (!empty($package_info_arr)) {
 		foreach($package_info_arr as $package_info){
+			if (! astpp_gt ( $seconds_left, 0 ) || isset ( $seen_packages [$package_info ['package_id']] )) {
+				continue;
+			}
+			$seen_packages [$package_info ['package_id']] = true;
 			// Ashish ASTPPCOM-823
 			$account_data = get_accounts ( $package_info["accountid"], $logger, $db );
 			// Ashish 823 End
@@ -576,8 +585,9 @@ function package_calculation($destination_number, $package_id, $duration, $call_
 					$logger->log ( "available_seconds  : " . $available_seconds."\n" );
 					$logger->log ( "free_minutes  : " . $package_info ['free_minutes']."\n" );
 					$logger->log ( "used_seconds  : " . $counter_info ['used_seconds']."\n" );
-					$logger->log ( "duration  : " . $duration."\n" );
-					$free_seconds = ($available_seconds >= $duration) ? $duration : $available_seconds;
+					$logger->log ( "duration  : " . $duration." (not yet counted: " . $seconds_left . ")\n" );
+					$free_seconds = ($available_seconds >= $seconds_left) ? $seconds_left : $available_seconds;
+					$seconds_left = astpp_n ( $seconds_left ) - astpp_n ( $free_seconds );
 	//				$duration = ($available_seconds >= $duration) ? $duration : $available_seconds;
 					$final_min = astpp_n($counter_info ['used_seconds']) + astpp_n($free_seconds);
 					$final_min =  astpp_ceil(astpp_n($final_min)/60)*60;
@@ -585,9 +595,10 @@ function package_calculation($destination_number, $package_id, $duration, $call_
 					$update_query = "UPDATE counters SET used_seconds = " . ($final_min) . " WHERE id = " . $counter_info ['id'];
 					$logger->log ( "Update Counters  : " . $update_query );
 					$db->run ( $update_query );
-					$package_array ['package_id'] = $package_info ['package_id'];
-					$package_array ['calltype'] = "FREE";
-					break;
+					if (empty ( $package_array )) {
+						$package_array ['package_id'] = $package_info ['package_id'];
+						$package_array ['calltype'] = "FREE";
+					}
 				}
 			}
 		}

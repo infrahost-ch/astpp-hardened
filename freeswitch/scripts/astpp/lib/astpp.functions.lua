@@ -490,6 +490,11 @@ function package_calculation (destination_number,userinfo,call_direction)
 	    	i = i+1
 		end))  
 
+	-- ASTPP fork: all packages that cover the destination form one pool. The first package with
+	-- minutes left carries the call (package_id), the maximum call length is the sum of the minutes
+	-- left in all of them. Upstream stopped at the first package, so a call was cut off when that
+	-- package ran out although others still had minutes (the CDR side counts on across packages).
+	local seen_packages = {}
 	if(package_info_arr and package_info_arr ~= nil) then
 		for package_info_key,package_info in pairs(package_info_arr) do
 			--local counter_info = {}
@@ -497,7 +502,8 @@ function package_calculation (destination_number,userinfo,call_direction)
 			Logger.info("Package ID : "..package_info['package_id'] );
 			Logger.info("Product ID : "..package_info['product_id'] );
 			Logger.info("Package Type : "..package_info['applicable_for'] .. " Call Direction : "..call_direction .." [0:inbound,1:outbound,2:both]");
-			if( (package_info['applicable_for'] == "0" and call_direction == "inbound") or (package_info['applicable_for'] == "1" and call_direction == "outbound") or (package_info['applicable_for'] == "2") ) then
+			if (seen_packages[package_info['package_id']] == nil and ((package_info['applicable_for'] == "0" and call_direction == "inbound") or (package_info['applicable_for'] == "1" and call_direction == "outbound") or (package_info['applicable_for'] == "2")) ) then
+				seen_packages[package_info['package_id']] = true
 				local counter_info =  get_counters(userinfo,package_info,package_act_id)
 				if(counter_info == nil or counter_info['used_seconds'] == nil) then
 					used_seconds = 0
@@ -506,22 +512,26 @@ function package_calculation (destination_number,userinfo,call_direction)
 				end			
 				remaining_minutes = (tonumber(package_info['free_minutes']*60) - tonumber(used_seconds))/60
 				Logger.info("Remaining minutes : "..remaining_minutes)
-				if(remaining_minutes > 0) then
+				if(remaining_minutes > 0 and package_maxlength ~= nil) then
+					package_maxlength = package_maxlength + remaining_minutes
+				elseif(remaining_minutes > 0) then
 					if (tonumber(balance) <= 0) then
 						userinfo['balance'] = 100
 						userinfo['credit_limit'] = 200
 						Logger.notice("Actual Balance : "..balance)
 						Logger.notice("Allocating static balance for package calls, Balance : "..userinfo['balance'].. ", Credit limit : "..userinfo['credit_limit'])
-					end			    	
+					end
 					userinfo['ACCOUNT_ERROR'] = ''
 					--remaining_sec = remaining_sec + 5
-					package_maxlength = remaining_minutes;	
+					package_maxlength = remaining_minutes;
 					package_id = package_info['package_id']
 					Logger.notice("package_id : "..package_id)
-					break
 				end
-			end 
+			end
 		end
+	end
+	if (package_maxlength ~= nil) then
+		Logger.notice("Package minutes left (all packages) : "..package_maxlength)
 	end
 	tmp[1]	= userinfo
 	tmp[2] = package_maxlength
