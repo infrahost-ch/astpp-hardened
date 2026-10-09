@@ -79,10 +79,7 @@ class GenerateInvoice extends MX_Controller {
 						break;
 				}
 			}
-			$screen_path = getcwd () . "/cron";
-			$screen_filename = "Email_Broadcast_" . strtotime ( 'now' );
-			$command = "cd " . $screen_path . " && /usr/bin/screen -d -m -S  $screen_filename php cron.php BroadcastEmail";
-			exec ( $command );
+			astpp_cron_background ( 'BroadcastEmail' );
 		}
 	}
 	function validate_invoice_date($account_value) {

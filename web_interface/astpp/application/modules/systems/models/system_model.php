@@ -107,10 +107,7 @@ class System_model extends CI_Model
         $this->db->update("system", $add_array);
         if ($name == 'base_currency') {
 
-            $screen_path = getcwd() . "/cron";
-            $screen_filename = "CurrencyUpdate" . strtotime('now');
-            $command = "cd " . $screen_path . " && /usr/bin/screen -d -m -S  $screen_filename php cron.php CurrencyUpdate";
-            exec($command);
+            astpp_cron_background('CurrencyUpdate');
             $this->db->update("currency", array(
                 "currencyrate" => '1'
             ), array(

@@ -32,8 +32,16 @@ class Broadcastemail extends CI_Controller {
 		$this->load->library ( "astpp/email_lib" );
 	}
 	function broadcast_email() {
+		// ASTPP fork: one run at a time. The minute cron and the immediate start after mails were
+		// queued (astpp_cron_background), or two cron runs when sending takes longer than a minute,
+		// would otherwise read the same queued mails and send them twice.
+		$lock = @fopen ( realpath ( APPPATH ) . '/cache/broadcast_email.lock', 'c' );
+		if ($lock !== false && ! flock ( $lock, LOCK_EX | LOCK_NB )) {
+			fclose ( $lock );
+			return;
+		}
 		$where = array (
-				"status" => "1" 
+				"status" => "1"
 		);
 		$query = $this->db_model->getSelect ( "*", "mail_details", $where );
 		if ($query->num_rows () > 0) {
@@ -43,6 +51,10 @@ class Broadcastemail extends CI_Controller {
 				unset ( $account_value ['id'] );
 				$this->email_lib->send_notifications ( '', $account_value, '', $account_value ['attachment'], 1, 0, 1 );
 			}
+		}
+		if ($lock !== false) {
+			flock ( $lock, LOCK_UN );
+			fclose ( $lock );
 		}
 	}
 }

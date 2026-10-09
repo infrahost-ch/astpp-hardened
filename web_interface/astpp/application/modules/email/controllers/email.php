@@ -355,22 +355,6 @@ class Email extends MX_Controller
         echo $this->db->delete("email");
     }
 
-    function email_send_multipal()
-    {
-        $add_array = $this->input->post();
-        if ($add_array['email'] == '' || $add_array['subject'] == '' || $add_array['template'] == '') {
-            $this->session->set_flashdata('astpp_notification', gettext('Email address not found!'));
-            redirect(base_url() . '/email/email_client_area/');
-        }
-        $this->email_model->multipal_email($add_array);
-        $screen_path = "/var/www/html/ITPLATP/cron";
-        $screen_filename = "Email_Broadcast_" . strtotime('now');
-        $command = "cd " . $screen_path . " && /usr/bin/screen -d -m -S  $screen_filename php cron.php BroadcastEmail";
-        exec($command);
-        $this->session->set_flashdata('astpp_errormsg', gettext('Email broad cast successfully!'));
-        redirect(base_url() . 'email/email_history_list/');
-    }
-
     function email_history_list_search()
     {
         $ajax_search = $this->input->post('ajax_search', 0);

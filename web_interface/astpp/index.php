@@ -248,6 +248,31 @@ function astpp_internal_request() {
 }
 
 /*
+ * ASTPP fork: start a cron task (key of $config['argv'] in config/cron.php, e.g. "BroadcastEmail")
+ * in the background - used right after mails were queued. Replaces
+ * "cd <getcwd()>/cron && screen -d -m php cron.php <task>": "php" is the system default CLI
+ * (PHP 7.4 on servers upgraded from it, not the PHP this code was ported to), one caller used a
+ * vendor development path, and screen is not needed for a detached process. The minute cron runs
+ * the same tasks, so a failed start only delays them.
+ */
+function astpp_cron_background($task) {
+	if (! preg_match ( '/^[A-Za-z]+$/', ( string ) $task )) {
+		return;
+	}
+	// version-matched CLI (Debian/Sury layout); PHP_BINARY is php-fpm under the web server
+	$php = '/usr/bin/php' . PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+	// same configuration as this process (php-fpm pool env): database and Blowfish provider
+	$env = '';
+	foreach ( array ('ASTPP_CONFIG', 'OPENSSL_CONF') as $name ) {
+		$value = getenv ( $name );
+		if ($value !== false && $value !== '') {
+			$env .= $name . '=' . escapeshellarg ( $value ) . ' ';
+		}
+	}
+	exec ( 'cd ' . escapeshellarg ( FCPATH . 'cron' ) . ' && ' . $env . escapeshellarg ( $php ) . ' cron.php ' . $task . ' >/dev/null 2>&1 &' );
+}
+
+/*
  * HARDENING: global normalization of request parameters that ASTPP concatenates
  * into SQL in many places (bulk actions and the left panel quick search).
  *  - selected_ids:       "'1','2','3'" -> only quoted integers survive

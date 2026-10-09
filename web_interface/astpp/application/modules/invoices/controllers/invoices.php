@@ -2020,10 +2020,7 @@ class Invoices extends MX_Controller
                         $accountdata = $acc_query->result_array();
 
                         $accountdata = $accountdata[0];
-                        $screen_path = getcwd() . "/cron";
-                        $screen_filename = "Email_Broadcast_" . strtotime('now');
-                        $command = "cd " . $screen_path . " && /usr/bin/screen -d -m -S  $screen_filename php cron.php BroadcastEmail";
-                        exec($command);
+                        astpp_cron_background('BroadcastEmail');
                         $invoice_data_count = 0;
                         $invoice_conf = array();
                         if (astpp_eq0($accountdata['reseller_id'])) {
