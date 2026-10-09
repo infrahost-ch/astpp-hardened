@@ -209,7 +209,7 @@ function isNumberKey(evt){
 </head>
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<body style="background: url(<?= base_url() ?>assets/images/login_bg.jpg);background-size: cover;background-attachment: fixed;">
+<body style="background: linear-gradient(135deg, #0E2638 0%, #1B4F87 60%, #347CCB 100%) fixed;">
 					<?php if (isset($astpp_notification)){ ?>
 					<div class="col-md-12">
 		<div

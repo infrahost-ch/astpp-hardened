@@ -563,4 +563,8 @@ border-bottom: 0px;
 #update_bar .gj-datepicker-bootstrap [role="right-icon"] button
 {
     border-bottom: 1px solid #347CCB !important;
+}/* ASTPP fork: logo in the login / signup card (the global rule limits #logo to 150x42) */
+#login_form img#logo, #customer_form img#logo {
+    max-width: 220px;
+    max-height: 60px;
 }

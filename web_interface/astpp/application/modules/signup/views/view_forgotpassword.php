@@ -103,7 +103,7 @@ body {
 </head>
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<body style="background: url(<?= base_url() ?>assets/images/login_bg.jpg);background-size: cover;background-attachment: fixed;" onload="FocusOnInput()">
+<body style="background: linear-gradient(135deg, #0E2638 0%, #1B4F87 60%, #347CCB 100%) fixed;" onload="FocusOnInput()">
 
 
 	<div class="container">

@@ -218,7 +218,7 @@ $(document).ready(function() {
         </div>
   </div>
 </div>
-<body style="background: url(<?= base_url() ?>assets/images/login_bg.jpg);background-size: cover;background-attachment: fixed;" onload="FocusOnInput()">
+<body style="background: linear-gradient(135deg, #0E2638 0%, #1B4F87 60%, #347CCB 100%) fixed;" onload="FocusOnInput()">
             <div class="col-md-12 m-auto form_card">
 				<form class="card p-4 col-12"  method="post" accept-charset="utf-8" id="otp_form" name="otp_form" style="background:rgba(255,255,255,0.8);">
 						<h2 class="text-center">	
