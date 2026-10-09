@@ -68,7 +68,7 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 </head>
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<body style="background: url(<?= base_url() ?>assets/images/login_bg.png);background-size: cover;">
+<body style="background: url(<?= base_url() ?>assets/images/login_bg.jpg);background-size: cover;">
 	<div class="container">
 		<div class="col-md-6 mx-auto">
 
