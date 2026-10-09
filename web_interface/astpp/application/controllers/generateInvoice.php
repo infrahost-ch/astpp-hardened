@@ -281,9 +281,15 @@ class GenerateInvoice extends MX_Controller {
 			$TemplateData ['template'] = str_replace ( "#DUE_DATE#", $invData ['due_date'], $TemplateData ['template'] );
 		}
 		$dir_path = getcwd () . "/attachments/";
+		// SECURITY: was exec("cp $FilePath $path"). The invoice prefix is part of the file name and can be
+		// edited by resellers (company profile) - shell injection and, with "../", copying arbitrary
+		// files into the e-mail attachment. No shell, no directories from the prefix.
+		$Filenm = basename ( $Filenm );
+		$FilePath = FCPATH . "invoices/" . ( int ) $AccountData ['id'] . "/" . $Filenm;
 		$path = $dir_path . $Filenm;
-		$command = "cp " . $FilePath . " " . $path;
-		exec ( $command );
+		if (is_file ( $FilePath )) {
+			@copy ( $FilePath, $path );
+		}
 		$email_array = array (
 				'accountid' => $AccountData ['id'],
 				'subject' => $TemplateData ['subject'],
