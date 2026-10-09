@@ -9,7 +9,8 @@
 #       wurden und ueberschrieben bzw. geloescht wuerden, fuehren zum Abbruch
 #    3. Sicherung: /opt/ASTPP (tar), Datenbank (mariadb-dump), nginx-Site
 #    4. rsync nach /opt/ASTPP - Laufzeitdaten (Uploads, Rechnungen, Logs, ...) bleiben
-#    5. Rechte, nginx-Site aus der Vorlage (FQDN/Zertifikat bleiben), PHP-FPM neu laden
+#    5. Rechte, nginx-Site aus der Vorlage (FQDN/Zertifikat bleiben), fail2ban-Filter,
+#       PHP-FPM neu laden
 #    6. Funktionspruefung (Weboberflaeche, FreeSWITCH-xml_curl, Admin-Seiten)
 #    7. Stand in /opt/ASTPP/.git festhalten ("git -C /opt/ASTPP status" zeigt spaeter
 #       jede Aenderung am Server, die nicht aus dem Fork kommt)
@@ -197,6 +198,28 @@ deploy_nginx() {
 	fi
 }
 
+# fail2ban-Filter aus dem Paket (die Jail-Datei enthaelt installationsspezifische Werte und bleibt)
+deploy_fail2ban() {
+	step "fail2ban-Filter"
+	command -v fail2ban-client >/dev/null || { warn "fail2ban nicht installiert - Filter unveraendert"; return 0; }
+	local f name changed=0
+	for f in "${SCRIPT_DIR}"/files/fail2ban/filter.d/*.conf; do
+		name="$(basename "${f}")"
+		cmp -s "${f}" "/etc/fail2ban/filter.d/${name}" && continue
+		[ -f "/etc/fail2ban/filter.d/${name}" ] && cp -a "/etc/fail2ban/filter.d/${name}" "${BACKUP_ROOT}/fail2ban-${name}-${TS}"
+		install -m 644 "${f}" "/etc/fail2ban/filter.d/${name}"
+		log "aktualisiert: ${name}"
+		changed=1
+	done
+	if [ "${changed}" -eq 0 ]; then
+		log "fail2ban-Filter unveraendert"
+	elif fail2ban-client reload >/dev/null; then
+		log "fail2ban neu geladen"
+	else
+		warn "fail2ban-client reload fehlgeschlagen - Filter pruefen (Sicherung: ${BACKUP_ROOT}/fail2ban-*-${TS})"
+	fi
+}
+
 reload_php() {
 	"php-fpm${PHP_VER}" -t 2>/dev/null || die "PHP-FPM-Konfiguration ungueltig"
 	systemctl reload "php${PHP_VER}-fpm"
@@ -259,6 +282,7 @@ main() {
 	deploy_code
 	if [ "${SERVICES}" = "yes" ]; then
 		deploy_nginx
+		deploy_fail2ban
 		reload_php
 		healthcheck
 	else
