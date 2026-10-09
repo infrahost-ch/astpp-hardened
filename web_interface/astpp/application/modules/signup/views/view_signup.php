@@ -203,18 +203,8 @@ function isNumberKey(evt){
 									<noscript>
 										<div id="noscript-warning"><?php echo gettext("ASTPP work best with JavaScript enabled"); ?></div>
 									</noscript>
-
-									</script>
-									<script src='https://www.google.com/recaptcha/api.js'></script>
-
-									<script>
-            function onSubmit(token) {
-				
-                $("#customer_form").submit();
-                return true;
-            }
-			 
-        </script>
+<!-- PRIVACY: Google reCAPTCHA api.js removed - it was loaded on every signup page view but no
+     reCAPTCHA widget exists (the signup form uses ASTPP's own image captcha) -->
 
 </head>
 <? extend('master.php') ?>
