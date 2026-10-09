@@ -1,14 +1,12 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/ck/ckeditor/ckeditor.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/ck/ckeditor/adapters/jquery.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/tinymce-8.9.3/tinymce.min.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/astpp_editor.js"></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
 <script>
 $ (document).ready(function(){
 	$('[data-toggle="tooltip"]').tooltip();
-    CKEDITOR.replace('template');
-    CKEDITOR.replace('alert_template');
-    CKEDITOR.config.width = '100%';
+    astppEditor('textarea[name="template"], textarea[name="alert_template"]');
 });
 </script>
 <script type="text/javascript" language="javascript">
@@ -18,12 +16,6 @@ $(document).ready(function() {
     $('.Emailtemplate2').parents('li').wrap('<div class="col-md-12 form-group h-auto pt-3">').contents().unwrap();
     $('.description').parents('li').wrap('<div class="col-md-12 form-group h-auto pt-3">').contents().unwrap();
 	$('.sms_template').parents('li').wrap('<div class="col-md-12 form-group h-auto pt-3">').contents().unwrap();   
-});
-</script>
-<script type="text/javascript">
-$(function() {
-  	$('#template').markItUp(mySettings);
-    $('#cke_template').addClass('col-12');
 });
 </script>
 <?php endblock() ?>

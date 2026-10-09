@@ -1,29 +1,21 @@
 <? extend('master.php') ?>
 <? extend('left_panel_setting_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/ck/ckeditor/ckeditor.js"></script>
-<script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/ck/ckfinder/ckfinder.js"></script>
-<script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/ck/ckeditor/adapters/jquery.js"></script>
-<script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/markup/markitup/sets/default/set.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/tinymce-8.9.3/tinymce.min.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/astpp_editor.js"></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
 
 <script>
 $ (document).ready(function(){
 	$('a[rel*=facebox]').facebox();
 	$('[data-toggle="tooltip"]').tooltip();
-    CKEDITOR.replace('text');
-    CKEDITOR.config.width = '100%';
+    // terms & conditions text (setting "text"): typing a text clears the terms & conditions URL
+    if (document.getElementById('term_condition')) {
+        astppEditor('#term_condition', { setup: function (editor) {
+            editor.on('keypress', function () { var url = document.getElementById('url'); if (url) { url.value = ''; } });
+        } });
+    }
 });
-</script>
-<script type="text/javascript">
-$(function() {
-  	$('#term_condition').markItUp(mySettings);
-});
-
 </script>
 
 
@@ -378,23 +370,14 @@ function myFunction() {
 	 var x = document.getElementById("url").value;
 			   if(x != '')
 			   { 
-				   CKEDITOR.instances.term_condition.setData('');
+				   if (window.tinymce && tinymce.get('term_condition')) { tinymce.get('term_condition').setContent(''); tinymce.get('term_condition').save(); }
 			   }else
 			   {
 				    document.getElementById("url").value = '';
 			   }
 	}
 	
-// field validation t&c text
-
-CKEDITOR.on('instanceCreated', function(e) {
-        e.editor.on('contentDom', function() {
-            e.editor.document.on('keypress', function(event) {
-            document.getElementById("url").value = '';
-            }
-        );
-    });
-}); 
+// field validation t&c text: see the editor keypress handler above
 
   //end 
 
