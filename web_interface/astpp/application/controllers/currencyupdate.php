@@ -23,6 +23,13 @@
 class Currencyupdate extends CI_Controller {
 	function __construct() {
 		parent::__construct ();
+		// HARDENING: was reachable without login; allow only internal (cron) calls or a logged-in admin
+		if (! astpp_internal_request ()) {
+			$this->load->library ( 'session' );
+			if ($this->session->userdata ( 'user_login' ) != TRUE || ! in_array ( ( string ) $this->session->userdata ( 'logintype' ), array ( '2', '4' ), true )) {
+				show_404 ();
+			}
+		}
 		$this->load->model ( "db_model" );
 		$this->load->library ( "astpp/common" );
 	}

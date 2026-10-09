@@ -25,6 +25,10 @@ class GenerateInvoice extends MX_Controller {
 	public static $global_config;
 	function __construct() {
 		parent::__construct ();
+		// HARDENING: cron controller - only reachable from this server (CLI or wget from cron_settings)
+		if (! astpp_internal_request ()) {
+			show_404 ();
+		}
 		$this->load->model ( "db_model" );
 		$this->load->library ( "astpp/common" );
 		$this->load->library ( 'html2pdf' );

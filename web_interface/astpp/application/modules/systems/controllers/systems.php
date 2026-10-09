@@ -763,19 +763,26 @@ class Systems extends MX_Controller
                 $db_username = $this->db->username;
                 $db_password = $this->db->password;
                 $db_hostname = $this->db->hostname;
-                $filename = $add_array['path'];
+                // HARDENING: the file name was used unquoted in a shell command (command
+                // injection, path traversal) and the DB password was visible in `ps`.
+                $filename = basename((string) $add_array['path']);
+                if (! preg_match('/^[A-Za-z0-9._-]+\.sql(\.gz)?$/', $filename)) {
+                    echo gettext('Invalid backup file name. Allowed: letters, digits, ".", "_", "-" and the extension .sql or .sql.gz');
+                    exit();
+                }
+                $add_array['path'] = $filename;
                 $backup_file = DATABASE_DIRECTORY . $filename;
+                $do_gzip = 0;
                 if (substr($backup_file, - 3) == '.gz') {
                     $backup_file = substr($backup_file, 0, - 3);
                     $do_gzip = 1;
                 }
 
-                $run_backup = "/usr/bin/mysqldump -all --databases " . $db_name . " -u'" . $db_username . "' -p'" . $db_password . "' > '$backup_file'";
+                $run_backup = "MYSQL_PWD=" . escapeshellarg($db_password) . " /usr/bin/mysqldump --single-transaction -h " . escapeshellarg($db_hostname) . " -u " . escapeshellarg($db_username) . " --databases " . escapeshellarg($db_name) . " > " . escapeshellarg($backup_file);
                 $error_zip = 0;
                 exec($run_backup, $output, $error);
                 if ($do_gzip) {
-                    $gzip = $this->config->item('gzip-path');
-                    $run_gzip = $gzip . " " . $backup_file;
+                    $run_gzip = "/bin/gzip -f " . escapeshellarg($backup_file);
                     exec($run_gzip, $output, $error_zip);
                 }
 
@@ -826,14 +833,16 @@ class Systems extends MX_Controller
             $db_username = $this->db->username;
             $db_password = $this->db->password;
             $db_hostname = $this->db->hostname;
-            $path = DATABASE_DIRECTORY . $result_array[0]['path'];
+            // HARDENING: quote every shell argument, no password on the command line
+            $path = DATABASE_DIRECTORY . basename((string) $result_array[0]['path']);
             if (file_exists($path)) {
                 if (substr($path, - 3) == '.gz') {
-                    $GUNZIP_EXE = $this->config->item('gunzip-path');
-                    $run_gzip = $GUNZIP_EXE . " < " . $path . " | ";
+                    $run_gzip = "/bin/gzip -dc " . escapeshellarg($path) . " | ";
+                } else {
+                    $run_gzip = "/bin/cat " . escapeshellarg($path) . " | ";
                 }
                 $MYSQL = "/usr/bin/mysql";
-                $run_restore = $run_gzip . $MYSQL . " -h" . $db_hostname . " -u" . $db_username . " -p" . $db_password . " " . $db_name;
+                $run_restore = $run_gzip . "MYSQL_PWD=" . escapeshellarg($db_password) . " " . $MYSQL . " -h " . escapeshellarg($db_hostname) . " -u " . escapeshellarg($db_username) . " " . escapeshellarg($db_name);
                 exec($run_restore);
                 $this->session->set_flashdata('astpp_errormsg', gettext('Database Restore successfully.'));
                 redirect(base_url() . 'systems/database_restore/');
@@ -886,9 +895,11 @@ class Systems extends MX_Controller
                 $data['page_title'] = gettext('Import Database');
                 $this->load->view('view_import_database', $data);
             } else {
-                $db_file = explode(".", $upload_greeting_file);
-                if ($db_file[1] == 'csv' || $db_file[1] == 'tar' || $db_file[1] == 'sql') {
-                    $target_path = basename($_FILES['userfile']['name']);
+                // HARDENING: the old check accepted e.g. "x.sql.php" and stored it in the
+                // web root (current working directory) -> remote code execution.
+                $upload_name = basename((string) $upload_greeting_file);
+                if (preg_match('/^[A-Za-z0-9._-]+\.(sql|sql\.gz|csv|tar)$/', $upload_name)) {
+                    $target_path = DATABASE_DIRECTORY . $upload_name;
                     move_uploaded_file($_FILES["userfile"]["tmp_name"], $target_path);
 
                     $query = $this->system_model->import_database($filename_text, $_FILES['userfile']['name']);

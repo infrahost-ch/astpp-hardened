@@ -17,7 +17,7 @@
  * NOTE: If you change these, also change the error_reporting() code below
  *
  */
-ini_set('display_errors','on');
+ini_set('display_errors','off'); // HARDENING
 ini_set ( "date.timezone", "UTC" );
 define ( 'ENVIRONMENT', 'production' );
 /*
@@ -217,6 +217,49 @@ if (is_dir ( $application_folder )) {
  * And away we go...
  *
  */
+/*
+ * HARDENING: TRUE for CLI/cron runs and for HTTP requests the server makes to itself.
+ * The jobs in `cron_settings` call the cron controllers via "wget {BASE_URL}...", so
+ * those controllers must stay reachable over HTTP - but only from this host.
+ */
+function astpp_internal_request() {
+	if (defined ( 'CRON' ) || php_sapi_name () === 'cli') {
+		return TRUE;
+	}
+	$remote = isset ( $_SERVER ['REMOTE_ADDR'] ) ? ( string ) $_SERVER ['REMOTE_ADDR'] : '';
+	if (strpos ( $remote, '127.' ) === 0 || $remote === '::1') {
+		return TRUE;
+	}
+	return ($remote !== '' && isset ( $_SERVER ['SERVER_ADDR'] ) && $remote === ( string ) $_SERVER ['SERVER_ADDR']);
+}
+
+/*
+ * HARDENING: global normalization of request parameters that ASTPP concatenates
+ * into SQL in many places (bulk actions and the left panel quick search).
+ *  - selected_ids:       "'1','2','3'" -> only quoted integers survive
+ *  - left_panel_search:  quotes/backslashes removed
+ */
+if (isset ( $_POST ['selected_ids'] )) {
+	$astpp_ids = array ();
+	foreach ( explode ( ',', ( string ) $_POST ['selected_ids'] ) as $astpp_id ) {
+		$astpp_id = trim ( $astpp_id, " '\"" );
+		if ($astpp_id !== '' && ctype_digit ( $astpp_id )) {
+			$astpp_ids [] = "'" . $astpp_id . "'";
+		}
+	}
+	$_POST ['selected_ids'] = empty ( $astpp_ids ) ? "'0'" : implode ( ',', $astpp_ids );
+	unset ( $astpp_ids, $astpp_id );
+}
+if (isset ( $_POST ['left_panel_search'] )) {
+	$_POST ['left_panel_search'] = str_replace ( array (
+			"'",
+			'"',
+			chr ( 92 ), // backslash
+			'`',
+			';' 
+	), '', ( string ) $_POST ['left_panel_search'] );
+}
+
 require_once BASEPATH . 'core/CodeIgniter.php';
 
 /* End of file index.php */

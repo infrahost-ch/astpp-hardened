@@ -195,42 +195,53 @@ function load_sofia($logger, $db, $config) {
 	return $xml;
 }
 function update_vm_data($logger, $db, $password, $user) {
-	$query = "SELECT * FROM sip_devices where username='" . $_REQUEST ['user'] . "' limit 1";
+	// HARDENING: prepared statements (username/password come from SIP/voicemail input)
+	$query = "SELECT * FROM sip_devices where username=? limit 1";
 	$logger->log ( "Directory Query : " . $query );
-	$res_dir = $db->run ( $query );
+	$res_dir = $db->run ( $query, array ( ( string ) $_REQUEST ['user'] ) );
+	if (! is_array ( $res_dir ) || empty ( $res_dir ))
+		return;
 	$params = json_decode ( $res_dir [0] ['dir_params'], true );
 	$params ['vm-password'] = $password;
-	
-	$query = "update sip_devices set dir_params = '" . json_encode ( $params, true ) . "' where username='" . $_REQUEST ['user'] . "' limit 1";
-	$res_dir = $db->run ( $query );
+
+	$query = "update sip_devices set dir_params = ? where username=? limit 1";
+	$res_dir = $db->run ( $query, array ( json_encode ( $params ), ( string ) $_REQUEST ['user'] ) );
+}
+
+// HARDENING: escape values reflected into the XML returned to FreeSWITCH
+function astpp_xml_attr($value) {
+	return htmlspecialchars ( ( string ) $value, ENT_QUOTES | ENT_XML1, 'UTF-8' );
 }
 
 // Build directory xml
 function load_directory($logger, $db) {
 	$xml = "";
 	
-	$query = "SELECT username,dir_params,dir_vars,number as accountcode,accountid FROM sip_devices,accounts WHERE sip_devices.status=0 AND accounts.status=0 AND accounts.deleted=0 AND accounts.id=sip_devices.accountid AND username='" . $_REQUEST ['user'] . "' limit 1";
-	$logger->log ( "Directory Query : " . $query );
-	$res_dir = $db->run ( $query );
+	// HARDENING: the SIP username is attacker controlled (REGISTER/INVITE from the internet)
+	$query = "SELECT username,dir_params,dir_vars,number as accountcode,accountid FROM sip_devices,accounts WHERE sip_devices.status=0 AND accounts.status=0 AND accounts.deleted=0 AND accounts.id=sip_devices.accountid AND username=? limit 1";
+	$logger->log ( "Directory Query : " . $query . " [user=" . $_REQUEST ['user'] . "]" );
+	$res_dir = $db->run ( $query, array ( ( string ) $_REQUEST ['user'] ) );
 	$logger->log ( $res_dir );
-	
+	if (! is_array ( $res_dir ))
+		$res_dir = array ();
+
 	foreach ( $res_dir as $res_dir_key => $res_dir_value ) {
 		$xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
 		$xml .= "<document type=\"freeswitch/xml\">\n";
 		$xml .= "   <section name=\"Directory\" description=\"Directory\">\n";
-		$xml .= "       <domain name=\"" . $_REQUEST ['domain'] . "\" alias=\"true\">\n";
-		$xml .= "           <user id=\"" . $_REQUEST ['user'] . "\">\n";
-		
+		$xml .= "       <domain name=\"" . astpp_xml_attr ( $_REQUEST ['domain'] ) . "\" alias=\"true\">\n";
+		$xml .= "           <user id=\"" . astpp_xml_attr ( $_REQUEST ['user'] ) . "\">\n";
+
 		$params = json_decode ( $res_dir_value ['dir_params'], true );
-		
+
 		$vars = json_decode ( $res_dir_value ['dir_vars'], true );
 		$param_xml = $var_xml = "";
-		foreach ( $params as $parms_key => $res_dir_params ) {
-			$param_xml .= "<param name=\"" . $parms_key . "\" value=\"" . $res_dir_params . "\"/>\n";
+		foreach ( ( array ) $params as $parms_key => $res_dir_params ) {
+			$param_xml .= "<param name=\"" . astpp_xml_attr ( $parms_key ) . "\" value=\"" . astpp_xml_attr ( $res_dir_params ) . "\"/>\n";
 		}
-		
-		foreach ( $vars as $var_key => $res_dir_vars ) {
-			$var_xml .= "<variable name=\"" . $var_key . "\" value=\"" . $res_dir_vars . "\"/>\n";
+
+		foreach ( ( array ) $vars as $var_key => $res_dir_vars ) {
+			$var_xml .= "<variable name=\"" . astpp_xml_attr ( $var_key ) . "\" value=\"" . astpp_xml_attr ( $res_dir_vars ) . "\"/>\n";
 		}
 		
 		$xml .= "               <params>\n";
@@ -241,9 +252,9 @@ function load_directory($logger, $db) {
 		$xml .= "               <variables>\n";
 		$xml .= $var_xml;
 		$xml .= "<variable name=\"sipcall\" value=\"true\"/>\n";
-		$xml .= "<variable name=\"sip_user\" value=\"" . $_REQUEST ['user'] . "\"/>\n";
-		$xml .= "<variable name=\"accountcode\" value=\"" . $res_dir_value ['accountcode'] . "\"/>\n";
-		$xml .= "<variable name=\"domain_name\" value=\"" . $_REQUEST ['domain'] . "\"/>\n";
+		$xml .= "<variable name=\"sip_user\" value=\"" . astpp_xml_attr ( $_REQUEST ['user'] ) . "\"/>\n";
+		$xml .= "<variable name=\"accountcode\" value=\"" . astpp_xml_attr ( $res_dir_value ['accountcode'] ) . "\"/>\n";
+		$xml .= "<variable name=\"domain_name\" value=\"" . astpp_xml_attr ( $_REQUEST ['domain'] ) . "\"/>\n";
 		$xml .= "               </variables>\n";
 		
 		$xml .= "           </user>\n";

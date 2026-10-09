@@ -358,6 +358,10 @@ class System_model extends CI_Model
     function add_languages($add_array)
     {
         unset($add_array["action"], $add_array["id"]);
+        // HARDENING: the locale becomes a column name (ALTER TABLE) and a directory/shell path
+        if (! isset($add_array['locale']) || ! preg_match('/^[A-Za-z]{2,3}(_[A-Za-z]{2,4})?$/', $add_array['locale'])) {
+            return false;
+        }
         $this->db->insert("languages", $add_array);
         $this->db->query('ALTER TABLE translations ADD ' . "`" . $add_array['locale'] . "`" . ' VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL');
         $this->db->query('UPDATE translations SET ' . "`" . $add_array['locale'] . "`" . '= en_En');

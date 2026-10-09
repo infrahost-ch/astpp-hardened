@@ -1617,7 +1617,10 @@ class Rates extends MX_Controller
         $trunkID = $this->input->post("trunkid");
         $check_header = $this->input->post("check_header");
         $pattern_prefix = $this->input->post("pattern-prefix");
-        $filefields = unserialize($this->input->post("filefields"));
+        $filefields = unserialize($this->input->post("filefields"), array('allowed_classes' => false)); // HARDENING: no object injection
+        if (! is_array($filefields)) {
+            $filefields = array();
+        }
         $new_final_arr = array();
         $invalid_array = array();
         $new_final_arr_key = array();

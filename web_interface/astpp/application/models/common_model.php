@@ -32,7 +32,9 @@ class Common_model extends CI_Model {
 		parent::__construct ();
 		$this->load->library ( 'astpp/common' );
 		$this->get_system_config ();
-		$this->uri->uri(self::$global_config,$this->get_dashboard_details());
+		// HARDENING/PRIVACY: removed vendor telemetry. get_dashboard_details() collected all
+		// customer contact data plus server details (spawning curl/fs_cli on every request)
+		// and URI::uri() POSTed it to dcoll.inextrix.com.
 		$this->get_currencylist ();
 		$this->get_country_list ();
 		$this->get_admin_info ();

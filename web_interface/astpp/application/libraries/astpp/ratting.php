@@ -200,7 +200,7 @@ class Ratting {
 		$md5hash = substr($localdata, 0, 32); # Extract MD5 Hash
 		$localdata = substr($localdata, 32); # Extract License Data
 		$localdata = base64_decode($localdata);
-		$localkeyresults = unserialize($localdata);
+		$localkeyresults = unserialize($localdata, array('allowed_classes' => false)); // HARDENING
 		$originalcheckdate = $localkeyresults['checkdate'];
 		if ($md5hash == md5($originalcheckdate . $licensing_secret_key)) {
 

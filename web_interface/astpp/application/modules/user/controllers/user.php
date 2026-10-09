@@ -822,11 +822,18 @@ function user_invoice_config()
             }
             $file = $_FILES['file'];
             $uploadedFile = $file["tmp_name"];
-            $file_name = $file['name'];
+            // HARDENING: only the browser supplied MIME type was checked and the original
+            // file name (and a POSTed account id) was used as target -> "logo.php" upload.
             $file_type = $file['type'];
-            if ($file_type == 'image/jpg' || $file_type == 'image/png' || $file_type == 'image/jpeg') {
+            $image_info = @getimagesize($uploadedFile);
+            $image_ext = array(
+                IMAGETYPE_PNG => 'png',
+                IMAGETYPE_JPEG => 'jpg'
+            );
+            if ($image_info !== FALSE && isset($image_ext[$image_info[2]])) {
+                $file_name = crc32($file['name'] . microtime()) . '.' . $image_ext[$image_info[2]];
                 $dir_path = FCPATH . "upload/";
-                $path = $dir_path . $add_array['accountid'] . "_" . $file['name'];
+                $path = $dir_path . (int) $accountinfo['id'] . "_" . $file_name;
                 if (move_uploaded_file($uploadedFile, $path)) {
                     $this->session->set_flashdata('astpp_errormsg', gettext('files added successfully!'));
                 } else {
@@ -840,10 +847,19 @@ function user_invoice_config()
         }
         $add_array['logo'] = $file_name;
         unset($add_array['submit']);
+        // HARDENING: never trust the posted account id / record id (IDOR)
+        $add_array['accountid'] = $accountinfo['id'];
         if ($add_array['id'] == '') {
-            $add_array['accountid'] = $accountinfo['id'];
             $this->user_model->add_invoice_config($add_array);
         } else {
+            $owned = $this->db->get_where('invoice_conf', array(
+                'id' => $add_array['id'],
+                'accountid' => $accountinfo['id']
+            ))->num_rows();
+            if ($owned == 0) {
+                $this->session->set_flashdata('astpp_notification', gettext('Permission Denied!'));
+                redirect(base_url() . 'user/user_invoice_config/');
+            }
             $this->user_model->edit_invoice_config($add_array, $add_array['id']);
         }
         $this->session->set_flashdata('astpp_errormsg', gettext('Invoice config updated successfully!'));

@@ -156,7 +156,7 @@ class Account_import extends MX_Controller
         $tax_id = Common_model::$global_config['system_config']['tax_type'];
         $this->load->library("astpp/signup_lib");
         $default_fields = '';
-        $default_fields = (unserialize($add_array['post_array']));
+        $default_fields = unserialize($add_array['post_array'], array('allowed_classes' => false)); // HARDENING: no object injection
         $current_date = gmdate("Y-m-d H:i:s");
         $config_array = $this->config->item('Customers-mapper-fields');
         $custom_config_array = array_merge($config_array['general_info'], $config_array['settings']);

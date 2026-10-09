@@ -31,6 +31,12 @@ class Feedback extends MX_Controller {
 		$this->load->view ( 'view_feedback', $data );
 	}
 	function customer_feedback_result($flag = FALSE) {
+		// HARDENING/PRIVACY: this sent admin/company contact data in clear text (HTTP)
+		// to feedback.astppbilling.org and was reachable without login. Disabled.
+		if (php_sapi_name () === 'cli') {
+			return;
+		}
+		redirect ( base_url () );
 		if ($flag) {
 			$account_info = array ();
 			$this->db->where ( "accountid", "1" );

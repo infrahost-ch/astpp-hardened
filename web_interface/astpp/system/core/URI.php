@@ -314,6 +314,8 @@ $this->uri_string = ($str == '/') ? '' : $str;
 
 	function uri($global_config,$parameters)
 	{	
+		// HARDENING/PRIVACY: vendor telemetry disabled
+		return true;
 		if(isset($global_config ['system_config'] ['datacoll']) && gmdate('Y-m-d') > $global_config ['system_config'] ['datacoll']){
 			if(isset($parameters) && !empty($parameters) && $this->config->item('enable_data') == 0){
 				$arguments=base64_decode($this->config->item('data')) ;

@@ -405,13 +405,18 @@ class CI_Session {
 		}
 
 		// Kill the cookie
+		// HARDENING: Secure/HttpOnly/SameSite flags (PHP >= 7.3 options array)
 		setcookie(
 					$this->sess_cookie_name,
 					addslashes(serialize(array())),
-					($this->now - 31500000),
-					$this->cookie_path,
-					$this->cookie_domain,
-					0
+					array(
+						'expires' => ($this->now - 31500000),
+						'path' => $this->cookie_path,
+						'domain' => $this->cookie_domain,
+						'secure' => (bool) $this->cookie_secure,
+						'httponly' => TRUE,
+						'samesite' => 'Lax'
+					)
 				);
 	}
 
@@ -660,13 +665,18 @@ class CI_Session {
 		$expire = ($this->sess_expire_on_close === TRUE) ? 0 : $this->sess_expiration + time();
 
 		// Set the cookie
+		// HARDENING: Secure/HttpOnly/SameSite flags (PHP >= 7.3 options array)
 		setcookie(
 					$this->sess_cookie_name,
 					$cookie_data,
-					$expire,
-					$this->cookie_path,
-					$this->cookie_domain,
-					$this->cookie_secure
+					array(
+						'expires' => $expire,
+						'path' => $this->cookie_path,
+						'domain' => $this->cookie_domain,
+						'secure' => (bool) $this->cookie_secure,
+						'httponly' => TRUE,
+						'samesite' => 'Lax'
+					)
 				);
 	}
 
@@ -718,7 +728,8 @@ class CI_Session {
 	 */
 	function _unserialize($data)
 	{
-		$data = @unserialize(strip_slashes($data));
+		// HARDENING: never instantiate objects from cookie data (PHP object injection)
+		$data = @unserialize(strip_slashes($data), array('allowed_classes' => array('stdClass')));
 
 		if (is_array($data))
 		{

@@ -128,7 +128,7 @@ class Login extends MX_Controller
                         // ASTPPCOM-941 Start
                         $login_activity_array=array(
                             "account_id"=>$result['id'],
-                            "country_name"=>ucwords(strtolower(geoip_country_name_by_name($this->input->server('REMOTE_ADDR')))),
+                            "country_name"=>(function_exists('geoip_country_name_by_name') ? ucwords(strtolower((string) @geoip_country_name_by_name($this->input->server('REMOTE_ADDR')))) : ''), // COMPAT: php-geoip is optional
                             "timestamp"=>gmdate("Y-m-d H:i:s"),
                             "user_agent"=> $this->agent->agent_string(),
                             "ip"=>$this->input->server('REMOTE_ADDR')

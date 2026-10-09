@@ -23,6 +23,11 @@
 class Getbalance extends MX_Controller {
 	function Getbalance() {
 		parent::__construct ();
+		// HARDENING: unauthenticated balance lookup by SIP user/account number (info leak).
+		// Only allowed from this server. Remove this check if IP phones must query it directly.
+		if (! astpp_internal_request ()) {
+			show_404 ();
+		}
 		$this->load->model ( 'common_model' );
 		$this->load->library ( 'common' );
 		$this->load->model ( 'db_model' );

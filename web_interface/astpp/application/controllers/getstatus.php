@@ -26,7 +26,8 @@ class Getstatus extends MX_Controller {
 		$this->load->model ( "db_model" );
 		$this->load->library ( "astpp/common" );
 	}
-	function reload_freeswitch($command, $server_host = "") {
+	// HARDENING: leading underscore makes this method non-routable (was an unauthenticated ESL command endpoint)
+	function _reload_freeswitch($command, $server_host = "") {
                 $response = '';
                 $query = $this->db_model->getSelect ( "*", "freeswich_servers", "" );
                 $fs_data = $query->result_array ();
@@ -83,7 +84,7 @@ class Getstatus extends MX_Controller {
 			if ($post_data ['table'] == "ip_map") {
 							$this->load->library ( 'freeswitch_lib' );
 							$command = "api reloadacl";
-							$response = $this->reload_freeswitch ( $command );
+							$response = $this->_reload_freeswitch ( $command );
 					}
 				echo TRUE;
 			}

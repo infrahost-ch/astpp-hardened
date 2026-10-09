@@ -340,7 +340,7 @@ class Invoices extends MX_Controller
 			$sourceFile = FCPATH.'upload/'.$company_data->logo;
 			$DestFile = FCPATH.'upload/'.$logo[0].'.jpg';
 			$filePath = FCPATH.'upload/';
-			$convert_png  = "convert ".$sourceFile." -background white -flatten ".$DestFile;
+			$convert_png  = "convert " . escapeshellarg($sourceFile) . " -background white -flatten " . escapeshellarg($DestFile); // HARDENING
 			$convert_png_file = system($convert_png, $retval);
 			$company_data->logo = $logo[0].'.jpg';
 		}
@@ -1483,6 +1483,11 @@ class Invoices extends MX_Controller
 
                         $file_name_extention = explode(".", $file_name);
 
+                        // HARDENING: extension whitelist (was taken from the 2nd dot-segment, e.g. "x.php.png")
+                        $file_name_extention[1] = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+                        if (! in_array($file_name_extention[1], array('png', 'jpg', 'jpeg'), true)) {
+                            $file_name_extention[1] = 'png';
+                        }
                         $file_name = crc32($file_name) . '.' . $file_name_extention[1];
                         $path = $dir_path . $file_name;
                         if (move_uploaded_file($uploadedFile, $path)) {
@@ -1496,6 +1501,11 @@ class Invoices extends MX_Controller
                     if (isset($favicon_status)) {
                         $dir_path = FCPATH . "upload/";
                         $file_name_fav_exten = explode(".", $file_name_fav);
+                        // HARDENING: extension whitelist
+                        $file_name_fav_exten[1] = strtolower(pathinfo($file_name_fav, PATHINFO_EXTENSION));
+                        if (! in_array($file_name_fav_exten[1], array('png', 'jpg', 'jpeg', 'ico'), true)) {
+                            $file_name_fav_exten[1] = 'ico';
+                        }
                         $file_name_fav = crc32($file_name_fav) . '.' . $file_name_fav_exten[1];
                         $path = $dir_path . $file_name_fav;
                         if (move_uploaded_file($uploadedFile1, $path)) {
