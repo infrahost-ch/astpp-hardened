@@ -458,6 +458,7 @@ $config ['local_number-rates-field'] = array (
 
 
 // ASTPP fork: was FCPATH."playlist/example/media/recordings/" - a symlink inside the web root,
-// nginx served every recording as a static file without login. PHP reads them directly.
-$config['recordings_path'] = "/var/lib/freeswitch/recordings/";
+// nginx served every recording as a static file without login. PHP reads them directly;
+// astpp-config.conf may set recordings_path (default: the FreeSWITCH recordings directory).
+$config['recordings_path'] = rtrim ( ( string ) ( $astpp_config ['recordings_path'] ?? "/var/lib/freeswitch/recordings" ), "/" ) . "/";
 

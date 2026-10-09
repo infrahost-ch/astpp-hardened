@@ -1850,7 +1850,10 @@ function user_cdrs_report_json()
 
 function user_report_recording_download($file_name)
 {
-    $file_name = $this->config->item('recordings_path') . $file_name;
+    $file_name = $this->common->recording_file($file_name);
+    if ($file_name === false) {
+        show_404();
+    }
     header('Content-Description: File Transfer');
     header('Content-Type: application/octet-stream');
     header('Content-Disposition: attachment; filename=' . basename($file_name));

@@ -32,6 +32,37 @@ class common {
 		$this->CI->load->library ( 'email' );
 		$this->CI->load->library ( 'session' );
 	}
+	/**
+	 * ASTPP fork: absolute path of a call recording the logged-in account may download, or false.
+	 * Recordings are named <call uuid>.wav. Admin / sub admin: every recording; reseller: CDRs of
+	 * its customers; everybody else: own CDRs. Previously any logged-in account could fetch any
+	 * recording by name (and nginx served them without login, see config recordings_path).
+	 */
+	function recording_file($file_name) {
+		if ($this->CI->session->userdata('user_login') == FALSE || !preg_match('/^([0-9A-Za-z-]{8,64})\.wav$/', (string) $file_name, $m)) {
+			return false;
+		}
+		$path = $this->CI->config->item('recordings_path') . $m[0];
+		if (!is_file($path)) {
+			return false;
+		}
+		$logintype = $this->CI->session->userdata('logintype');
+		if ($logintype == 2 || $logintype == 4) {
+			return $path;
+		}
+		$accountinfo = $this->CI->session->userdata('accountinfo');
+		if (empty($accountinfo['id'])) {
+			return false;
+		}
+		$this->CI->db->from('cdrs');
+		$this->CI->db->like('uniqueid', $m[1], 'after');
+		if ($logintype == 1) {
+			$this->CI->db->where('reseller_id', (int) $accountinfo['id']);
+		} else {
+			$this->CI->db->where('accountid', (int) $accountinfo['id']);
+		}
+		return $this->CI->db->count_all_results() > 0 ? $path : false;
+	}
 	function generate_password() {
 
 		$length         = (common_model::$global_config ['system_config'] ['pinlength'] < 8) ? 8 : common_model::$global_config ['system_config'] ['pinlength'];
