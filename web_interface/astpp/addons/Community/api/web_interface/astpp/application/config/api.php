@@ -11,7 +11,7 @@
  |
  |
  */
- $astpp_config = parse_ini_file ( "/var/lib/astpp/astpp-config.conf" );
+ $astpp_config = parse_ini_file ( getenv ( 'ASTPP_CONFIG' ) ?: "/var/lib/astpp/astpp-config.conf" );
  //Riya 3490 Mobile Dialer - Recharge functional is not working
  //Riya ASTPPENT-3993 API- Token keys ISSUE
  $config['api_x_auth_token'] = isset($astpp_config ['api_x_auth_token']) && $astpp_config ['api_x_auth_token'] != "<AUTH_KEY>

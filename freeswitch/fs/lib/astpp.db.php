@@ -28,7 +28,7 @@ class db extends PDO {
 	private $errorCallbackFunction;
 	private $errorMsgFormat;
 	public function __construct($cdr = "") {
-		$config = parse_ini_file ( "/var/lib/astpp/astpp-config.conf" );
+		$config = parse_ini_file ( getenv ( 'ASTPP_CONFIG' ) ?: "/var/lib/astpp/astpp-config.conf" );
 		
 		// HARDENING: never allow stacked queries (blocks "; UPDATE ..." injections)
 		$options = array (

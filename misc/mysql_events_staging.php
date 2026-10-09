@@ -5,7 +5,7 @@
 $minutes = "180";
 
 //Get parameters of database connection from this file.
-$astpp_config = parse_ini_file ( "/var/lib/astpp/astpp-config.conf" );
+$astpp_config = parse_ini_file ( getenv ( 'ASTPP_CONFIG' ) ?: "/var/lib/astpp/astpp-config.conf" );
 $dbname = $astpp_config['dbname'];
 $dbuser = $astpp_config['dbuser'];
 $dbpass = $astpp_config['dbpass'];

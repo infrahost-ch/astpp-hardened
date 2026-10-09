@@ -1,5 +1,5 @@
 <?php
-$astpp_config = parse_ini_file ( "/var/lib/astpp/astpp-config.conf" );
+$astpp_config = parse_ini_file ( getenv ( 'ASTPP_CONFIG' ) ?: "/var/lib/astpp/astpp-config.conf" );
 //print_r($astpp_config);exit;
 $con=mysqli_connect( $astpp_config ['dbhost'],$astpp_config ['dbuser'],$astpp_config ['dbpass'],$astpp_config ['dbname']);
 if (mysqli_connect_errno())

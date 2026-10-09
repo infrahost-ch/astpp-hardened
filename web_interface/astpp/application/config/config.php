@@ -17,7 +17,7 @@ if (! defined ( 'BASEPATH' ))
  * |
  */
 
-$astpp_config = parse_ini_file ( "/var/lib/astpp/astpp-config.conf" );
+$astpp_config = parse_ini_file ( getenv ( 'ASTPP_CONFIG' ) ?: "/var/lib/astpp/astpp-config.conf" );
 $config ['base_url'] = $astpp_config ['base_url'];
 
 // $config['perl_url'] = $astpp_config['base_url']."cgi-bin/astpp-admin/";

@@ -10,7 +10,7 @@ if (! defined ( 'CRON' )) {
  * |--------------------------------------------------------------------------
  */
 
-$astpp_config = parse_ini_file ( "/var/lib/astpp/astpp-config.conf" );
+$astpp_config = parse_ini_file ( getenv ( 'ASTPP_CONFIG' ) ?: "/var/lib/astpp/astpp-config.conf" );
 $config ['SERVER_NAME'] = $astpp_config ['base_url']; // Your web site url
 $config ['CRON_TIME_LIMIT'] = 0; // 0 = no time limit
 $config ['argv'] = array (

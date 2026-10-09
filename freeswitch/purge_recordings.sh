@@ -1,10 +1,11 @@
 #!/bin/bash
 DATE=`date +"%m-%d-%y %T"`
 RECDIR=/var/lib/freeswitch/recordings/
-DBHOST=`cat /var/lib/astpp/astpp-config.conf | grep dbhost | cut -c 10-`
-DBUSER=`cat /var/lib/astpp/astpp-config.conf | grep dbuser | cut -c 10-`
-DBPASS=`cat /var/lib/astpp/astpp-config.conf | grep dbpass | cut -c 10-`
-DBNAME=`cat /var/lib/astpp/astpp-config.conf | grep dbname | cut -c 10-`
+ASTPP_CONFIG="${ASTPP_CONFIG:-/var/lib/astpp/astpp-config.conf}"
+DBHOST=`cat "$ASTPP_CONFIG" | grep dbhost | cut -c 10-`
+DBUSER=`cat "$ASTPP_CONFIG" | grep dbuser | cut -c 10-`
+DBPASS=`cat "$ASTPP_CONFIG" | grep dbpass | cut -c 10-`
+DBNAME=`cat "$ASTPP_CONFIG" | grep dbname | cut -c 10-`
 echo "[client]
 user = $DBUSER
 password = '$DBPASS'
