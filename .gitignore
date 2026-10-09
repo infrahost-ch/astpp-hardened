@@ -1,0 +1,13 @@
+# Runtime data written by ASTPP. The directories belong to the tree (installer/deploy keep
+# their content), generated files never do. Files already tracked here stay tracked.
+/web_interface/astpp/upload/*
+/web_interface/astpp/attachments/*
+/web_interface/astpp/invoices/*
+/web_interface/astpp/database_backup/*
+/web_interface/astpp/language/*
+/web_interface/astpp/assets/captcha/*.jpg
+/web_interface/astpp/assets/Rates_File/uploaded_files/
+/web_interface/astpp/application/cache/*
+/web_interface/astpp/application/logs/*
+/freeswitch/scripts/astpp/lib/addons/*
+/freeswitch/fs/lib/addons/*
