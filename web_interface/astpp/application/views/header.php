@@ -125,8 +125,8 @@
 	
     </script>      
      <link href="<?= base_url() ?>assets/css/checkbox.css" rel="stylesheet"/>
-     <link href="<?= base_url() ?>assets/css/bootstrap.min.css" rel="stylesheet"/>
-     <link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/bootstrap-select.css"/>
+     <link href="<?= base_url() ?>assets/vendor/bootstrap-4.6.2/bootstrap.min.css" rel="stylesheet"/>
+     <link rel="stylesheet" href="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.min.css"/>
      <link href="<?= base_url() ?>assets/css/sidebar_style.css" rel="stylesheet" type="text/css"/>
      <link href="<?php echo base_url(); ?>/assets/css/jquery.datetimepicker.min.css" rel="stylesheet" />
      <link rel="stylesheet" media="all" type="text/css" href="<?php echo base_url(); ?>/assets/css/tabcontent.css"/>
@@ -143,9 +143,10 @@
   <link href="<?php echo base_url(); ?>assets/vendor/fonts/fonts.css" rel="stylesheet"> 
 
 
-     <script src="<?php echo base_url(); ?>assets/js/jquery-1.12.4.js"></script>
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/bootstrap.bundle.min.js"></script>
-	 <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/bootstrap-select.js"></script>  
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"></script>
+	 <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"></script>  
      <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.datetimepicker.min.js"></script>
 
      <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/modernizr.custom.js"></script>
@@ -156,7 +157,6 @@
 
 
      <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery.browser/jquery.browser.min.js"></script>
-  -->
 
      <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/facebox.js"></script>
      <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/flexigrid.js"></script>

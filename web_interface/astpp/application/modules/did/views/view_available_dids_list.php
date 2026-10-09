@@ -5,13 +5,13 @@
 <script type="text/javascript" language="javascript">
  $(document).ready(function() {
 	
-    $( window ).load(function() {
-	     $(".did_dropdown").removeClass("col-md-5");  
-             $(".did_dropdown").addClass("col-md-3"); 
-    });
+    // jQuery 3: $(window).load() inside a ready handler would never fire (ready runs after "load")
+    var did_dropdown_cols = function () { $(".did_dropdown").removeClass("col-md-5").addClass("col-md-3"); };
+    did_dropdown_cols();
+    $(document).on("loaded.bs.select", did_dropdown_cols);
     build_grid("available_did_grid","",<? echo $grid_fields; ?>,'');
     $('.checkall').click(function () {
-            $('.chkRefNos').attr('checked', this.checked); //if you want to select/deselect checkboxes use this
+            $('.chkRefNos').prop('checked', this.checked); //if you want to select/deselect checkboxes use this
     });
     $("#available_did_search_btn").click(function(){        
             post_request_for_search("available_did_grid","","available_did_search");

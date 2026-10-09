@@ -21,7 +21,7 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 ?>
 </title>
 <link rel="icon" href="<? echo base_url(); ?>assets/images/favicon.ico">
-<link href="<?= base_url() ?>assets/css/bootstrap.min.css"
+<link href="<?= base_url() ?>assets/vendor/bootstrap-4.6.2/bootstrap.min.css"
 	rel="stylesheet">
 <link
 	href="<?= base_url() ?>assets/fonts/font-awesome-4.2.0/css/font-awesome.css"

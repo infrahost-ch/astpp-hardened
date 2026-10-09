@@ -4,10 +4,10 @@
 	src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
 <script type="text/javascript" language="javascript">
  $(document).ready(function() {
-    $( window ).load(function() {
-	     $(".did_dropdown").removeClass("col-md-5");  
-             $(".did_dropdown").addClass("col-md-3"); 
-    });
+    // jQuery 3: $(window).load() inside a ready handler would never fire (ready runs after "load")
+    var did_dropdown_cols = function () { $(".did_dropdown").removeClass("col-md-5").addClass("col-md-3"); };
+    did_dropdown_cols();
+    $(document).on("loaded.bs.select", did_dropdown_cols);
     build_grid("did_grid","",<? echo $grid_fields; ?>,<? echo $grid_buttons; ?>);
     $('.checkall').click(function () {
            $('.chkRefNos').prop('checked', $(this).prop('checked')); //if you want to select/deselect checkboxes use this

@@ -1,7 +1,7 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 <link href="<?= base_url() ?>assets/css/shop_popup.css" rel="stylesheet" type="text/css"/>
-<script src="<?= base_url() ?>assets/js/jquery-ui.min.js"></script>
+<script src="<?= base_url() ?>assets/vendor/jquery-ui-1.14.2/jquery-ui.min.js"></script>
 <script type="text/javascript" language="javascript">
 $(document).ready(function() {
         build_grid("refill_coupon_grid","",<? echo $grid_fields; ?>,"");

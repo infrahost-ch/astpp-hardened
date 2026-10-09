@@ -10,10 +10,10 @@
 	    var base_url = '<?php echo base_url(); ?>';
     </script>
      
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/bootstrap.min.js"></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.min.js"></script>
      
      
-     <script src="<?php echo  base_url(); ?>assets/js/bootstrap-select.min.js"></script>
+     <script src="<?php echo  base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"></script>
      <script src="<?php echo base_url(); ?>/assets/js/jquery.datetimepicker.min.js"></script>
      <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/tabcontent.js"></script>
      <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/facebox.js"></script>

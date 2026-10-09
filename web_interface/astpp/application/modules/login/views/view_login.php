@@ -24,7 +24,7 @@
 
     <link rel="icon"
 	href="<? echo base_url(); ?>assets/images/<? echo $user_favicon ?>" />
-<link href="<?= base_url() ?>assets/css/bootstrap.min.css"
+<link href="<?= base_url() ?>assets/vendor/bootstrap-4.6.2/bootstrap.min.css"
 	rel="stylesheet">
 <link
 	href="<?= base_url() ?>assets/fonts/font-awesome-4.7.0/css/font-awesome.css"
@@ -38,11 +38,12 @@
 <link href="<?php echo base_url(); ?>assets/css/com-style.css"
 rel="stylesheet" type="text/css">	
 
-<script src="<?php echo base_url(); ?>assets/js/jquery-1.12.4.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"></script>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/js/bootstrap.bundle.min.js"></script>
+	src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"></script>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/status/dist/js/bootstrap-select.js"></script>
+	src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"></script>
 <script type="text/javascript"
 	src="<?php echo base_url(); ?>assets/js/jquery.validate.min.js"></script>
 <!-- IE -->
