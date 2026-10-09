@@ -188,13 +188,23 @@ deploy_nginx() {
 	diff -u "${NGINX_SITE}" "${tmp}" | sed 's/^/  /' || true
 	install -m 644 "${tmp}" "${NGINX_SITE}"
 	rm -f "${tmp}"
-	if nginx -t 2>/dev/null; then
-		systemctl reload nginx
+	# "nginx -t" passes some changes that the running master then refuses on reload (e.g. a
+	# limit_req zone with a new key) - it keeps the old configuration and only logs [emerg].
+	local errlog=/var/log/nginx/error.log size emerg=""
+	size="$(stat -c %s "${errlog}" 2>/dev/null || echo 0)"
+	if nginx -t 2>/dev/null && systemctl reload nginx; then
+		sleep 1
+		emerg="$(tail -c +"$((size + 1))" "${errlog}" 2>/dev/null | grep '\[emerg\]' || true)"
+	else
+		emerg="nginx -t fehlgeschlagen"
+	fi
+	if [ -z "${emerg}" ]; then
 		log "nginx-Site aktualisiert (${fqdn})"
 	else
+		printf '  %s\n' "${emerg}" >&2
 		cp -a "${BACKUP_ROOT}/nginx-astpp.conf-${TS}" "${NGINX_SITE}"
 		nginx -t && systemctl reload nginx
-		warn "neue nginx-Site war ungueltig - alte Site wiederhergestellt"
+		warn "neue nginx-Site wurde nicht uebernommen (siehe oben) - alte Site wiederhergestellt"
 	fi
 }
 
