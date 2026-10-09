@@ -58,8 +58,6 @@
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/fileinput.js"></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/tabcontent.js"></script>
 <!-- IE -->
-<script type="text/javascript" src="<?php echo base_url(); ?>/assets/js/respond.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>/assets/js/respond.src.js"></script>
 <!-- -->    
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/custome_index.js"></script>
 <noscript>	

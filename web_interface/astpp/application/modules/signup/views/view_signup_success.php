@@ -31,10 +31,6 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 <link href="<?php echo base_url(); ?>assets/css/com-style.css"
 							rel="stylesheet" type="text/css">	
 
-<script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/js/respond.js"></script>
-<script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/js/respond.src.js"></script>
 <noscript>
 	<div id="noscript-warning"><?php echo gettext("ASTPP work best with JavaScript enabled"); ?></div>
 </noscript>

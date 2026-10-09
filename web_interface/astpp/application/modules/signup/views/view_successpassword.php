@@ -33,10 +33,6 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 							rel="stylesheet" type="text/css">	
 
 						<!-- IE -->
-						<script type="text/javascript"
-							src="<?php echo base_url(); ?>/assets/js/respond.js"></script>
-						<script type="text/javascript"
-							src="<?php echo base_url(); ?>/assets/js/respond.src.js"></script>
 						<!-- -->
 
 						<script type="text/javascript"
