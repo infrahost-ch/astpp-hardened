@@ -1112,26 +1112,9 @@ function create_formatted_date($startdate,$enddate,$timezone,$timevisibly)
                         <div class="card-body">
                             <div id="call-count"></div>
                             <?php
-                            $feed_url = "https://newsinfo.astppbilling.org/posts.php";
-                            if($feed_url!='')
-                            {
-
-                            // make request
-                            $ch = curl_init();
-                            // Disable SSL verification
-                            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                            // Will return the response, if false it print the response
-                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // Set the url
-                            curl_setopt($ch, CURLOPT_URL, $feed_url);
-                            // Execute
-                            $output = curl_exec($ch);
-                            $xml_snippet = simplexml_load_string( $output,null, LIBXML_NOCDATA);
-                            $json_convert = json_encode( $xml_snippet );
-                            $json = json_decode( $json_convert );
-                            PHP_VERSION_ID < 80000 && curl_close($ch);
-                            $events = $json->channel->item;
-                            }                     
+                            // PRIVACY/SECURITY: the vendor news feed (newsinfo.astppbilling.org) was fetched on every
+                            // dashboard view with TLS verification off and printed unescaped - removed.
+                            $events = array();                     
                             ?>
                             <div class="rss-widget">
                                 <?php

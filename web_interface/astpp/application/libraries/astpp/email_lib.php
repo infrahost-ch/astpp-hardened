@@ -435,12 +435,11 @@ class email_lib {
 			$accountinfo = $this->CI->session->userdata ( 'accountinfo' );
 			$country_code = $this->CI->common->get_field_name('countrycode','countrycode',array ("id" => $accountinfo['country_id']));
 			$contact_no=isset($accountinfo['telephone_1'])?$accountinfo['telephone_1']:$accountinfo['telephone_2'];
-			$url="https://rest.nexmo.com/sms/json?api_key=".$this->sms_api_key."&api_secret=".$this->sms_secret_key."&from=NEXMO&to=".$country_code."".$contact_no."&text=".$this->sms_content."";
+			// SECURITY: parameters URL-encoded, TLS verification no longer disabled
+			$url = 'https://rest.nexmo.com/sms/json?' . http_build_query(array('api_key' => $this->sms_api_key, 'api_secret' => $this->sms_secret_key, 'from' => 'NEXMO', 'to' => $country_code . $contact_no, 'text' => $this->sms_content));
             $ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $url); 
-			curl_setopt($ch, CURLOPT_VERBOSE, 1); 
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE); 
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE); 
+			curl_setopt($ch, CURLOPT_TIMEOUT, 15); 
 			curl_setopt($ch, CURLOPT_POST, 1); 
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
             $result = curl_exec($ch);

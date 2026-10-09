@@ -107,22 +107,34 @@ class notification {
 	}
 	function send_sms_notification($notification_template_data,$accountinfo,$invoiceconf){
 		$numberlength=6;
-		$sms_details=$this->get_sms_settings_details();
 		$uniq_rendno = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
-		$message = str_replace ( "<p>", "", $notification_template_data['template'] );
-		$message = str_replace ( "</p>", "", $notification_template_data['template'] );
-
-		$url="https://rest.nexmo.com/sms/json?api_key='be33a9f1'&api_secret='LPn30y0lCuBHjKk2'&from=NEXMO&to=".$accountinfo['number']."&text=".$message;
-            $ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $url); 
-			curl_setopt($ch, CURLOPT_VERBOSE, 1); 
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE); 
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE); 
-			curl_setopt($ch, CURLOPT_POST, 1); 
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
-           		$result = curl_exec($ch);
-		
+		// SECURITY: upstream sent every notification as SMS through a hard-coded third-party Nexmo
+		// account (API key/secret in the source), unencoded and without TLS verification, whenever
+		// the non-existent setting "account_generate" was "0". Now: only if SMS notifications are
+		// enabled and with the operator's own SMS credentials (Configuration -> SMS).
+		$sms = array();
+		$query = $this->CI->db_model->getSelect ( "name,value", "system", array ( 'group_title' => 'sms' ) );
+		foreach ( $query->result_array () as $row ) {
+			$sms [strtolower ( $row ['name'] )] = $row ['value'];
+		}
+		if (! isset ( $sms ['sms_notications'] ) || ! astpp_eq0 ( $sms ['sms_notications'] ) || empty ( $sms ['sms_api_key'] ) || empty ( $sms ['sms_secret_key'] )) {
 			return $uniq_rendno;
+		}
+		$message = str_replace ( array ( "<p>", "</p>" ), "", $notification_template_data['template'] );
+		$url = 'https://rest.nexmo.com/sms/json?' . http_build_query ( array (
+				'api_key' => $sms ['sms_api_key'],
+				'api_secret' => $sms ['sms_secret_key'],
+				'from' => 'NEXMO',
+				'to' => $accountinfo['number'],
+				'text' => $message
+		) );
+		$ch = curl_init ();
+		curl_setopt ( $ch, CURLOPT_URL, $url );
+		curl_setopt ( $ch, CURLOPT_POST, 1 );
+		curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, 1 );
+		curl_setopt ( $ch, CURLOPT_TIMEOUT, 15 );
+		curl_exec ( $ch );
+		return $uniq_rendno;
 	}
 	function get_sms_settings_details(){
 		$where = array (

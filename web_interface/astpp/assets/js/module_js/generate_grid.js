@@ -704,9 +704,7 @@ function get_lang(value) {
 function gettext_custom(collumn_property) {
 
     var collumn = '';
-    //var url = 'http://65.111.177.99:9999/accounts/customer_global_grid_list/';
     var url = base_url + "login/get_language_text/";
-    //var url = "http://192.168.1.22:8073/login/get_language_text/";
     //alert(url);exit;
     $.ajax({
         url: url,
