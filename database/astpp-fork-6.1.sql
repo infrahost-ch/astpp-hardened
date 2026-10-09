@@ -14,3 +14,7 @@ UPDATE invoice_conf
        fax = '', emailaddress = '', website = '', invoice_taxes_number = '', domain = '',
        website_title = 'ASTPP', website_footer = ''
  WHERE accountid = 1 AND company_name = 'Inextrix Technologies Pvt. Ltd.';
+
+-- Country list: the row for +372 (ISO EE, capital Tallinn) was labelled ERITREA, so Estonia
+-- was missing from every country drop-down and Eritrea appeared twice.
+UPDATE countrycode SET country = 'ESTONIA' WHERE id = 61 AND iso = 'EE' AND countrycode = 372 AND country = 'ERITREA';
