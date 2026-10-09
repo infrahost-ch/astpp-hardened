@@ -493,8 +493,6 @@ if (isset($error['captcha_err']) && $error['captcha_err']) {
 				</div>
 
 	<script type="text/javascript">
-		<?php  echo $term_and_condition_url;  ?>
-		<?php  echo $term_and_condition_url;  ?>
 		$("#country_id").val(<?= $country_id ?>);
 		$("#timezone_id").val(<?= $timezone_id ?>);
 		$("#currency_id").val(<?= $currency_id ?>);

@@ -1,8 +1,7 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/chart/highcharts.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/chart/exporting.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/chart/highcharts-3d.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/chartjs-4.5.1/chart.umd.min.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/astpp_charts.js"></script>
 <style>
     .second{
         color: black;
@@ -79,34 +78,10 @@ to{-webkit-transform:rotate(1turn);transform:rotate(1turn)}
             },
             success: function(response_data) {
                 $("#call-graph").hide();
-                $('#call_graph_data').highcharts({
-                    chart: {
-                        zoomType: 'xy'
-                    },
-                    title: {
-                        text: 'ABC'
-                    },
-                    xAxis: [{
-                            categories:response_data.date
-                        }],
-                    yAxis: [{
-                            min: 0,
-                            title: {
-                                    text: ' '
-                            }
-                        }, {
-                            min: 0,
-                            opposite: true, 
-                            title: {
-                                text: '<?php echo gettext("Profit per day"); ?>'
-                            }
-                        }],
-                    tooltip: {
-                        backgroundColor: '#FEFEC5',
-                        borderColor: 'black',
-                        borderRadius: 10,
-                        borderWidth: 2,
-                        formatter: function() {
+                astppComboChart('#call_graph_data', {
+                    categories: response_data.date,
+                    y1Title: '<?php echo gettext("Profit per day"); ?>',
+                    tooltip: function() {
                             var today_dropdown=$("#today_dropdown").val();
                             if(this.series.name == 'Total Calls'){
                                 if(today_dropdown == 't_month'){
@@ -125,58 +100,12 @@ to{-webkit-transform:rotate(1turn);transform:rotate(1turn)}
                             }else{
                                 return this.series.name+': <b>'+this.y+'</b>';
                             }
-                        }
-                                  
-                    },
-                    legend: {
-                        layout: 'horizontal',
-                        align: 'center',
-                        x: 0,
-                        verticalAlign: 'top',
-                        y: 0,
-                        backgroundColor: '#EFEFEF'
-                    },
+                        },
                     series: [
-                        {
-                            name: '<?php echo gettext("Total Calls"); ?>',
-                            type: 'column',
-                            color:'#6E8CD7  ',
-                            yAxis:0,
-                            data: response_data.total
-                        },
-                        {
-                            name: '<?php echo gettext("Answered Calls"); ?>',
-                            type: 'spline',
-                            color:'#34D3EB',
-                            yAxis:0,
-                            data: response_data.answered,
-                            marker: {
-                                enabled: true
-                            },
-                            dashStyle: 'shortdot'
-                        },
-                        {
-                            name: '<?php echo gettext("Failed Calls"); ?>',
-                            type: 'spline',
-                            color:'#E94E02',
-                            yAxis:0,
-                            data: response_data.failed,
-                            marker: {
-                                enabled: true
-                            },
-                            dashStyle: 'shortdot'
-                        },
-                        {
-                            name: '<?php echo gettext("Profit"); ?>',
-                            type: 'spline',
-                            yAxis:1,
-                            color:'#008000',
-                            data: response_data.profit,
-                            marker: {
-                                enabled: true
-                            },
-                            dashStyle: 'shortdot'
-                        }
+                        { name: '<?php echo gettext("Total Calls"); ?>', type: 'column', color: '#6E8CD7', yAxis: 0, data: response_data.total },
+                        { name: '<?php echo gettext("Answered Calls"); ?>', type: 'line', color: '#34D3EB', yAxis: 0, data: response_data.answered, dashed: true },
+                        { name: '<?php echo gettext("Failed Calls"); ?>', type: 'line', color: '#E94E02', yAxis: 0, data: response_data.failed, dashed: true },
+                        { name: '<?php echo gettext("Profit"); ?>', type: 'line', color: '#008000', yAxis: 1, data: response_data.profit, dashed: true }
                     ]
                 });
             }
@@ -274,49 +203,9 @@ to{-webkit-transform:rotate(1turn);transform:rotate(1turn)}
                 else{
                     $("div.not_data").hide();
                     $("div.call_count_data").show();
-                    $('#call_count_data').highcharts({
-                        chart: {
-                            type: 'pie',
-                            options3d: {
-                                enabled: true,
-                                alpha: 45,
-                                beta: 0,
-                                depth: 25,
-                                viewDistance: 25
-                            }
-                        },
-                        title: {
-                            text: ""
-                        },
-                        tooltip: {
-                            backgroundColor: '#FEFEC5',
-                            borderColor: 'black',
-                            borderRadius: 10,
-                            borderWidth: 2,
-                            formatter: function() {
+                    astppPieChart('#call_count_data', response_data, function() {
                                 return this.point.name+': <b>'+this.y+'</b>';
-                            }
-                        
-                        },
-                        subtitle: {
-                            text: ''
-                        },
-                        plotOptions: {
-                            pie: {
-                                allowPointSelect: true,
-                                cursor: 'pointer',
-                                depth: 25,
-                                dataLabels: {
-                                    enabled: false
-                                },
-                                showInLegend: true
-                            }
-                        },
-                        series: [{
-                                name: '',
-                                data: response_data
-                            }]
-                    });
+                            });
                 }
             }
         });
@@ -360,49 +249,9 @@ to{-webkit-transform:rotate(1turn);transform:rotate(1turn)}
                 else{
                     $("div.country_not_data").hide();
                     $("div.country_count_data").show();
-                    $('#country_count_data').highcharts({
-                        chart: {
-                            type: 'pie',
-                            options3d: {
-                                enabled: true,
-                                alpha: 45,
-                                beta: 0,
-                                depth: 25,
-                                viewDistance: 25
-                            }
-                        },
-                        title: {
-                            text: ""
-                        },
-                        tooltip: {
-                            backgroundColor: '#FEFEC5',
-                            borderColor: 'black',
-                            borderRadius: 10,
-                            borderWidth: 2,
-                            formatter: function() {
+                    astppPieChart('#country_count_data', response_data, function() {
                                 return this.point.name+': <b>'+this.y+'</b>';
-                            }
-                        
-                        },
-                        subtitle: {
-                            text: ''
-                        },
-                        plotOptions: {
-                            pie: {
-                                allowPointSelect: true,
-                                cursor: 'pointer',
-                                depth: 25,
-                                dataLabels: {
-                                    enabled: false
-                                },
-                                showInLegend: true
-                            }
-                        },
-                        series: [{
-                                name: '',
-                                data: response_data
-                            }]
-                    });
+                            });
                 }
             }
         });

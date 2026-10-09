@@ -8,9 +8,6 @@
 
 ?>
 <? startblock('extra_head') ?>
-    <script type="text/javascript" src="<?php echo base_url();?>assets/js/chart/highcharts.js"></script>
-    <script type="text/javascript" src="<?php echo base_url();?>assets/js/chart/exporting.js"></script>
-    <script type="text/javascript" src="<?php echo base_url();?>assets/js/chart/highcharts-3d.js"></script>
 <style>
 .second{
  color: black;
