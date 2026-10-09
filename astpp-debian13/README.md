@@ -265,7 +265,7 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
 | FreeSWITCH-Konsole | `fs_cli` (Passwort aus `/etc/fs_cli.conf`) |
 | SIP-Status | `fs_cli -x 'sofia status'` |
 | Logs | `/var/log/astpp/`, `/var/log/freeswitch/freeswitch.log`, `/var/log/nginx/astpp_*.log` |
-| fail2ban | `fail2ban-client status freeswitch-astpp` / `fail2ban-client set freeswitch-astpp unbanip <IP>` |
+| fail2ban | `fail2ban-client status` (Jails `sshd`, `freeswitch-astpp`, `astpp-login`) / gesperrte IP freigeben: `fail2ban-client set astpp-login unbanip <IP>` (Web-Login, 10 Fehlversuche bzw. Limit-Treffer in 10 min) |
 | Firewall | `nft list table inet astpp` |
 
 **Updates**
