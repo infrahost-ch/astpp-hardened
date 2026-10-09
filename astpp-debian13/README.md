@@ -15,6 +15,7 @@ Sicherheitslücken der Herstellerinstallation.
 | `tools/astpp-deploy.sh` | bringt eine bestehende Installation auf den Stand von `astpp/` (mit Sicherung und Prüfungen) |
 | `tools/astpp-postinstall.php` | schlüsselt Seed-Passwörter um, setzt Admin-Passwort, sperrt Demo-Konten |
 | `tools/astpp-smoketest.php` | lesender Funktionstest der Weboberfläche (`php8.5 tools/astpp-smoketest.php`) |
+| `tools/npmfetch.sh`, `tools/gitfetch.sh` | Bibliotheken für `astpp/` herunterladen und prüfen (npm: SHA-512 der Registry, Composer: Commit laut Packagist) |
 | `tools/php85-port/` | Werkzeuge der PHP-8.5-Portierung (Umschreiber, Kompatibilitätstest, A/B-Testsuite) – auch für Code, der später aus Upstream übernommen wird |
 | `files/` | Konfigurationsvorlagen (nginx, PHP-FPM, MariaDB, FreeSWITCH, fail2ban, nftables, cron) |
 
@@ -122,6 +123,14 @@ folgt jede Änderung als eigener Commit (`git log -- astpp`): Härtung, PHP-8.5-
 - Rechnungsversand per E-Mail kopierte die PDF per `exec("cp …")`; der Dateiname enthält das
   Rechnungspräfix, das Reseller im Firmenprofil selbst setzen → **Befehlsausführung** auf dem Server.
   Jetzt ohne Shell, nur Dateinamen ohne Pfad.
+- Status-Schalter in den Listen (Audit M9): vorher konnte jedes angemeldete Konto jeden Datensatz
+  jeder Tabelle sperren/entsperren (z. B. ein Kunde fremde Konten). Jetzt nur Tabellen mit Schalter
+  und je Rolle: Admin alles, Reseller seine Kunden und eigenen Daten, Kunden nur eigene
+  SIP-Geräte/IP-/ANI-Einträge.
+- Hintergrundaufgaben (Mailversand nach Rechnungserstellung, Währungsupdate) starten mit der
+  passenden PHP-CLI statt `screen … php` (= PHP 7.4 auf dem umgestellten Server); der Mailversand
+  läuft nie doppelt parallel (Sperre), sonst hätten Sofort-Start und Minuten-Cron Mails doppelt
+  verschickt.
 - Bibliotheken mit bekannten Lücken ersetzt (Tabelle unten), CKEditor samt öffentlicher Beispielseiten
   entfernt.
 
@@ -136,6 +145,7 @@ npm-/Packagist-Prüfsummen verifiziert)
 | bootstrap-select | 1.13.2 / 1.13.5 / 1.13.10 (XSS, CVE-2019-20921) | 1.13.18 | MIT |
 | Diagramme | Highcharts 4.2.5 (**kommerzielle Lizenz** nötig) | Chart.js 4.5.1 (`assets/js/module_js/astpp_charts.js`) | MIT |
 | Editor | CKEditor 4.11.4 (EOL, XSS), TinyMCE 4.3.8, markItUp | TinyMCE 8.9.3 (`astpp_editor.js`) | GPL-2.0-or-later |
+| Formularprüfung | jquery.validate 1.17.0 (ReDoS) | jquery.validate 1.22.1 | MIT |
 | PDF | TCPDF 5.0.002 (2010) + html2pdf 4.03 | TCPDF 6.11.4 + html2pdf 4.6.1 (PHP-8.5-portiert) | LGPL-3.0 / LGPL |
 | Schriften | Google Fonts | Fontsource-Dateien | OFL-1.1 |
 
@@ -144,9 +154,8 @@ npm-/Packagist-Prüfsummen verifiziert)
 - jQuery 3 führt `ready`-Handler asynchron aus; bootstrap-select initialisiert deshalb erst nach den
   `ready`-Handlern der Seiten (wie unter jQuery 1). jQuery Migrate ist stumm geschaltet und fängt die
   verbliebenen veralteten Aufrufe ab (nur Deprecations, keine entfernten APIs).
-- Unverändert: FPDF (Belege), jquery.validate 1.17.0, Flexigrid, Facebox, gijgo-Datepicker,
-  bootstrap-fileinput 3.1.3 – teils von ASTPP angepasst. Kandidat für das nächste Update:
-  jquery.validate (1.19.5+ behebt drei ReDoS-Lücken in den Browser-Validierungen).
+- Unverändert: FPDF (Belege), Flexigrid, Facebox, gijgo-Datepicker, bootstrap-fileinput 3.1.3 –
+  teils von ASTPP angepasst.
 
 **Entfernt** (toter Code, Beispielseiten): Wavesurfer-Demo `playlist/` (öffentlich erreichbar),
 CKEditor-Beispiele, Demo-Addons, ungenutzte Views und Bibliotheken (Select2, daterangepicker,
@@ -164,7 +173,10 @@ Seiten ohne JavaScript-Fehler (ausser bekannten Upstream-Fehlern); Konfiguration
 Vorlagen-Seiten funktionieren jetzt (im Original defekt). Interaktiv geprüft: Grid-Suche, Datepicker,
 Dropdowns, Menüs, Popup-Formulare (SIP-Gerät anlegen, Passwort neu erzeugen, Validierung),
 Dashboard-Diagramme mit Tooltips und Zeitraumwechsel, Editor (Umlaute und `#PLATZHALTER#` bleiben),
-AGB-Text ↔ AGB-URL, Rechnungs-PDF (alt/neu optisch gleich), Aufnahmen-Download mit Rechteprüfung.
+AGB-Text ↔ AGB-URL, Rechnungs-PDF (alt/neu optisch gleich), Aufnahmen-Download mit Rechteprüfung,
+Status-Schalter (25 Fälle mit Admin, Kunde und Reseller inkl. Reseller-Produkten), Formularprüfung
+mit jquery.validate 1.22.1 (Signup, Passwort vergessen, PIN, IP-/ANI-Map mit eigenen Regeln und
+Server-Prüfung), Hintergrund-Mailversand samt Sperre.
 Crawler über 318 URLs: nur bekannte Upstream-Fehler.
 
 ## Voraussetzungen
