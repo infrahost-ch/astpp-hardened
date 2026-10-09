@@ -1,9 +1,14 @@
 <?php
 /*
- * Read-only smoke test of the PRODUCTION web interface after the switch to PHP 8.5:
+ * Read-only smoke test of the web interface (after install, deploy or PHP changes):
  * admin login, list/view pages and their JSON grids. Nothing is saved or changed.
+ *
+ *   php8.5 astpp-smoketest.php [host]     host default: base_url of astpp-config.conf
+ * Exit code 0 = all pages ok, 1 = problems, 2 = login failed.
  */
-$host = 'astpp.example.com'; $base = "https://$host/";
+$host = $argv[1] ?? (string) parse_url((string) (parse_ini_file(getenv('ASTPP_CONFIG') ?: '/var/lib/astpp/astpp-config.conf')['base_url'] ?? ''), PHP_URL_HOST);
+if ($host === '') { fwrite(STDERR, "host unknown\n"); exit(2); }
+$base = "https://$host/";
 foreach (file('/root/astpp-credentials.txt') as $l) if (preg_match('/^Admin-Passwort\s*:\s*(\S+)/', $l, $m)) $pw = $m[1];
 $jar = tempnam('/tmp', 'smoke');
 function r($u, $p = null) {
@@ -19,6 +24,7 @@ function r($u, $p = null) {
 r($base . 'login/login');
 list($c, $b, $loc) = r($base . 'login/login', array('username' => 'admin', 'password' => $pw));
 echo "Login: HTTP $c -> $loc\n";
+if (strpos($loc, 'dashboard') === false) { echo "Login fehlgeschlagen (Admin-Passwort in /root/astpp-credentials.txt aktuell?)\n"; exit(2); }
 $pages = array('dashboard/', 'accounts/customer_list/', 'accounts/reseller_list/', 'accounts/provider_list/', 'accounts/admin_list/',
     'freeswitch/fssipdevices/', 'freeswitch/fssipprofile/', 'freeswitch/fsgateway/', 'freeswitch/fsserver_list/', 'did/did_list/',
     'rates/origination_rates_list/', 'rates/termination_rates_list/', 'pricing/price_list/', 'trunk/trunk_list/', 'ipmap/ipmap_detail/',
@@ -41,3 +47,4 @@ foreach ($pages as $p) {
 echo "Seiten/Grids ok: $ok, Probleme: " . count($bad) . "\n" . implode("\n", $bad) . "\n";
 r($base . 'login/logout');
 @unlink($jar);
+exit($bad ? 1 : 0);

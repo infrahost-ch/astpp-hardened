@@ -37,6 +37,6 @@ RTP_END="32768"
 # PHP open_basedir fuer die Weboberflaeche (bei unerklaerlichen Fehlern testweise "no")
 PHP_OPEN_BASEDIR="yes"
 
-# Gepruefte Versionen - nur aendern, wenn das Patchset dazu passt
-#ASTPP_COMMIT="d5108ec6fb7a1ba7842155fb4e06632c629f3a63"
+# ASTPP-Quellbaum (Standard: astpp/ neben astpp-debian13/) und gepruefte FreeSWITCH-Versionen
+#ASTPP_TREE="/root/astpp/astpp"
 #FS_VERSION="v1.11.3"

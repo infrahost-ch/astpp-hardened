@@ -8,14 +8,14 @@ Sicherheitslücken der Herstellerinstallation.
 
 | Pfad | Zweck |
 |---|---|
+| [`../astpp/`](../astpp) | **ASTPP-Quellcode (infrahost-Fork)** – wird von Installer und Deploy unverändert installiert, siehe [Fork](#fork-astpp) |
 | `install.sh` | Installer für Debian 13 (ersetzt das `install.sh` des Herstellers) |
 | `install.conf.example` | Einstellungen (FQDN, E-Mail, FreeSWITCH-Token, Firewall) |
-| `patches/astpp-v6-hardening.patch` | Sicherheits- und Kompatibilitätspatches für ASTPP |
-| `patches/astpp-v6-php85.patch` | Portierung von ASTPP auf PHP 8.5 (wird nach dem Hardening-Patch angewendet) |
+| `lib/astpp-tree.sh` | gemeinsame Funktionen von Installer und Deploy (Syntaxprüfung, Abgleich, Rechte) |
+| `tools/astpp-deploy.sh` | bringt eine bestehende Installation auf den Stand von `astpp/` (mit Sicherung und Prüfungen) |
 | `tools/astpp-postinstall.php` | schlüsselt Seed-Passwörter um, setzt Admin-Passwort, sperrt Demo-Konten |
-| `tools/astpp-upgrade-php85.sh` | stellt eine bestehende PHP-7.4-Installation auf PHP 8.5 um (mit Sicherung) |
-| `tools/astpp-smoketest.php` | lesender Funktionstest der Weboberfläche nach Änderungen (`php8.5 tools/astpp-smoketest.php`) |
-| `tools/php85-port/` | Werkzeuge der Portierung (Umschreiber, Kompatibilitätstest, A/B-Testsuite) |
+| `tools/astpp-smoketest.php` | lesender Funktionstest der Weboberfläche (`php8.5 tools/astpp-smoketest.php`) |
+| `tools/php85-port/` | Werkzeuge der PHP-8.5-Portierung (Umschreiber, Kompatibilitätstest, A/B-Testsuite) – auch für Code, der später aus Upstream übernommen wird |
 | `files/` | Konfigurationsvorlagen (nginx, PHP-FPM, MariaDB, FreeSWITCH, fail2ban, nftables, cron) |
 
 ## Wichtige Entscheidungen
@@ -39,8 +39,8 @@ für die PHP-Prozesse von ASTPP (`/etc/astpp/openssl-legacy.cnf` via
 
 ## PHP 8.5
 
-ASTPP 6 war nur unter PHP 7.4 lauffähig. `patches/astpp-v6-php85.patch` (464 Dateien) portiert es auf
-PHP 8.5 mit dem Ziel **identischen Verhaltens**: Was unter 7.4 funktionierte, funktioniert gleich; wo
+ASTPP 6 war nur unter PHP 7.4 lauffähig. Der Commit *PHP 8.5 port* im Fork (464 Dateien, früher
+`patches/astpp-v6-php85.patch`) portiert es auf PHP 8.5 mit dem Ziel **identischen Verhaltens**: Was unter 7.4 funktionierte, funktioniert gleich; wo
 PHP 7.4 nur eine Warnung ausgab und weiterrechnete, rechnet ASTPP unter 8.5 genauso weiter.
 
 **Vorgehen**
@@ -86,6 +86,87 @@ Pflichtparameter aufgerufen werden, liefern einen 500er; *SIP Devices → Routin
 setzt das nicht installierte Addon `siprouting` voraus; *SIP-Profil bearbeiten* und *CDR-Report*
 des Resellers enden mit einem SQL-Fehler; `products_listing_json` mit Fehler 500.
 
+## Fork (`astpp/`)
+
+Seit 09.10.2026 installieren Installer und Deploy ASTPP aus dem Verzeichnis [`astpp/`](../astpp)
+dieses Repositories statt aus dem Hersteller-Repository plus Patches. Ziel ist ein **sicherer und
+stabiler Fork** – Kompatibilität mit künftigen Upstream-Versionen und neue Funktionen sind bewusst
+kein Ziel; Upstream-Korrekturen werden bei Bedarf von Hand übernommen.
+
+Die Git-Historie von `astpp/` beginnt mit dem unveränderten Upstream-Stand (V6.0 @ `d5108ec6`), danach
+folgt jede Änderung als eigener Commit (`git log -- astpp`): Härtung, PHP-8.5-Port, dann:
+
+**Datenschutz** (keine Verbindung zu Dritten mehr beim Seitenaufruf)
+
+- Google-Analytics-Tag des Herstellers (`G-Y72F0B6ZN1`) aus allen Seiten entfernt – jeder
+  Seitenaufruf (auch der Admin-Oberfläche) wurde an das Analytics-Konto des Herstellers gemeldet.
+- Schriften (Montserrat, Roboto, Noto Sans), Glyphicons, `jquery.browser` werden selbst ausgeliefert
+  statt von Google Fonts, BootstrapCDN und cdnjs.
+- Newsfeed des Herstellers im Dashboard entfernt (TLS-Prüfung aus, Inhalt ungefiltert ausgegeben).
+- Fest eingebaute Nexmo-Zugangsdaten eines Dritten entfernt; SMS gehen nur noch über die in den
+  Einstellungen hinterlegten Zugangsdaten, mit TLS-Prüfung.
+- Lizenzprüfung gegen `portal.inextrix.com` (WHMCS, ungenutzt) und Links ins Hersteller-LAN entfernt.
+- Google-reCAPTCHA-Skript von der Signup-Seite entfernt (wurde immer geladen, aber nie benutzt –
+  ASTPP verwendet ein eigenes Bild-Captcha); Formular-Icons, die von einer fremden Privat-Website
+  geladen wurden (`popup.css`), entfernt. Externe Skripte gibt es nur noch auf der Bezahlseite für
+  Reseller-Produkte (Stripe), wenn Stripe genutzt wird.
+
+**Sicherheit**
+
+- Anrufaufzeichnungen lagen über einen Symlink im Web-Root (`playlist/example/media/recordings`) und
+  waren **ohne Anmeldung** abrufbar. ASTPP liest sie jetzt direkt aus
+  `/var/lib/freeswitch/recordings` (`recordings_path` in `astpp-config.conf`) und gibt sie nur für
+  CDRs heraus, die das angemeldete Konto sehen darf (Admin: alle, Reseller: seine Kunden, sonst eigene).
+  Vorher konnte jedes angemeldete Konto jede Aufnahme laden. Die Abspiel-Knöpfe in den CDR-Listen
+  funktionieren unter nginx erst jetzt (eigene Route in `files/nginx/astpp.conf`).
+- Rechnungsversand per E-Mail kopierte die PDF per `exec("cp …")`; der Dateiname enthält das
+  Rechnungspräfix, das Reseller im Firmenprofil selbst setzen → **Befehlsausführung** auf dem Server.
+  Jetzt ohne Shell, nur Dateinamen ohne Pfad.
+- Bibliotheken mit bekannten Lücken ersetzt (Tabelle unten), CKEditor samt öffentlicher Beispielseiten
+  entfernt.
+
+**Bibliotheken** (alle selbst ausgeliefert unter `assets/vendor/<name>-<version>/`, Downloads gegen
+npm-/Packagist-Prüfsummen verifiziert)
+
+| Komponente | vorher | jetzt | Lizenz |
+|---|---|---|---|
+| jQuery | 1.12.4 (+ 1.7.1) | 3.7.1 + jQuery Migrate 3.6.0 | MIT |
+| jQuery UI | 1.12.1 | 1.14.2 | MIT |
+| Bootstrap | 4.1.3 (+ 3.3.4) | 4.6.2 | MIT |
+| bootstrap-select | 1.13.2 / 1.13.5 / 1.13.10 (XSS, CVE-2019-20921) | 1.13.18 | MIT |
+| Diagramme | Highcharts 4.2.5 (**kommerzielle Lizenz** nötig) | Chart.js 4.5.1 (`assets/js/module_js/astpp_charts.js`) | MIT |
+| Editor | CKEditor 4.11.4 (EOL, XSS), TinyMCE 4.3.8, markItUp | TinyMCE 8.9.3 (`astpp_editor.js`) | GPL-2.0-or-later |
+| PDF | TCPDF 5.0.002 (2010) + html2pdf 4.03 | TCPDF 6.11.4 + html2pdf 4.6.1 (PHP-8.5-portiert) | LGPL-3.0 / LGPL |
+| Schriften | Google Fonts | Fontsource-Dateien | OFL-1.1 |
+
+- html2pdf 5.x wurde bewusst **nicht** genommen: Lizenz OSL-3.0, nicht mit der AGPL von ASTPP vereinbar.
+  4.6.1 ist die letzte LGPL-Version und nutzt TCPDF 6. TCPDF setzt keinen versteckten Link mehr ins PDF.
+- jQuery 3 führt `ready`-Handler asynchron aus; bootstrap-select initialisiert deshalb erst nach den
+  `ready`-Handlern der Seiten (wie unter jQuery 1). jQuery Migrate ist stumm geschaltet und fängt die
+  verbliebenen veralteten Aufrufe ab (nur Deprecations, keine entfernten APIs).
+- Unverändert: FPDF (Belege), jquery.validate 1.17.0, Flexigrid, Facebox, gijgo-Datepicker,
+  bootstrap-fileinput 3.1.3 – teils von ASTPP angepasst. Kandidat für das nächste Update:
+  jquery.validate (1.19.5+ behebt drei ReDoS-Lücken in den Browser-Validierungen).
+
+**Entfernt** (toter Code, Beispielseiten): Wavesurfer-Demo `playlist/` (öffentlich erreichbar),
+CKEditor-Beispiele, Demo-Addons, ungenutzte Views und Bibliotheken (Select2, daterangepicker,
+bootstrap-datepicker, SyntaxHighlighter, excanvas, respond.js, Bootstrap 3, jQuery Migrate 1, …),
+SQL-Dumps von ASTPP 1.7–4.0, 53-MB-Partner-Upgrade-Dump, MySQL-ODBC-Tarball, ungenutzte Bilder,
+macOS-Dateien, Duplikate, die sich nur in Gross-/Kleinschreibung unterschieden.
+
+**Weitere Korrekturen:** Konfigurationsdatei per `ASTPP_CONFIG` umstellbar (Testinstanzen),
+Signup-Seite (verirrte PHP-Ausgaben brachen die Vorbelegung von Land/Zeitzone/Währung),
+DID-Listen und Kontrollkästchen unter jQuery 3.
+
+**Verifikation** (09.10.2026, Testinstanz mit Kopie der Produktionsdatenbank, Browser + Server-Crawler):
+45 Admin-Seiten, 12 Kundenprofil-Unterseiten, 18 Seiten des Kundenportals und die öffentlichen
+Seiten ohne JavaScript-Fehler (ausser bekannten Upstream-Fehlern); Konfigurations- und
+Vorlagen-Seiten funktionieren jetzt (im Original defekt). Interaktiv geprüft: Grid-Suche, Datepicker,
+Dropdowns, Menüs, Popup-Formulare (SIP-Gerät anlegen, Passwort neu erzeugen, Validierung),
+Dashboard-Diagramme mit Tooltips und Zeitraumwechsel, Editor (Umlaute und `#PLATZHALTER#` bleiben),
+AGB-Text ↔ AGB-URL, Rechnungs-PDF (alt/neu optisch gleich), Aufnahmen-Download mit Rechteprüfung.
+Crawler über 318 URLs: nur bekannte Upstream-Fehler.
+
 ## Voraussetzungen
 
 - frisch installiertes **Debian 13 (amd64)**, Minimal-Installation mit SSH
@@ -97,18 +178,25 @@ des Resellers enden mit einem SQL-Fehler; `products_listing_json` mit Fehler 500
 
 ## Installation
 
+Das ganze Repository (mindestens `astpp/` und `astpp-debian13/` nebeneinander) auf den Server
+bringen, z. B. als `git clone` oder per Bundle:
+
 ```bash
-scp -r astpp-debian13 root@astpp.example.com:/root/
+git bundle create astpp.bundle main
+```
+
+```bash
+scp astpp.bundle root@astpp.example.com:/root/ && ssh root@astpp.example.com git clone -b main /root/astpp.bundle /root/astpp
 ```
 
 Auf dem Server:
 
 ```bash
-cd /root/astpp-debian13 && cp install.conf.example install.conf && nano install.conf
+cd /root/astpp/astpp-debian13 && cp install.conf.example install.conf && nano install.conf
 ```
 
 ```bash
-bash /root/astpp-debian13/install.sh
+bash /root/astpp/astpp-debian13/install.sh
 ```
 
 Das Protokoll liegt in `/var/log/astpp-install.log`, die Zugangsdaten in
@@ -124,10 +212,10 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
 4. PHP 8.5 (Sury), Blowfish-Selbsttest, opcache, eigener `astpp.ini`
 5. nginx mit Platzhalter-Zertifikat
 6. FreeSWITCH 1.11 (Pakete oder Quell-Build), systemd-Abhängigkeit auf MariaDB/nginx/PHP
-7. ASTPP-Quellcode, **gepinnt** auf Commit `d5108ec6…` (Branch V6.0, 26.06.2026), beide Patchsets
-   anwenden (Hardening, PHP 8.5), Upstream-Datei `index.html` (Kopie der Google-Startseite) entfernen,
-   PHP/Lua-Syntaxprüfung aller geänderten Dateien; Code gehört `root` und ist für PHP nur lesbar,
-   schreibbar nur `upload/`, `attachments/`, `invoices/`, `database_backup/`, `language/`, `assets/Rates_File/`, Caches
+7. ASTPP-Quellcode aus `astpp/` (Fork), vorher PHP/Lua-Syntaxprüfung **aller** Dateien; Code gehört
+   `root` und ist für PHP nur lesbar, schreibbar nur `upload/`, `attachments/`, `invoices/`,
+   `database_backup/`, `language/`, `assets/Rates_File/`, `assets/captcha/`, Caches/Logs.
+   Der installierte Stand wird in `/opt/ASTPP/.git` festgehalten
 8. Konfiguration mit **pro Installation zufälligen** Schlüsseln/Passwörtern (DB, Krypto-Keys, ESL, Admin)
 9. DB-Import + `astpp-postinstall.php` (Seed-Passwörter umschlüsseln, Admin-Passwort, Demo-Konten sperren, ESL-Passwort)
 10. FreeSWITCH: ASTPP-Module/xml_curl/Lua, Event-Socket nur `127.0.0.1` mit Zufallspasswort,
@@ -172,25 +260,35 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
 - Debian-Sicherheitsupdates laufen automatisch (`unattended-upgrades`).
 - **PHP 8.5 (Sury) und FreeSWITCH** werden *nicht* automatisch aktualisiert – monatlich
   `apt update && apt list --upgradable` prüfen und gezielt einspielen.
-- **ASTPP-Updates:** neuen Commit holen, beide Patchsets neu anwenden/anpassen, auf einem Testsystem
-  prüfen (A/B-Testsuite in `tools/php85-port/`). Neuer Upstream-Code muss wieder durch die Umschreiber
-  (`tools/php85-port/README.md`). `git -C /opt/ASTPP status` zeigt jederzeit, ob Dateien vom geprüften
-  Stand abweichen.
+- **ASTPP-Änderungen** werden in `astpp/` gemacht (ein Commit pro Änderung), auf einem Testsystem
+  geprüft und dann per Deploy eingespielt. Code aus Upstream wird von Hand übernommen und muss durch
+  die Umschreiber der PHP-8.5-Portierung (`tools/php85-port/README.md`).
+- `git -C /opt/ASTPP status` zeigt jederzeit, ob am Server Dateien vom installierten Stand abweichen.
 
-## Bestehende Installation von PHP 7.4 auf 8.5 umstellen
+## Bestehende Installation aktualisieren (Deploy)
 
-Für Server, die mit der früheren Version dieses Pakets (PHP 7.4) installiert wurden:
+Im aktualisierten Checkout des Repositories auf dem Server:
 
 ```bash
-bash /root/astpp-debian13/tools/astpp-upgrade-php85.sh
+DRY_RUN=yes bash /root/astpp/astpp-debian13/tools/astpp-deploy.sh
 ```
 
-Das Skript sichert Code, Konfiguration und Datenbank nach `/root/astpp-pre-php85-<Zeitstempel>/`,
-installiert PHP 8.5, wendet den Patch auf `/opt/ASTPP` an (Syntaxprüfung unter 8.5), legt die
-PHP-8.5-Pools mit denselben Werten an, stellt nginx, Cron und die FreeSWITCH-Abhängigkeit um, prüft
-Weboberfläche und xml_curl und stoppt erst dann `php7.4-fpm`. Die PHP-7.4-Pakete bleiben für ein
-Rollback installiert; die Rollback-Befehle gibt das Skript am Ende aus. Wenn alles läuft:
-`apt purge 'php7.4*'`.
+```bash
+bash /root/astpp/astpp-debian13/tools/astpp-deploy.sh
+```
+
+Das Skript prüft die Syntax aller PHP-/Lua-Dateien, plant den Abgleich (`rsync --checksum`) und bricht
+ab, wenn dabei am Server geänderte oder zusätzlich angelegte Dateien verloren gingen (Liste wird
+ausgegeben; `FORCE=yes` verwirft sie). Danach: Sicherung nach `/var/backups/astpp/` (Code als tar,
+Datenbank per `mariadb-dump`, nginx-Site), Abgleich nach `/opt/ASTPP`, Rechte, nginx-Site neu aus der
+Vorlage (FQDN, Zertifikat und Socket bleiben), PHP-FPM neu laden, Funktionsprüfung (Weboberfläche,
+xml_curl, Smoketest der Admin-Seiten, SIP-Profil, neue Einträge im PHP-Fehlerlog) und Eintrag in
+`/opt/ASTPP/.git`. Laufzeitdaten (Uploads, Rechnungen, Captchas, Logs, Caches) werden nie gelöscht
+oder überschrieben, fehlende mitgelieferte Dateien darin ergänzt. Der Rückweg steht am Ende der
+Ausgabe. Probelauf auf eine Kopie: `ASTPP_SRC=/root/kopie` (dann ohne Dienste).
+
+Installationen des alten Installers (Upstream-Checkout + Patches) übernimmt das Skript beim ersten
+Lauf; deren `.git` landet in der Sicherung.
 
 **Firewall anpassen:** `install.conf` ändern und nur den Firewall-Teil neu erzeugen ist nicht vorgesehen –
 Regeln direkt in `/etc/nftables.conf` (Sets `ssh_allow4/6`, `sip_allow4/6`) pflegen und
@@ -200,7 +298,10 @@ Regeln direkt in `/etc/nftables.conf` (Sets `ssh_allow4/6`, `sip_allow4/6`) pfle
 
 - **Addons über die Weboberfläche installieren** funktioniert nicht mehr: Das Addon-Modul kopiert
   Code per `cp -rf` in die Anwendung, was einen beschreibbaren Code-Baum voraussetzt (= jede
-  Upload-Lücke wird zur Code-Ausführung). Addons bei Bedarf als root installieren und den Patch prüfen.
+  Upload-Lücke wird zur Code-Ausführung). Die Addons unter `addons/` werden im Fork nicht gepflegt
+  (nicht auf PHP 8.5 getestet, teils noch alte Editor-/Bibliotheksaufrufe); ein benötigtes Addon
+  gehört als Commit in `astpp/`, sonst löscht der nächste Deploy seine Dateien nicht – er bricht ab.
+- Dashboard-Diagramme: das Export-Menü von Highcharts (PNG/PDF-Download) gibt es nicht mehr.
 - `/getbalance/<nummer>` (Guthabenabfrage ohne Login) ist nur noch vom Server selbst erreichbar.
 - Mehrfach-Domains (Reseller-Branding mit eigener Domain) brauchen zusätzliche `server_name`-Einträge
   und Zertifikate in `/etc/nginx/sites-available/astpp.conf`.
@@ -211,10 +312,12 @@ Regeln direkt in `/etc/nftables.conf` (Sets `ssh_allow4/6`, `sip_allow4/6`) pfle
 ## Validierung / Testplan
 
 Der Installer (damals mit PHP 7.4) lief am 08.10.2026 auf dem Referenzserver; der Server wurde
-anschliessend mit `tools/astpp-upgrade-php85.sh` auf PHP 8.5 umgestellt (Ergebnisse siehe
-[PHP 8.5](#php-85)). Ein kompletter Neuinstallationslauf direkt mit PHP 8.5 steht noch aus; die
-Patch-Kette des Installers (Upstream-Commit → Hardening → PHP 8.5) wurde separat nachgestellt und
-ergibt exakt den getesteten Stand, `astpp-postinstall.php` lief unter 8.5 gegen eine frische Datenbank.
+anschliessend auf PHP 8.5 umgestellt (Ergebnisse siehe [PHP 8.5](#php-85)); der Wechsel auf den Fork
+erfolgte per `tools/astpp-deploy.sh`. Ein kompletter Neuinstallationslauf mit dem Fork steht
+noch aus; die Funktionen für Abgleich, Rechte und Protokoll teilen sich Installer und Deploy
+(`lib/astpp-tree.sh`), das Deploy wurde vorher auf einer Kopie des Produktionscodes geprobt
+(Codebaum danach identisch mit `astpp/`, Laufzeitdaten und hochgeladene Logos erhalten, lokale
+Änderungen führen zum Abbruch).
 
 - [x] Login als admin, Konten anlegen/bearbeiten (Formulartests), erneut anmelden
 - [x] Rechnung erzeugen (PDF), Tarif-Import (CSV)

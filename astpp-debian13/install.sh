@@ -6,8 +6,9 @@
 #  Unterschiede zum Hersteller-Installer (install.sh aus dem ZIP):
 #   - nur Debian 13; MariaDB 11.8 aus Debian statt Oracle-MySQL-Repo
 #   - PHP 8.5 von packages.sury.org; ASTPP 6 (CodeIgniter 2.1) ist dafuer portiert
-#     (patches/astpp-v6-php85.patch, PHP-7-Semantik ueber application/php7compat.php)
-#   - ASTPP-Quellcode auf einen geprueften Commit gepinnt + Sicherheits-Patchset
+#     (PHP-7-Semantik ueber application/php7compat.php)
+#   - ASTPP-Quellcode aus dem infrahost-Fork (Verzeichnis astpp/ dieses Repositories):
+#     Upstream V6.0 + Haertung + PHP-8.5-Port + aktualisierte, selbst ausgelieferte Bibliotheken
 #   - keine Telemetrie (Upstream-Installer schickte E-Mail/IP an astppbilling.org,
 #     die Anwendung selbst alle Kundenkontaktdaten an dcoll.inextrix.com)
 #   - kein chmod 777, Code gehoert root und ist fuer PHP nur lesbar,
@@ -16,8 +17,10 @@
 #   - kein ionCube, kein "apt purge php8.*", keine --no-check-certificate-Downloads
 #   - nftables-Firewall, fail2ban (SSH, SIP, Web-Login), Let's-Encrypt-TLS
 #
-#  Aufruf:   cp install.conf.example install.conf && $EDITOR install.conf
+#  Aufruf (im Checkout des Repositories, astpp/ liegt neben astpp-debian13/):
+#            cp install.conf.example install.conf && $EDITOR install.conf
 #            bash install.sh
+#  Bestehende Installation aktualisieren: tools/astpp-deploy.sh
 # =============================================================================
 set -Eeuo pipefail
 shopt -u patsub_replacement 2>/dev/null || true
@@ -26,6 +29,8 @@ umask 022
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 [ -f "${SCRIPT_DIR}/install.conf" ] && . "${SCRIPT_DIR}/install.conf"
+# shellcheck source=lib/astpp-tree.sh
+. "${SCRIPT_DIR}/lib/astpp-tree.sh"
 
 # ---------------------------------------------------------------- settings ---
 ASTPP_FQDN="${ASTPP_FQDN:-}"                 # Pflicht: oeffentlicher Hostname (install.conf)
@@ -44,8 +49,7 @@ RTP_END="${RTP_END:-32768}"
 PHP_OPEN_BASEDIR="${PHP_OPEN_BASEDIR:-yes}"
 FORCE="${FORCE:-no}"
 
-ASTPP_REPO="${ASTPP_REPO:-https://github.com/iNextrix/ASTPP.git}"
-ASTPP_COMMIT="${ASTPP_COMMIT:-d5108ec6fb7a1ba7842155fb4e06632c629f3a63}"   # Branch V6.0, 2026-06-26
+ASTPP_TREE="${ASTPP_TREE:-}"                 # leer = astpp/ neben astpp-debian13/
 FS_VERSION="${FS_VERSION:-v1.11.3}"
 SOFIA_VERSION="${SOFIA_VERSION:-v1.13.18}"
 SPANDSP_VERSION="${SPANDSP_VERSION:-v3.1.1}"
@@ -86,21 +90,6 @@ randpw() {
 	printf '%s' "${out:0:${len}}"
 }
 
-# render TEMPLATE DEST KEY VALUE [KEY VALUE ...] - literal @KEY@ replacement
-render() {
-	local src="$1" dst="$2" content key val
-	shift 2
-	content="$(<"${src}")"
-	while [ "$#" -ge 2 ]; do
-		key="@$1@"; val="$2"; shift 2
-		content="${content//"${key}"/"${val}"}"
-	done
-	if grep -q '@[A-Z0-9_]\+@' <<<"${content}"; then
-		die "Template ${src}: nicht ersetzte Platzhalter: $(grep -o '@[A-Z0-9_]\+@' <<<"${content}" | sort -u | tr '\n' ' ')"
-	fi
-	printf '%s\n' "${content}" >"${dst}"
-}
-
 apt_install() { apt-get install -y -o Dpkg::Options::=--force-confold "$@"; }
 pkg_available() { apt-cache show "$1" >/dev/null 2>&1; }
 
@@ -130,9 +119,10 @@ preflight() {
 		|| die "Nur Debian 13 (trixie) wird unterstuetzt - gefunden: ${PRETTY_NAME:-unbekannt}"
 	[ "$(dpkg --print-architecture)" = "amd64" ] || die "Nur amd64 wird unterstuetzt."
 	[ -d /run/systemd/system ] || die "systemd wird benoetigt."
-	for f in patches/astpp-v6-hardening.patch patches/astpp-v6-php85.patch tools/astpp-postinstall.php files/nginx/astpp.conf; do
+	for f in lib/astpp-tree.sh tools/astpp-postinstall.php files/nginx/astpp.conf; do
 		[ -f "${SCRIPT_DIR}/${f}" ] || die "Datei fehlt im Installationspaket: ${f}"
 	done
+	ASTPP_TREE="$(astpp_tree_dir)"
 	[[ "${ASTPP_FQDN}" =~ ^([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$ ]] \
 		|| die "ASTPP_FQDN fehlt oder ist kein gueltiger Hostname (install.conf): ${ASTPP_FQDN}"
 	if [ -e "${ASTPP_SRC}" ] && [ "${FORCE}" != "yes" ]; then
@@ -163,7 +153,7 @@ install_base() {
 	step "Basissystem aktualisieren und Pakete installieren"
 	apt-get update
 	apt-get -y -o Dpkg::Options::=--force-confold full-upgrade
-	apt_install ca-certificates curl wget gnupg git lsb-release unzip xz-utils sudo \
+	apt_install ca-certificates curl wget gnupg git rsync lsb-release unzip xz-utils sudo \
 		openssl screen imagemagick gettext bc locales-all chrony \
 		unattended-upgrades apt-listchanges nftables fail2ban python3-systemd \
 		logrotate lua5.3 unixodbc odbc-mariadb iproute2 procps
@@ -443,53 +433,18 @@ install_freeswitch() {
 
 # ------------------------------------------------------------- ASTPP source ---
 install_astpp_source() {
-	step "ASTPP-Quellcode (Commit ${ASTPP_COMMIT:0:12}) holen und Sicherheits-Patches anwenden"
+	local rev
+	rev="$(astpp_tree_revision "${ASTPP_TREE}")"
+	step "ASTPP-Quellcode aus dem Fork installieren (${ASTPP_TREE}, Revision ${rev})"
+	astpp_lint_tree "${ASTPP_TREE}"
+	"php${PHP_VER}" -l "${SCRIPT_DIR}/tools/astpp-postinstall.php" >/dev/null || die "Syntaxfehler in tools/astpp-postinstall.php"
+
 	rm -rf "${ASTPP_SRC}"
-	git init -q "${ASTPP_SRC}"
-	git -C "${ASTPP_SRC}" remote add origin "${ASTPP_REPO}"
-	git -C "${ASTPP_SRC}" fetch -q --depth 1 origin "${ASTPP_COMMIT}"
-	git -C "${ASTPP_SRC}" -c advice.detachedHead=false checkout -q --detach FETCH_HEAD
-	[ "$(git -C "${ASTPP_SRC}" rev-parse HEAD)" = "${ASTPP_COMMIT}" ] || die "Commit-Pruefung fehlgeschlagen."
-
-	local p
-	for p in astpp-v6-hardening.patch astpp-v6-php85.patch; do
-		# (Upstream-Code enthaelt Leerzeichen am Zeilenende - die bleiben unveraendert)
-		git -C "${ASTPP_SRC}" apply --whitespace=nowarn --check "${SCRIPT_DIR}/patches/${p}" \
-			|| die "Patchset ${p} passt nicht auf den ASTPP-Commit."
-		git -C "${ASTPP_SRC}" apply --whitespace=nowarn "${SCRIPT_DIR}/patches/${p}"
-	done
-	# Upstream liefert unter web_interface/astpp/index.html eine Kopie der Google-Startseite aus
-	rm -f "${ASTPP_WEB}/index.html"
-	# Dateirechte werden unten neu gesetzt - "git status" soll nur Inhaltsaenderungen zeigen
-	git -C "${ASTPP_SRC}" config core.fileMode false
-
-	# Syntaxpruefung aller geaenderten Dateien
-	local f bad=0
-	while IFS= read -r f; do
-		case "${f}" in
-			*.php) "php${PHP_VER}" -l "${ASTPP_SRC}/${f}" >/dev/null || { echo "PHP-Syntaxfehler: ${f}"; bad=1; } ;;
-			*.lua) luac5.3 -p "${ASTPP_SRC}/${f}" || { echo "Lua-Syntaxfehler: ${f}"; bad=1; } ;;
-		esac
-	done < <(git -C "${ASTPP_SRC}" diff --name-only)
-	"php${PHP_VER}" -l "${SCRIPT_DIR}/tools/astpp-postinstall.php" >/dev/null || bad=1
-	[ "${bad}" -eq 0 ] || die "Syntaxfehler in gepatchten Dateien - Abbruch."
-
+	install -d -m 755 "${ASTPP_SRC}"
+	astpp_sync_tree "${ASTPP_TREE}"
 	# Besitz: root, nur lesbar fuer PHP. Schreibbar nur die Datenverzeichnisse.
-	chown -R root:root "${ASTPP_SRC}"
-	find "${ASTPP_SRC}" -path "${ASTPP_SRC}/.git" -prune -o -type d -exec chmod 755 {} +
-	find "${ASTPP_SRC}" -path "${ASTPP_SRC}/.git" -prune -o -type f -exec chmod 644 {} +
-	local d
-	for d in upload attachments invoices database_backup language assets/Rates_File \
-		assets/Rates_File/uploaded_files assets/captcha application/cache application/logs \
-		application/libraries/html2pdf/_tcpdf_5.0.002/cache; do
-		install -d "${ASTPP_WEB}/${d}"
-		chown -R www-data:www-data "${ASTPP_WEB}/${d}"
-		find "${ASTPP_WEB}/${d}" -type d -exec chmod 750 {} +
-		find "${ASTPP_WEB}/${d}" -type f -exec chmod 640 {} +
-	done
-	# nginx (www-data) muss Logos/Sounds/Captchas ausliefern koennen
-	chmod 755 "${ASTPP_WEB}/upload" "${ASTPP_WEB}/assets/captcha"
-	install -d "${ASTPP_SRC}/freeswitch/scripts/astpp/lib/addons" "${ASTPP_SRC}/freeswitch/fs/lib/addons"
+	astpp_set_permissions
+	astpp_git_record "Installation: ASTPP-Fork ${rev}"
 
 	install -d -m 755 /var/www/html
 	ln -sfn "${ASTPP_WEB}" /var/www/html/astpp
@@ -524,6 +479,8 @@ api_decipher_auth_token = "$(randpw 32)"
 astpp_dbengine = MySQLi
 debug = 0
 base_url=https://${ASTPP_FQDN}/
+; call recordings: FreeSWITCH writes, ASTPP reads them (never inside the web root)
+recordings_path = /var/lib/freeswitch/recordings
 EOF
 	cat >"${ASTPP_CONF_DIR}/astpp.lua" <<EOF
 -- ASTPP database connection for FreeSWITCH - generated by astpp-debian13/install.sh

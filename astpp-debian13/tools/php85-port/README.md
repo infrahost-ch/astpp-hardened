@@ -1,8 +1,9 @@
 # Werkzeuge der PHP-8.5-Portierung
 
-Mit diesen Skripten wurde `patches/astpp-v6-php85.patch` erzeugt und geprüft. Sie werden nur
-gebraucht, wenn ASTPP auf einen neueren Upstream-Commit gehoben wird – neuer Code muss dann erneut
-durch die Umschreiber und die A/B-Tests. Für den Betrieb sind sie nicht nötig.
+Mit diesen Skripten wurde der Commit *PHP 8.5 port* im Fork `astpp/` erzeugt und geprüft (früher
+`patches/astpp-v6-php85.patch`); auch html2pdf 4.6.1 lief später durch dieselbe Kette. Sie werden
+gebraucht, wenn Code aus Upstream oder eine PHP-Bibliothek in den Fork übernommen wird – neuer Code
+muss erneut durch die Umschreiber und die A/B-Tests. Für den Betrieb sind sie nicht nötig.
 
 Alle Skripte laufen auf dem Server als root mit PHP 8.5. `rewrite/arith_ast.php` und
 `scan/find_literal_args.php` brauchen nikic/php-parser (`apt install php-parser`, nach der Arbeit
