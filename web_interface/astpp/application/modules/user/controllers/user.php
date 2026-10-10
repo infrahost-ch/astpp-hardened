@@ -952,7 +952,8 @@ function user_change_password()
             $data = array(
                 'password' => $password_encode
             );
-            $this->db->where('id', $add_array['id']);
+            // HARDENING: the password of the account in the POST field id was changed (any account)
+            $this->db->where('id', $accountinfo['id']);
             $this->db->update('accounts', $data);
 
             $this->db->where('accountid', $accountinfo['id']);
