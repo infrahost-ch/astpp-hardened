@@ -569,8 +569,10 @@ class Login extends MX_Controller
                 'id' => $select_id
             );
             }
+        $where['deleted'] = 0;
         $result = $this->db_model->getSelect("*", "accounts", $where);
         $account_res = $result->row_array();
+        $this->_login_as_found($account_res);
         $this->_relogin($account_res['id'],$accountinfo['id'] );
         }else{
         	$this->session->sess_destroy();
@@ -593,8 +595,10 @@ class Login extends MX_Controller
                 'id' => $select_id
             );
             }
+        $where['deleted'] = 0;
         $result = $this->db_model->getSelect("*", "accounts", $where);
         $account_res = $result->row_array();
+        $this->_login_as_found($account_res);
         $this->_relogin($account_res['id'] , $accountinfo['id']);
         }else{
         	$this->session->sess_destroy();
@@ -628,29 +632,45 @@ class Login extends MX_Controller
     }
 
 
+    /** HARDENING: login as another account only if it was found in the own scope. */
+    function _login_as_found($account_res)
+    {
+        if (empty($account_res['id'])) {
+            $this->session->set_flashdata('astpp_notification', gettext('Permission Denied!'));
+            redirect(base_url() . 'dashboard/');
+            exit();
+        }
+    }
+
     function _relogin($new_login_id, $master_id = '0')
     {
+        // HARDENING: the account was looked up again by number OR email; an id that was not
+        // found gave an empty number and switched the session to the first account without
+        // e-mail address. Use the row of the id and stop if there is none.
         $where = array(
-            'id' => $new_login_id
+            'id' => (int) $new_login_id,
+            'deleted' => 0
         );
         $account_res = (array) $this->db->get_where("accounts", $where)->first_row();
+        if (empty($account_res['id'])) {
+            $this->session->sess_destroy();
+            redirect(base_url() . "login/login/");
+            exit();
+        }
         $master_login_details = array();
         if ($master_id != '0') {
             $where = array(
                 'id' => $master_id
             );
             $admin_res = (array) $this->db->get_where("accounts", $where)->first_row();
+            // HARDENING: the decoded password of the admin was stored in the session (unused)
             $master_login_details = array(
                 'master_login_id' => $admin_res['id'],
-                'master_number' => $admin_res['number'],
-                'master_password' => $this->common->decode($admin_res['password'])
+                'master_number' => $admin_res['number']
             );
         }
         $this->session->set_userdata('user_login', TRUE);
-        $where = "number = '" . $this->db->escape_str($account_res['number']) . "' OR email = '" . $this->db->escape_str($account_res['number']) . "'";
-        $result = $this->db_model->getSelect("*", "accounts", $where);
-        $result = $result->result_array();
-        $result = $result[0];
+        $result = $account_res;
 	$password=$this->common->decode($result['password']);
         $permission_result = $this->db_model->getSelect("*", "permissions", array(
             'id' => $result['permission_id']
