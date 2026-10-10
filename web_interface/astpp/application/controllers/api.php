@@ -66,6 +66,9 @@ class Api extends CI_Controller {
 	function __construct() {
 		parent::__construct();
 		$this->new_session = ! isset($_COOKIE[(string) $this->config->item('sess_cookie_name')]);
+		// database errors must not end in CodeIgniter's HTML error page: failed queries return
+		// FALSE, the handlers turn that into a JSON 500 (see _remap)
+		$this->db->db_debug = FALSE;
 		$this->load->library('astpp/api_keys');
 	}
 
@@ -87,8 +90,8 @@ class Api extends CI_Controller {
 			}
 			$this->send($e->status, array('error' => $error));
 		} catch (Throwable $e) {
-			log_message('error', 'API: ' . get_class($e) . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-			error_log('ASTPP API: ' . get_class($e) . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+			$db_error = $this->db->_error_message();
+			error_log('ASTPP API: ' . get_class($e) . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() . ($db_error !== '' ? ' (last DB error: ' . $db_error . ')' : ''));
 			$this->send(500, array('error' => array('code' => 'internal_error', 'message' => 'An internal error occurred.')));
 		}
 	}
@@ -293,7 +296,15 @@ class Api extends CI_Controller {
 	}
 
 	private function customer_create() {
-		$in = $this->body(array('reseller_id', 'company_name', 'first_name', 'last_name', 'email', 'phone', 'address', 'country', 'currency', 'timezone', 'billing_type', 'credit_limit', 'max_channels', 'rate_group_id', 'localization_id'));
+		$in = $this->body(array('reseller_id', 'company_name', 'first_name', 'last_name', 'email', 'phone', 'address', 'country', 'currency', 'timezone', 'billing_type', 'credit_limit', 'max_channels', 'rate_group_id', 'localization_id', 'send_welcome_email'));
+		$welcome = false;
+		if (array_key_exists('send_welcome_email', $in)) {
+			if (! is_bool($in['send_welcome_email'])) {
+				throw new Api_error(422, 'validation_failed', 'Invalid input.', array('send_welcome_email' => 'Must be true or false.'));
+			}
+			$welcome = $in['send_welcome_email'];
+			unset($in['send_welcome_email']);
+		}
 		$owner = 0;
 		if ($this->role === 'reseller') {
 			if (isset($in['reseller_id']) && (int) $in['reseller_id'] !== $this->account_id) {
@@ -308,10 +319,21 @@ class Api extends CI_Controller {
 			}
 		}
 		$fields = $this->customer_fields($in, true, $owner);
+		if ($welcome && (! isset($fields['email']) || $fields['email'] === '')) {
+			throw new Api_error(422, 'validation_failed', 'Invalid input.', array('send_welcome_email' => 'Requires an e-mail address.'));
+		}
 		$this->load->library('astpp/signup_lib');
 		$password = $this->common->generate_password();
 		$number = $this->common->find_uniq_rendno_customer(isset(Common_model::$global_config['system_config']['cardlength']) ? Common_model::$global_config['system_config']['cardlength'] : 10, 'number', 'accounts');
 		$account = array_merge(array(
+			'company_name' => '',
+			'first_name' => '',
+			'last_name' => '',
+			'email' => '',
+			'telephone_1' => '',
+			// signup_lib sends the welcome e-mail (with the portal password) when notifications
+			// is 0; only on request, the account gets the system default afterwards
+			'notifications' => $welcome ? '0' : '1',
 			'number' => $number,
 			'password' => $this->common->encode($password),
 			'type' => 0,
@@ -339,8 +361,11 @@ class Api extends CI_Controller {
 		$id = (int) $this->signup_lib->create_account($account);
 		$this->db->trans_complete();
 		if ($id <= 0 || $this->db->trans_status() === FALSE) {
+			error_log('ASTPP API: customer not created: ' . $this->db->_error_message());
 			throw new Api_error(500, 'internal_error', 'The customer could not be created.');
 		}
+		$this->db->where('id', $id);
+		$this->db->update('accounts', array('notifications' => isset(Common_model::$global_config['system_config']['notifications']) ? Common_model::$global_config['system_config']['notifications'] : '0'));
 		$this->log_target = 'customer ' . $id;
 		$out = $this->customer_out($this->db->get_where('accounts', array('id' => $id))->row_array());
 		$out['portal_password'] = $password;
