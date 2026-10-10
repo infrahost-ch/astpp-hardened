@@ -297,7 +297,7 @@ paths:
               required: [product_id]
               properties:
                 product_id: { type: integer, minimum: 1 }
-                quantity: { type: integer, minimum: 1, maximum: 50, default: 1, description: Number of separate packages, e.g. one per channel }
+                quantity: { type: integer, minimum: 1, maximum: 50, default: 1, description: "Number of separate packages, e.g. one per channel" }
       responses:
         "201":
           description: Created packages
@@ -588,12 +588,12 @@ components:
         postal_code: { type: string, maxLength: 12 }
         city: { type: string, maxLength: 20 }
         province: { type: string, maxLength: 20 }
-        country: { type: string, description: ISO 3166-1 alpha-2, example: CH }
+        country: { type: string, description: "ISO 3166-1 alpha-2, example: CH" }
     Customer:
       type: object
       properties:
         id: { type: integer }
-        number: { type: string, description: Account number, also the portal login }
+        number: { type: string, description: "Account number, also the portal login" }
         reseller_id: { type: integer, nullable: true }
         status: { $ref: "#/components/schemas/Status" }
         company_name: { type: string }
@@ -606,7 +606,7 @@ components:
         timezone: { type: string }
         billing_type: { type: string, enum: [prepaid, postpaid] }
         credit_limit: { type: number }
-        max_channels: { type: integer, description: Concurrent calls, 0 = unlimited }
+        max_channels: { type: integer, description: "Concurrent calls, 0 = unlimited" }
         rate_group_id: { type: integer, nullable: true }
         localization_id: { type: integer, nullable: true }
         created_at: { type: string, format: date-time }
@@ -624,9 +624,9 @@ components:
         email: { type: string, format: email, maxLength: 80 }
         phone: { type: string, maxLength: 20 }
         address: { $ref: "#/components/schemas/Address" }
-        country: { type: string, description: ISO code, default from system settings }
-        currency: { type: string, description: Currency code, default currency of the key's account }
-        timezone: { type: string, description: e.g. Europe/Zurich, default time zone of the key's account }
+        country: { type: string, description: "ISO code, default from system settings" }
+        currency: { type: string, description: "Currency code, default currency of the key's account" }
+        timezone: { type: string, description: "e.g. Europe/Zurich, default time zone of the key's account" }
         billing_type: { type: string, enum: [prepaid, postpaid], default: prepaid }
         credit_limit: { type: number, minimum: 0, maximum: 1000000 }
         max_channels: { type: integer, minimum: 0, maximum: 1000 }
