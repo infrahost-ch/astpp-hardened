@@ -2589,6 +2589,11 @@ class common {
 		return true;
 	}
 	function customer_delete_dependencies($id,$entity=0) {
+		// BUGFIX: an empty selection (id '' or 0) deleted the records without account (accountid 0)
+		$id = ( int ) $id;
+		if ($id <= 0) {
+			return;
+		}
 		$this->delete_data ( 'ani_map', array (
 				'accountid' => $id
 		) );
@@ -2652,7 +2657,11 @@ class common {
 		}
 	}
 	function reseller_delete_dependencies($id) {
-
+		// BUGFIX: id '' or 0 worked on the data of the admin (reseller_id 0)
+		$id = ( int ) $id;
+		if ($id <= 0) {
+			return;
+		}
 		$accountinfo = $this->CI->session->userdata ( 'accountinfo' );
 		$child_arr = $this->select_data ( "accounts", array (
 				"reseller_id" => $id,
@@ -2728,6 +2737,11 @@ class common {
 		) );
 	}
 	function subreseller_list($parent_id = '') {
+		// BUGFIX: an empty selection (id '' or 0) deleted the customers of the admin (reseller_id 0)
+		$parent_id = ( int ) $parent_id;
+		if ($parent_id <= 0) {
+			return;
+		}
 		$customer_id = $parent_id;
 		$this->reseller_delete_dependencies ( $parent_id );
 		$query = 'select id,type from accounts where reseller_id = ' . $parent_id . ' AND deleted =0';
