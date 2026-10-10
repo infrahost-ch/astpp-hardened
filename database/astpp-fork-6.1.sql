@@ -18,3 +18,23 @@ UPDATE invoice_conf
 -- Country list: the row for +372 (ISO EE, capital Tallinn) was labelled ERITREA, so Estonia
 -- was missing from every country drop-down and Eritrea appeared twice.
 UPDATE countrycode SET country = 'ESTONIA' WHERE id = 61 AND iso = 'EE' AND countrycode = 372 AND country = 'ERITREA';
+
+-- Provisioning API (/api/v1, controllers/api.php): API keys, managed in the portal (API Access).
+-- key_id is the public part of the key, secret_hash the SHA-256 of the secret part.
+-- allowed_ips: comma separated IPv4/IPv6 addresses or networks; a key only works from these.
+CREATE TABLE IF NOT EXISTS `api_keys` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `accountid` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL DEFAULT '',
+  `key_id` char(16) NOT NULL,
+  `secret_hash` char(64) NOT NULL,
+  `allowed_ips` text NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0-Active,1-Disabled',
+  `created_by` int(11) NOT NULL DEFAULT 0,
+  `created_date` datetime NOT NULL,
+  `last_used_date` datetime DEFAULT NULL,
+  `last_used_ip` varchar(45) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `key_id` (`key_id`),
+  KEY `accountid` (`accountid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
