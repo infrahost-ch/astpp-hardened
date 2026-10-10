@@ -175,17 +175,8 @@ if (! is_dir ( $system_path )) {
 if((substr($_SERVER['REQUEST_URI'], 0, strlen('//')) === '//')){
     $_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'],1);
 }
-$folder_name = explode('/',$_SERVER['REQUEST_URI']) ;
-if($folder_name['1'] == 'api' || $folder_name['1'] == 'admin'){
-        if (! is_dir ($application_folder . '/controllers/'.$folder_name['1'])) {
-        $array = array (
-            'status'  => false,
-            'error'   => 'API Addon is not installed, Please contact administrator',
-            'response_code' => 400
-        );
-        echo json_encode($array); die;
-    }
-}
+// ASTPP fork: the check for the vendor's API add-on (controllers/api/, controllers/admin/) is
+// gone - /api/v1/ is served by controllers/api.php, the add-on is no longer part of the fork.
 // Kinjal ASTPPCOM-975 END
 
 /*
