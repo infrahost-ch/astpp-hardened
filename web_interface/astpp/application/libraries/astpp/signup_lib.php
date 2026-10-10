@@ -157,7 +157,7 @@ class Signup_lib {
 		$this->CI->db->where ( 'name', 'default' );
 		$sipprofile_result = ( array ) $this->CI->db->get ( 'sip_profiles' )->first_row ();
 		$digits=5;
-		$random_password = rand(pow(10, astpp_n($digits)-1), pow(10, $digits)-1);
+		$random_password = astpp_random_int(pow(10, astpp_n($digits)-1), pow(10, $digits)-1);
 		$sipdevice_array = array (
 				'username' => $accountinfo ['number'],
 				'sip_profile_id' => $sip_profile_info ['id'],

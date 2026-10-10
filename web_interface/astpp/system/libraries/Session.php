@@ -766,8 +766,9 @@ class CI_Session {
 			return;
 		}
 
-		srand(time());
-		if ((rand() % 100) < $this->gc_probability)
+		// ASTPP fork: no srand(time()) - since PHP 7.1 it seeds mt_rand() for the whole request,
+		// so every rand()/mt_rand()/array_rand()/str_shuffle() value was predictable from the time
+		if (random_int(0, 99) < $this->gc_probability)
 		{
 			$expire = astpp_n($this->now) - astpp_n($this->sess_expiration);
                         $expire = astpp_n($expire) - 60*60*12*1;

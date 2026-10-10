@@ -201,7 +201,7 @@ class Signup extends MX_Controller
                 $verification_by = common_model::$global_config['system_config']['verification_by'];
                 $numberlength = common_model::$global_config['system_config']['pinlength'];
                 $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-                $insert_array['otp'] = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
+                $insert_array['otp'] = astpp_random_int(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
                 $this->db->where("id", $last_id);
                 $this->db->update("account_unverified", array(
                     "otp" => $insert_array['otp']
@@ -236,7 +236,7 @@ class Signup extends MX_Controller
                 redirect(base_url() . "otp_verification/");
                 exit();
             } else {
-                $random_number = substr(astpp_number_format(time() * rand(), 0, '', ''), 0, 6);
+                $random_number = substr(astpp_number_format(time() * astpp_random_int(), 0, '', ''), 0, 6);
                 $vals = array(
                     'word' => $random_number,
                     'img_path' => getcwd() . '/assets/captcha/',
@@ -259,7 +259,7 @@ class Signup extends MX_Controller
             }
         } else {
 
-            $random_number = substr(astpp_number_format(time() * rand(), 0, '', ''), 0, 6);
+            $random_number = substr(astpp_number_format(time() * astpp_random_int(), 0, '', ''), 0, 6);
             $vals = array(
                 'word' => $random_number,
                 'img_path' => getcwd() . '/assets/captcha/',
@@ -271,7 +271,7 @@ class Signup extends MX_Controller
             $data['captcha'] = create_captcha($vals);
             $this->session->set_userdata('captchaWord', $data['captcha']['word']);
 
-            $random_number = substr(astpp_number_format(time() * rand(), 0, '', ''), 0, 6);
+            $random_number = substr(astpp_number_format(time() * astpp_random_int(), 0, '', ''), 0, 6);
             if ($key != '') {
                 $reseller_id = $this->common->decode($this->common->decode_params(trim($key)));
                 $data['key'] = $key;
@@ -533,7 +533,7 @@ class Signup extends MX_Controller
     {
         $numberlength = common_model::$global_config['system_config']['pinlength'];
         $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-        $uniq_rendno = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
+        $uniq_rendno = astpp_random_int(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
         $otp_array = array(
             'otp_number' => $uniq_rendno,
             'user_number' => $username,
@@ -583,7 +583,7 @@ class Signup extends MX_Controller
             if (astpp_eq0($pin)) {
                 $numberlength = common_model::$global_config['system_config']['pinlength'];
                 $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-                $account_details['pin'] = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
+                $account_details['pin'] = astpp_random_int(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
             }
             if (empty($account_array)) {
                 $account_details['pricelist_id'] = Common_model::$global_config['system_config']['default_signup_rategroup'];
@@ -684,7 +684,7 @@ class Signup extends MX_Controller
             $email = $post['email'];
             $numberlength = common_model::$global_config['system_config']['pinlength'];
             $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-            $uniq_rendno = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
+            $uniq_rendno = astpp_random_int(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
             $otp_array = array(
                 'otp' => $uniq_rendno,
                 'creation_date' => date('Y-m-d H:i:s')
@@ -790,7 +790,7 @@ class Signup extends MX_Controller
                 $user_data = $acountdata[0];
                 $numberlength = common_model::$global_config['system_config']['pinlength'];
                 $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-                $user_data['otp'] = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
+                $user_data['otp'] = astpp_random_int(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
                 $account_unverified_array = (array) $this->db->get_where("account_unverified", array(
                     "number" => $user_data['number']
                 ))->first_row();

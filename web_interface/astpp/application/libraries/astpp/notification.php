@@ -107,7 +107,7 @@ class notification {
 	}
 	function send_sms_notification($notification_template_data,$accountinfo,$invoiceconf){
 		$numberlength=6;
-		$uniq_rendno = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
+		$uniq_rendno = astpp_random_int(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
 		// SECURITY: upstream sent every notification as SMS through a hard-coded third-party Nexmo
 		// account (API key/secret in the source), unencoded and without TLS verification, whenever
 		// the non-existent setting "account_generate" was "0". Now: only if SMS notifications are

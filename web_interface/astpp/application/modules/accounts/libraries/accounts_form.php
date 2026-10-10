@@ -76,7 +76,7 @@ class Accounts_form extends common
         if (astpp_eq0($pin_generate)) {
             $numberlength = common_model::$global_config['system_config']['pinlength'];
             $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-            $pin_number = rand(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
+            $pin_number = astpp_random_int(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
         }
         $account_val = 'accounts.number';
         $cps = Common_model::$global_config['system_config']['cps'];

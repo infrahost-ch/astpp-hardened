@@ -1846,7 +1846,7 @@ class User_form extends common
         $val = astpp_gt($id, 0) ? 'sip_devices.username.' . $id : 'sip_devices.username';
         $uname_user = $this->CI->common->find_uniq_rendno('10', '', '');
 	$digits = 5;
-	$random_password = rand(pow(10, astpp_n($digits) - 1), pow(10, $digits) - 1);
+	$random_password = astpp_random_int(pow(10, astpp_n($digits) - 1), pow(10, $digits) - 1);
         $password = $this->CI->common->generate_password();
         if (astpp_gt($id, 0)) {
             $password_field = array(

@@ -84,18 +84,24 @@ class common {
 			if(strpos($available_sets, 's') !== false)
 				$sets[] = '!@#$^*()';
 
+			// ASTPP fork: random_int() instead of array_rand()/str_shuffle() (Mersenne Twister,
+			// predictable after CodeIgniter's srand(time()) - see astpp_random_digits())
 			$all = '';
-			$password = '';
+			$chars = array();
 			foreach($sets as $set)
 			{
-				$password .= $set[array_rand(str_split($set))];
+				$chars[] = $set[random_int(0, strlen($set) - 1)];
 				$all .= $set;
 			}
-
-			$all = str_split($all);
 			for($i = 0; $i < astpp_n($length) - astpp_count($sets); $i++)
-				$password .= $all[array_rand($all)];
-				$pass = str_shuffle($password);
+				$chars[] = $all[random_int(0, strlen($all) - 1)];
+			for ($i = count($chars) - 1; $i > 0; $i--) {
+				$j = random_int(0, $i);
+				$tmp = $chars[$i];
+				$chars[$i] = $chars[$j];
+				$chars[$j] = $tmp;
+			}
+			$pass = implode('', $chars);
 
 		} else {
 		
@@ -104,29 +110,35 @@ class common {
    			$alphaLength = strlen($alphabet) - 1; 
 
 			for ($i = 0; $i < 8; $i++) {
-			    $n = rand(0, $alphaLength);
+			    $n = astpp_random_int(0, $alphaLength);
 			    $pass[] = $alphabet[$n];
 			}
    		 return astpp_implode($pass); 
 		}
 		return $pass;
 	}
+	// ASTPP fork: random numbers with random_int() (CSPRNG). CodeIgniter's session seeded astpp_random_int()
+	// with srand(time()) on every request, so numbers, PINs and passwords created in the same
+	// second were identical and predictable from the creation time. The loops below also
+	// re-check every new candidate (upstream kept the old WHERE / used a result object as array).
+	private function astpp_random_digits($size) {
+		$size = max(1, min(18, (int) $size));
+		return random_int((int) pow(10, $size - 1), (int) pow(10, $size) - 1);
+	}
+
+	private function astpp_unique_random_digits($size, $field, $tablename) {
+		do {
+			$uname = $this->astpp_random_digits($size);
+			$acc_result = (array) $this->CI->db_model->getSelect('Count(*) as count', $tablename, array($field => $uname))->first_row();
+		} while (! astpp_eq0($acc_result['count']));
+		return $uname;
+	}
+
 	function find_uniq_rendno($size = '', $field = '', $tablename = '') {
 		if ($tablename != '') {
-			$size=(int)$size;
-			$accounttype_array = array ();
-			$uname = rand ( pow ( 10, astpp_n($size) - 1 ), pow ( 10, $size ) - 1 );
-			$where = array (
-					$field => $uname
-			);
-			$acc_result = $this->CI->db_model->getSelect ( 'Count(*) as count', $tablename, $where );
-			$acc_result = (array)$acc_result->first_row ();
-			if ( (!astpp_eq0($acc_result ['count'])) ) {
-				$uname = rand ( pow ( 10, astpp_n($size) - 1 ), pow ( 10, $size ) - 1 );
-				$acc_result = $this->CI->db_model->getSelect ( 'Count(*) as count', $tablename, $where );
-			}
+			$uname = $this->astpp_unique_random_digits($size, $field, $tablename);
 		} else {
-			$uname = rand ( pow ( 10, astpp_n($size) - 1 ), pow ( 10, $size ) - 1 );
+			$uname = $this->astpp_random_digits($size);
 		}
 		return $uname;
 	}
@@ -137,19 +149,9 @@ class common {
 		//ASTPPCOM-1183 End
 
 		if ($tablename != '') {
-			$accounttype_array = array ();
-			$uname = rand ( pow ( 10, astpp_n($size) - 1 ), pow ( 10, $size ) - 1 );
-			$where = array (
-					$field => $uname
-			);
-			$acc_result = $this->CI->db_model->getSelect ( 'Count(*) as count', $tablename, $where );
-			$acc_result = $acc_result->result ();
-			while ( (!astpp_eq0($acc_result [0]->count)) ) {
-				$uname = rand ( pow ( 10, astpp_n($size) - 1 ), pow ( 10, $size ) - 1 );
-				$acc_result = $this->CI->db_model->getSelect ( 'Count(*) as count', $tablename, $where );
-			}
+			$uname = $this->astpp_unique_random_digits($size, $field, $tablename);
 		} else {
-			$uname = rand ( pow ( 10, astpp_n($size) - 1 ), pow ( 10, $size ) - 1 );
+			$uname = $this->astpp_random_digits($size);
 		}
 		$start_prifix_value = common_model::$global_config ['system_config'] ['startingdigit'];
 		if ($tablename == 'accounts' && (!astpp_eq0($start_prifix_value))) {
@@ -170,7 +172,7 @@ class common {
 			if(($count_result['count'] >= $difference) || ($min > $max)){
 				$uname = $this->find_uniq_rendno_customer(common_model::$global_config ['system_config'] ['cardlength'],$field,$tablename);
 			}else{
-				$uname = mt_rand ($min,$max);
+				$uname = astpp_random_int($min,$max);
 				$length=strlen($max);
 				$uname=str_pad($uname,$length, '0', STR_PAD_LEFT);
 				$where = array (
@@ -180,7 +182,7 @@ class common {
 				$acc_result = $this->CI->db_model->getSelect ( 'Count(*) as count', $tablename, $where );
 				$acc_result = (array)$acc_result->first_row ();
 				while ( (!astpp_eq0($acc_result['count'])) ) {
-					$uname = mt_rand ($min,$max);
+					$uname = astpp_random_int($min,$max);
 					$length=strlen($max);
 					$uname=str_pad($uname,$length, '0', STR_PAD_LEFT);
 					$where = array (
@@ -197,7 +199,7 @@ class common {
 		$chars = "1234567890"; 
 		$final_rand = '';
 		for($i = 0; $i < $length; $i ++) {
-			$final_rand .= $chars [rand ( 0, strlen ( $chars ) - 1 )];
+			$final_rand .= $chars [astpp_random_int( 0, strlen ( $chars ) - 1 )];
 		}
 		return $final_rand;
 	}
@@ -2993,19 +2995,9 @@ class common {
     	}
     	function pin_generate($size = '', $field = '', $tablename = ''){
 		if ($tablename != '') {
-			$accounttype_array = array ();
-			$uname = rand ( pow ( 10, astpp_n($size) - 1 ), pow ( 10, $size ) - 1 );
-			$where = array (
-					$field => $uname
-			);
-			$acc_result = $this->CI->db_model->getSelect ( 'Count(*) as count', $tablename, $where );
-			$acc_result = $acc_result->result ();
-			while ( (!astpp_eq0($acc_result [0]->count)) ) {
-				$uname = rand ( pow ( 10, astpp_n($size) - 1 ), pow ( 10, $size ) - 1 );
-				$acc_result = $this->CI->db_model->getSelect ( 'Count(*) as count', $tablename, $where );
-			}
+			$uname = $this->astpp_unique_random_digits($size, $field, $tablename);
 		} else {
-			$uname = rand ( pow ( 10, astpp_n($size) - 1 ), pow ( 10, $size ) - 1 );
+			$uname = $this->astpp_random_digits($size);
 		}
 		$start_prifix_value = common_model::$global_config ['system_config'] ['startingdigit'];
 		if ($tablename == 'accounts' && (!astpp_eq0($start_prifix_value))) {

@@ -413,3 +413,19 @@ if (! function_exists('astpp_chr')) {
 		return "\0";
 	}
 }
+
+// ASTPP fork: random values for account numbers, PINs, OTPs and passwords. CodeIgniter's
+// session seeded rand()/mt_rand() with srand(time()) on every request, which made them
+// predictable from the time of creation; random_int() uses the system CSPRNG. Like rand(),
+// tolerates swapped bounds and numeric strings/floats.
+if (! function_exists('astpp_random_int')) {
+	function astpp_random_int($min = 0, $max = 2147483647)
+	{
+		$min = (int) $min;
+		$max = (int) $max;
+		if ($min > $max) {
+			list($min, $max) = array($max, $min);
+		}
+		return random_int($min, $max);
+	}
+}
