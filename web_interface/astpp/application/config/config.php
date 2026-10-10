@@ -436,7 +436,8 @@ $config ['invoice_template'] = APPPATH . "views/";
 $config ['invoice_screen'] = APPPATH . "controllers/";
 $config ['gzip-path'] = "/bin/gzip";
 $config ['gunzip-path'] = "/bin/gunzip";
-$config['allow_menu_url'] = array('invoice_conf_list','resellersrates_list');
+// ASTPP fork: apikeys_list - every reseller manages the API keys of its own account
+$config['allow_menu_url'] = array('invoice_conf_list','resellersrates_list','apikeys_list');
 $config['allow_module'] = array('tariff','configuration');
 
 /*Access Number*/
