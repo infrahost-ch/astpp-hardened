@@ -2858,7 +2858,8 @@ function customer_orders_save()
         $this->load->view("view_customer_orders_assign", $data);
     } else {
 
-        if ($account_balance > $total_amt) {
+        // ASTPP fork: ">=" - a free package (price 0) could not be assigned to a prepaid customer with balance 0
+        if ($account_balance >= $total_amt) {
             $last_id = $this->order->confirm_order($ProductData, $account_id, $accountinfo);
             if ($last_id != "") {
                 $ProductData['name'] = $this->common->get_field_name("name", "products", array(
