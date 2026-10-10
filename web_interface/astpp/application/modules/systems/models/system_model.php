@@ -127,15 +127,12 @@ class System_model extends CI_Model
     function edit_resellertemplate($data, $id)
     {
         $arraydata = $data;
-        if ($this->session->userdata('logintype') == 1 || $this->session->userdata('logintype') == 5) {
-            $account_data = $this->session->userdata("accountinfo");
-            $reseller = $account_data['id'];
-            $array = $data;
-            $data = array(
-                'reseller_id' => $reseller
-            );
-            $this->db->where("id", $id);
-        }
+        // HARDENING: only the own template of the reseller (the posted id could be any
+        // template, and without reseller session the update had no WHERE at all)
+        $account_data = $this->session->userdata("accountinfo");
+        $this->db->where("id", $id);
+        $this->db->where("reseller_id", (int) $account_data['id']);
+        $arraydata['reseller_id'] = (int) $account_data['id'];
         unset($arraydata["action"]);
         unset($arraydata["form"]);
         unset($arraydata["page_title"]);

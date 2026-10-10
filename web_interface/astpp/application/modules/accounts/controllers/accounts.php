@@ -3050,6 +3050,8 @@ function customer_did_delete($accountid)
     if ($order_item->num_rows > 0) {
         $order_item = $order_item->result_array();
         foreach ($order_item as $key => $item) {
+            // BUGFIX: the update had no WHERE and terminated the order items of all accounts
+            $this->db->where("id", $item['id']);
             $this->db->update("order_items", array(
                 "is_terminated" => 1,
                 "termination_date" => gmdate("Y-m-d"),

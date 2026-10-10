@@ -603,17 +603,21 @@ class Products extends MX_Controller {
 			$reseller_id = astpp_gt($accountinfo ['reseller_id'], 0) ? $accountinfo ['reseller_id'] : 0;
 			$accountid = $accountinfo ['type'] == 1 ? $accountinfo ['id'] : 0;
 			if ($this->session->userdata ( 'logintype' ) == 1 || $this->session->userdata ( 'logintype' ) == 5) {	
-				$where =$this->db->where("product_id IN (".$ids.")");
-				$product_info = ( array ) $this->db->get_where( "reseller_products", $where )->result_array();
+				// BUGFIX: get_where() got the DB object as condition (TypeError, nothing deleted),
+				// the rows of all resellers were read and the opt-out below had no WHERE (reset the
+				// opt-in of every reseller). Only the rows of this reseller now.
+				$this->db->where("product_id IN (".$ids.")", NULL, FALSE);
+				$product_info = ( array ) $this->db->get_where( "reseller_products", array("account_id" => $accountid) )->result_array();
 				foreach ($product_info as $key => $value) {
 					if (astpp_eq0($value['is_owner']) ) {
-						
+
 							$this->db->where ("id",$value['product_id']);
 							$this->db->update("products",array("is_deleted"=>1));
 							$this->db->where ("id",$value['id']);
 							$this->db->update("reseller_products",array("is_optin"=>1));
 						}
 					else{
+						$this->db->where ("id",$value['id']);
 						$this->db->update("reseller_products",array("is_optin"=>1));
 						echo TRUE;
 					}
@@ -927,12 +931,15 @@ class Products extends MX_Controller {
 			} 
 			if($status == 'false'){
 				$orders = $this->db_model->getSelect("*","order_items",array("product_id"=>$product_id));
+				// BUGFIX: the opt-out deleted/disabled the opt-in of every reseller, not only the own one
 				if($orders->num_rows == 0){
 					$this->db->where("product_id",$product_id);
+					$this->db->where("account_id",$accountinfo['id']);
 					$this->db->delete("reseller_products");
 				}else{
 					$this->db->where("product_id",$product_id);
-					$this->db->update("reseller_products",array("status"=>1));			
+					$this->db->where("account_id",$accountinfo['id']);
+					$this->db->update("reseller_products",array("status"=>1));
 				}
 
 			}
