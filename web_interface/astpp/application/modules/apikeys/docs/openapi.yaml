@@ -1,0 +1,743 @@
+openapi: 3.0.3
+info:
+  title: ASTPP Provisioning API
+  version: "1.0"
+  description: |
+    Provisioning API of ASTPP 6.1 (infrahost fork): customers, SIP devices, packages,
+    balances, package usage and call records.
+
+    Authentication: API key from the portal (API Access), sent as `Authorization: Bearer <key>`
+    (or `X-API-Key`). A key only works from the IP addresses allowed for it.
+
+    Scope: admin keys see all customers, reseller keys their own customers, customer keys
+    their own account. Objects outside the scope answer 404.
+
+    Rate limit: 10 requests per second and source address (burst 40), then HTTP 429.
+  license:
+    name: AGPL-3.0-or-later
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+servers:
+  - url: "{{API_BASE}}"
+security:
+  - bearerAuth: []
+  - apiKeyHeader: []
+tags:
+  - name: account
+  - name: customers
+  - name: packages
+  - name: sip-devices
+paths:
+  /me:
+    get:
+      tags: [account]
+      summary: Key and account of the request
+      operationId: getMe
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/Me" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /rate-groups:
+    get:
+      tags: [account]
+      summary: Rate groups that can be assigned to customers (admin, reseller)
+      operationId: listRateGroups
+      parameters:
+        - name: reseller_id
+          in: query
+          description: Admin only - rate groups of this reseller (0 = admin)
+          schema: { type: integer, minimum: 0 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/RateGroup" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /products:
+    get:
+      tags: [packages]
+      summary: Packages that can be assigned to customers (admin, reseller)
+      operationId: listProducts
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Product" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /customers:
+    get:
+      tags: [customers]
+      summary: List and search customers (admin, reseller)
+      operationId: listCustomers
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: q
+          in: query
+          description: Search in account number, company, first name, last name, e-mail
+          schema: { type: string, maxLength: 80 }
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, inactive] }
+        - name: reseller_id
+          in: query
+          description: Admin only - customers of this reseller (0 = admin)
+          schema: { type: integer, minimum: 0 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Customer" }
+                  meta: { $ref: "#/components/schemas/ListMeta" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [customers]
+      summary: Create a customer (admin, reseller)
+      operationId: createCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomerCreate" }
+      responses:
+        "201":
+          description: Created. Contains portal_password, returned only once.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    allOf:
+                      - $ref: "#/components/schemas/Customer"
+                      - type: object
+                        properties:
+                          portal_password: { type: string, description: Password for the customer portal }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+  /customers/{id}:
+    parameters:
+      - $ref: "#/components/parameters/CustomerId"
+    get:
+      tags: [customers]
+      summary: Read a customer
+      operationId: getCustomer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/Customer" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [customers]
+      summary: Change, block or unblock a customer (admin, reseller)
+      operationId: updateCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomerUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/Customer" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+  /customers/{id}/balance:
+    parameters:
+      - $ref: "#/components/parameters/CustomerId"
+    get:
+      tags: [customers]
+      summary: Balance and credit limit
+      operationId: getBalance
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/Balance" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /customers/{id}/usage:
+    parameters:
+      - $ref: "#/components/parameters/CustomerId"
+    get:
+      tags: [packages]
+      summary: Package minutes of the current period (all packages form one pool)
+      operationId: getUsage
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/Usage" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /customers/{id}/cdrs:
+    parameters:
+      - $ref: "#/components/parameters/CustomerId"
+    get:
+      tags: [customers]
+      summary: Call records, newest first
+      operationId: listCdrs
+      parameters:
+        - name: from
+          in: query
+          description: Date (2026-10-01) or date-time (2026-10-01T12:00:00Z). Default - 30 days ago.
+          schema: { type: string }
+        - name: to
+          in: query
+          description: Date (end of day) or date-time. Default - now.
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Cdr" }
+                  meta:
+                    allOf:
+                      - $ref: "#/components/schemas/ListMeta"
+                      - type: object
+                        properties:
+                          from: { type: string, format: date-time }
+                          to: { type: string, format: date-time }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /customers/{id}/products:
+    parameters:
+      - $ref: "#/components/parameters/CustomerId"
+    get:
+      tags: [packages]
+      summary: Active packages of a customer
+      operationId: listCustomerPackages
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Package" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [packages]
+      summary: Assign a package (admin, reseller)
+      operationId: assignPackage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [product_id]
+              properties:
+                product_id: { type: integer, minimum: 1 }
+                quantity: { type: integer, minimum: 1, maximum: 50, default: 1, description: Number of separate packages, e.g. one per channel }
+      responses:
+        "201":
+          description: Created packages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Package" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "402":
+          description: The available balance does not cover the price (insufficient_balance)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+  /customers/{id}/products/{item_id}:
+    parameters:
+      - $ref: "#/components/parameters/CustomerId"
+      - name: item_id
+        in: path
+        required: true
+        description: id of the package (from the package list)
+        schema: { type: integer }
+    delete:
+      tags: [packages]
+      summary: Terminate a package immediately (admin, reseller)
+      operationId: terminatePackage
+      responses:
+        "204": { description: Terminated }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /customers/{id}/sip-devices:
+    parameters:
+      - $ref: "#/components/parameters/CustomerId"
+    get:
+      tags: [sip-devices]
+      summary: SIP devices of a customer
+      operationId: listSipDevices
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/SipDevice" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [sip-devices]
+      summary: Create a SIP device (admin, reseller)
+      operationId: createSipDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SipDeviceCreate" }
+      responses:
+        "201":
+          description: Created. Contains the SIP password.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/SipDeviceWithPassword" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+  /sip-devices/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [sip-devices]
+      summary: Read a SIP device
+      operationId: getSipDevice
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/SipDevice" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [sip-devices]
+      summary: Change caller ID, codecs or status
+      operationId: updateSipDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SipDeviceUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/SipDevice" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      tags: [sip-devices]
+      summary: Delete a SIP device (admin, reseller)
+      operationId: deleteSipDevice
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /sip-devices/{id}/reset-password:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [sip-devices]
+      summary: Set a new SIP password (generated if none is given)
+      operationId: resetSipPassword
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                password: { $ref: "#/components/schemas/SipPassword" }
+      responses:
+        "200":
+          description: OK, contains the new password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/SipDeviceWithPassword" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: API key from the portal, format astpp_<16 hex>_<43 characters>
+    apiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  parameters:
+    CustomerId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 500, default: 50 }
+    Offset:
+      name: offset
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+  responses:
+    BadRequest:
+      description: Malformed request (invalid_body, unknown_fields, unknown_parameters, invalid_parameter)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Missing, invalid, disabled or deleted API key
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Source address not allowed for the key (ip_not_allowed) or endpoint not allowed for the role (forbidden)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Endpoint or object does not exist or is not visible for the key
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Conflict:
+      description: Username already exists (conflict) or customer blocked (customer_inactive)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ValidationFailed:
+      description: Invalid field values, details in error.fields
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, example: validation_failed }
+            message: { type: string }
+            fields:
+              type: object
+              additionalProperties: { type: string }
+    ListMeta:
+      type: object
+      properties:
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+    Status:
+      type: string
+      enum: [active, inactive]
+    Me:
+      type: object
+      properties:
+        key:
+          type: object
+          properties:
+            id: { type: string, description: Public key id (16 hex) }
+            name: { type: string }
+            allowed_ips: { type: array, items: { type: string } }
+            created_at: { type: string, format: date-time }
+        account:
+          type: object
+          properties:
+            id: { type: integer }
+            number: { type: string }
+            role: { type: string, enum: [admin, reseller, customer] }
+            company_name: { type: string }
+            currency: { type: string, example: CHF }
+            timezone: { type: string, example: Europe/Zurich }
+    RateGroup:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        reseller_id: { type: integer, nullable: true }
+        status: { $ref: "#/components/schemas/Status" }
+    Product:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        type: { type: string, enum: [package] }
+        price: { type: number }
+        setup_fee: { type: number }
+        free_minutes: { type: integer }
+        recurring: { type: boolean }
+        billing_days: { type: integer }
+    Address:
+      type: object
+      additionalProperties: false
+      properties:
+        line1: { type: string, maxLength: 80 }
+        line2: { type: string, maxLength: 80 }
+        postal_code: { type: string, maxLength: 12 }
+        city: { type: string, maxLength: 20 }
+        province: { type: string, maxLength: 20 }
+        country: { type: string, description: ISO 3166-1 alpha-2, example: CH }
+    Customer:
+      type: object
+      properties:
+        id: { type: integer }
+        number: { type: string, description: Account number, also the portal login }
+        reseller_id: { type: integer, nullable: true }
+        status: { $ref: "#/components/schemas/Status" }
+        company_name: { type: string }
+        first_name: { type: string }
+        last_name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        address: { $ref: "#/components/schemas/Address" }
+        currency: { type: string }
+        timezone: { type: string }
+        billing_type: { type: string, enum: [prepaid, postpaid] }
+        credit_limit: { type: number }
+        max_channels: { type: integer, description: Concurrent calls, 0 = unlimited }
+        rate_group_id: { type: integer, nullable: true }
+        localization_id: { type: integer, nullable: true }
+        created_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time, nullable: true }
+    CustomerCreate:
+      type: object
+      additionalProperties: false
+      required: [rate_group_id]
+      description: company_name or first_name is required.
+      properties:
+        reseller_id: { type: integer, description: Admin only - create the customer for this reseller }
+        company_name: { type: string, maxLength: 40 }
+        first_name: { type: string, maxLength: 40 }
+        last_name: { type: string, maxLength: 40 }
+        email: { type: string, format: email, maxLength: 80 }
+        phone: { type: string, maxLength: 20 }
+        address: { $ref: "#/components/schemas/Address" }
+        country: { type: string, description: ISO code, default from system settings }
+        currency: { type: string, description: Currency code, default currency of the key's account }
+        timezone: { type: string, description: e.g. Europe/Zurich, default time zone of the key's account }
+        billing_type: { type: string, enum: [prepaid, postpaid], default: prepaid }
+        credit_limit: { type: number, minimum: 0, maximum: 1000000 }
+        max_channels: { type: integer, minimum: 0, maximum: 1000 }
+        rate_group_id: { type: integer }
+        localization_id: { type: integer, nullable: true }
+        send_welcome_email: { type: boolean, default: false, description: Requires email }
+    CustomerUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        status: { $ref: "#/components/schemas/Status" }
+        company_name: { type: string, maxLength: 40 }
+        first_name: { type: string, maxLength: 40 }
+        last_name: { type: string, maxLength: 40 }
+        email: { type: string, format: email, maxLength: 80 }
+        phone: { type: string, maxLength: 20 }
+        address: { $ref: "#/components/schemas/Address" }
+        country: { type: string }
+        timezone: { type: string }
+        billing_type: { type: string, enum: [prepaid, postpaid] }
+        credit_limit: { type: number, minimum: 0, maximum: 1000000 }
+        max_channels: { type: integer, minimum: 0, maximum: 1000 }
+        rate_group_id: { type: integer }
+        localization_id: { type: integer, nullable: true }
+    Balance:
+      type: object
+      properties:
+        customer_id: { type: integer }
+        currency: { type: string }
+        billing_type: { type: string, enum: [prepaid, postpaid] }
+        balance: { type: number }
+        credit_limit: { type: number }
+        available: { type: number, description: Prepaid - balance. Postpaid - credit limit minus open balance. }
+    Package:
+      type: object
+      properties:
+        id: { type: integer, description: Package id (item_id for termination) }
+        product_id: { type: integer }
+        name: { type: string }
+        price: { type: number }
+        setup_fee: { type: number }
+        recurring: { type: boolean }
+        billing_days: { type: integer }
+        period_start: { type: string, format: date-time, nullable: true }
+        next_billing: { type: string, format: date-time, nullable: true }
+        free_minutes: { type: integer }
+        used_minutes: { type: number }
+        remaining_minutes: { type: number }
+    Usage:
+      type: object
+      properties:
+        customer_id: { type: integer }
+        free_minutes: { type: number }
+        used_minutes: { type: number }
+        remaining_minutes: { type: number }
+        packages:
+          type: array
+          items: { $ref: "#/components/schemas/Package" }
+    Cdr:
+      type: object
+      properties:
+        id: { type: string }
+        start: { type: string, format: date-time }
+        end: { type: string, format: date-time, nullable: true }
+        caller_id: { type: string }
+        destination: { type: string }
+        destination_name: { type: string }
+        duration: { type: integer, description: Billed seconds }
+        disposition: { type: string }
+        direction: { type: string, enum: [outbound, inbound] }
+        package_call: { type: boolean }
+        charge: { type: number }
+        sip_user: { type: string }
+    SipPassword:
+      type: string
+      minLength: 12
+      maxLength: 64
+      pattern: "^[A-Za-z0-9._~!@#%^+=,:-]{12,64}$"
+    SipDevice:
+      type: object
+      properties:
+        id: { type: integer }
+        customer_id: { type: integer }
+        username: { type: string }
+        status: { $ref: "#/components/schemas/Status" }
+        caller_id_name: { type: string, description: Empty = caller ID of the PBX is passed through }
+        caller_id_number: { type: string, description: Empty = caller ID of the PBX is passed through }
+        codec: { type: string, example: "PCMA,PCMU" }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    SipDeviceWithPassword:
+      allOf:
+        - $ref: "#/components/schemas/SipDevice"
+        - type: object
+          properties:
+            password: { type: string }
+    SipDeviceCreate:
+      type: object
+      additionalProperties: false
+      properties:
+        username: { type: string, pattern: "^[A-Za-z0-9._-]{4,40}$", description: Generated (10 digits) if omitted }
+        password: { $ref: "#/components/schemas/SipPassword" }
+        caller_id_name: { type: string, maxLength: 80 }
+        caller_id_number: { type: string, pattern: "^\\+?[0-9]{0,20}$" }
+        codec: { type: string, maxLength: 100 }
+        status: { $ref: "#/components/schemas/Status" }
+    SipDeviceUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        caller_id_name: { type: string, maxLength: 80 }
+        caller_id_number: { type: string, pattern: "^\\+?[0-9]{0,20}$" }
+        codec: { type: string, maxLength: 100 }
+        status: { $ref: "#/components/schemas/Status" }

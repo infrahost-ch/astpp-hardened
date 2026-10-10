@@ -113,11 +113,26 @@ class Apikeys extends MX_Controller {
 		redirect(base_url() . 'apikeys/apikeys_list/');
 	}
 
+	/** Documentation (modules/apikeys/docs/api.md, rendered with Parsedown). */
 	function apikeys_docs() {
+		require_once APPPATH . 'third_party/parsedown/Parsedown.php';
+		$markdown = (string) file_get_contents(APPPATH . 'modules/apikeys/docs/api.md');
+		$markdown = str_replace(array('{{API_BASE}}', '{{OPENAPI_URL}}'), array(base_url() . 'api/v1/', base_url() . 'apikeys/apikeys_openapi/'), $markdown);
+		$parser = new Parsedown();
 		$data['page_title'] = gettext('API Documentation');
-		$data['api_base'] = base_url() . 'api/v1/';
-		$data['role'] = $this->is_admin ? 'admin' : ((int) $this->accountinfo['type'] === 1 ? 'reseller' : 'customer');
+		$data['docs_html'] = $parser->text($markdown);
 		$this->load->view('apikeys_docs', $data);
+	}
+
+	/** OpenAPI description (modules/apikeys/docs/openapi.yaml) as download. */
+	function apikeys_openapi() {
+		$yaml = (string) file_get_contents(APPPATH . 'modules/apikeys/docs/openapi.yaml');
+		$yaml = str_replace('{{API_BASE}}', rtrim(base_url(), '/') . '/api/v1', $yaml);
+		header('Content-Type: application/yaml; charset=utf-8');
+		header('Content-Disposition: attachment; filename="astpp-api-openapi.yaml"');
+		header('X-Content-Type-Options: nosniff');
+		echo $yaml;
+		exit();
 	}
 
 	// ------------------------------------------------------------------ helpers
