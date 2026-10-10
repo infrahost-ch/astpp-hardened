@@ -38,3 +38,20 @@ CREATE TABLE IF NOT EXISTS `api_keys` (
   UNIQUE KEY `key_id` (`key_id`),
   KEY `accountid` (`accountid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Menu "API Access": admin and reseller under Configuration, customers under My Account.
+-- The menu is built at login; users see the new entry after their next login.
+INSERT INTO menu_modules (menu_label, module_name, module_url, menu_title, menu_image, menu_subtitle, priority)
+SELECT 'API Access', 'apikeys', 'apikeys/apikeys_list/', 'Configuration', 'Configurations.png', '0', 90.95 FROM DUAL
+ WHERE NOT EXISTS (SELECT 1 FROM menu_modules WHERE module_url = 'apikeys/apikeys_list/' AND menu_title = 'Configuration');
+INSERT INTO menu_modules (menu_label, module_name, module_url, menu_title, menu_image, menu_subtitle, priority)
+SELECT 'API Access', 'apikeys', 'apikeys/apikeys_list/', 'My Account', 'PaymentReport.png', '0', 7.7 FROM DUAL
+ WHERE NOT EXISTS (SELECT 1 FROM menu_modules WHERE module_url = 'apikeys/apikeys_list/' AND menu_title = 'My Account');
+UPDATE userlevels U
+  JOIN menu_modules M ON M.module_url = 'apikeys/apikeys_list/' AND M.menu_title = 'Configuration'
+   SET U.module_permissions = CONCAT(U.module_permissions, ',', M.id)
+ WHERE U.userlevelid IN (-1, 1) AND NOT FIND_IN_SET(M.id, U.module_permissions);
+UPDATE userlevels U
+  JOIN menu_modules M ON M.module_url = 'apikeys/apikeys_list/' AND M.menu_title = 'My Account'
+   SET U.module_permissions = CONCAT(U.module_permissions, ',', M.id)
+ WHERE U.userlevelid = 0 AND NOT FIND_IN_SET(M.id, U.module_permissions);
