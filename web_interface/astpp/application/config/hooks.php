@@ -35,7 +35,14 @@ $hook ['pre_controller'][] = array (
 		'class' => 'Router',
 		'function' => 'config',
 		'filename' => 'router.php',
-		'filepath' => 'hooks' 
+		'filepath' => 'hooks'
+);
+// HARDENING: central record ownership / role check before every controller method
+$hook ['post_controller_constructor'][] = array (
+		'class' => 'Access_control',
+		'function' => 'check',
+		'filename' => 'access_control.php',
+		'filepath' => 'hooks'
 );
 /*********************************************************/
 /*
