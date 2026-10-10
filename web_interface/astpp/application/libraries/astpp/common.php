@@ -2898,7 +2898,9 @@ class common {
 		return $InvoiceConf;
 	}
 	function csv_to_array($filename = '', $delimiter = ',') {
-		if (! file_exists ( $filename ) || ! is_readable ( $filename ))
+		// BUGFIX: without an uploaded file the path was the upload directory; fgetcsv() on a
+		// directory never returns FALSE and the loop ran forever. Only read regular files.
+		if (! is_file ( $filename ) || ! is_readable ( $filename ))
 			return FALSE;
 		$header = NULL;
 		$data = array ();

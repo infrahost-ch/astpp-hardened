@@ -1481,7 +1481,8 @@ class Rates extends MX_Controller
 
     function csv_to_array($filename = '', $delimiter = ',')
     {
-        if (! file_exists($filename) || ! is_readable($filename))
+        // BUGFIX: only regular files (a directory made the read loop endless)
+        if (! is_file($filename) || ! is_readable($filename))
             return FALSE;
         $header = NULL;
         $data = array();

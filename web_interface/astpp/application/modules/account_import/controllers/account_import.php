@@ -166,6 +166,11 @@ class Account_import extends MX_Controller
         $full_path = $this->config->item('rates-file-path');
         $customer_file_name = $this->session->userdata('import_customer_mapper_csv');
         $csv_tmp_data = $this->common->csv_to_array($full_path . $customer_file_name);
+        // BUGFIX: no uploaded file in this session
+        if (! is_array($csv_tmp_data)) {
+            $this->session->set_flashdata('astpp_notification', gettext('Please upload a CSV file first.'));
+            redirect(base_url() . "account_import/customer_import_mapper/");
+        }
         $i = 0;
         $this->db->select("id,name");
         $pricelist_result = $this->db->get_where('pricelists', array(
