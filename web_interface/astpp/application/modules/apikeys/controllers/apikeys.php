@@ -74,6 +74,8 @@ class Apikeys extends MX_Controller {
 		}
 		list($key, $id) = $this->api_keys->create((int) $this->accountinfo['id'], $name, $allowed, (int) $this->accountinfo['id']);
 		$this->rotate_csrf();
+		// the page contains the full key: keep it out of browser and proxy caches
+		header('Cache-Control: no-store');
 		$this->render_list($key);
 	}
 
