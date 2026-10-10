@@ -7,6 +7,10 @@ requests, no vendor advertising. Compatibility with future upstream releases is 
 upstream fixes are ported by hand.
 
 - Installation and updates: `../astpp-debian13/` (`install.sh`, `tools/astpp-deploy.sh`)
+- Provisioning API (`/api/v1`): overview in [`../docs/API.md`](../docs/API.md), full documentation
+  (German) in [`api.md`](web_interface/astpp/application/modules/apikeys/docs/api.md) and
+  [`openapi.yaml`](web_interface/astpp/application/modules/apikeys/docs/openapi.yaml), also shown
+  in the portal under *API Access*
 - Changes: `git log -- astpp` (each change is its own commit, starting from the upstream import)
 - License: GNU AGPL v3 (`LICENSE`), origin and copyright: `NOTICE`, `Authors`
 - Original README of the upstream project: `README-upstream.md`
