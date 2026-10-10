@@ -297,8 +297,10 @@ class Products extends MX_Controller {
 				$data['product_info'] = $add_array ;
 				$data['product_info']['description'] =  isset($add_array['product_description'])?$add_array['product_description']:['description'];
 				$data['product_info']['buy_cost'] = isset($add_array['product_buy_cost'])?$add_array['product_buy_cost']:$product_info['buy_cost'];
-				
-				$data['product_rate_group'] = $this->db_model->build_dropdown("id,name", "pricelists", "", $where_arr);	
+
+				// BUGFIX: the reseller filter was already used up by the query above, the list showed
+				// the rate groups of all resellers
+				$data['product_rate_group'] = $this->db_model->build_dropdown("id,name", "pricelists", "where_arr", array("reseller_id" => $reseller_id));
 
 				$data['product_info']['apply_on_rategroups'] = $product_info['apply_on_rategroups'];
 				$data['product_info']['name'] = (isset($add_array['product_name']) && $add_array['product_name'] !='' )?$add_array['product_name']: $product_info['name'];

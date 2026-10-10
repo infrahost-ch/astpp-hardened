@@ -3025,7 +3025,13 @@ class common {
 	}
 	
 	function get_reseller_info(){
-			 
+			 // HARDENING: a reseller got the list of all resellers; it only sees itself as parent
+			 $logintype = $this->CI->session->userdata('logintype');
+			 if ($logintype == 1 || $logintype == 5) {
+				$self = $this->CI->session->userdata('accountinfo');
+				$name = (isset($self['company_name']) && $self['company_name'] != '') ? $self['company_name'] . ' ' : $self['first_name'] . ' ' . $self['last_name'];
+				return array($self['id'] => $name . '(' . $self['number'] . ')');
+			 }
 			 $reseller_info    = $this->CI->db_model->getSelect("*","accounts",array("type"=>1,"deleted"=>0,"status"=>0));
 			 if($reseller_info->num_rows > 0) {
 			    	$reseller_data = $reseller_info->result_array();

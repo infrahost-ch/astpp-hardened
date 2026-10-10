@@ -874,7 +874,10 @@ class invoices_form extends common
                 'accounts',
                 'build_concat_dropdown',
                 '',
-                ''
+                // HARDENING: the dropdown listed all accounts of all tenants; a reseller only sees itself
+                array(
+                    'id' => (int) $account_info['id']
+                )
             );
         } else {
 
