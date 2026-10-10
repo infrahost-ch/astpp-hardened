@@ -289,6 +289,21 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
 | Logs | `/var/log/astpp/`, `/var/log/freeswitch/freeswitch.log`, `/var/log/nginx/astpp_*.log` |
 | fail2ban | `fail2ban-client status` (Jails `sshd`, `freeswitch-astpp`, `astpp-login`) / gesperrte IP freigeben: `fail2ban-client set astpp-login unbanip <IP>` (Web-Login, 10 Fehlversuche bzw. Limit-Treffer in 10 min) |
 | Firewall | `nft list table inet astpp` |
+| API-Zugriffe | `/var/log/astpp/api.log` (eine JSON-Zeile pro Anfrage: Zeit, IP, Schlüssel-ID, Konto, Pfad, Status; ohne Schlüssel, Passwörter, Inhalte) |
+
+**Provisionierungs-API (`/api/v1/`)**
+- JSON-API für Kunden, SIP-Geräte, Pakete, Guthaben, Paketverbrauch und Gesprächsdaten
+  (`astpp/web_interface/astpp/application/controllers/api.php`). Ersetzt das unsichere API-Addon des
+  Herstellers, das aus dem Fork entfernt ist.
+- Schlüssel verwalten Admin, Reseller und Kunden selbst im Portal unter **API Access**
+  (Admin/Reseller: *Configuration*, Kunden: *My Account*). Jeder Schlüssel braucht freigegebene
+  IP-Adressen; Admins sehen und sperren alle Schlüssel. Ein Schlüssel wird nur einmal angezeigt und nur
+  als SHA-256 gespeichert (Tabelle `api_keys`).
+- Rechte: Admin alle Kunden, Reseller die eigenen, Kunden das eigene Konto.
+- nginx begrenzt `/api/` auf 10 Anfragen/s pro Quell-IP (Spitze 40), Anfragen höchstens 1 MB.
+- Dokumentation im Portal (API Access → API documentation), Quelle
+  `application/modules/apikeys/docs/api.md`, OpenAPI-Beschreibung `docs/openapi.yaml` daneben.
+- Neue Menüpunkte erscheinen erst nach dem nächsten Login (das Menü wird beim Login aufgebaut).
 
 **Updates**
 - Debian-Sicherheitsupdates laufen automatisch (`unattended-upgrades`).
