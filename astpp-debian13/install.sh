@@ -553,6 +553,7 @@ configure_freeswitch() {
 	local ac="${FS_ETC}/autoload_configs"
 	cp -f "${ASTPP_SRC}"/freeswitch/conf/autoload_configs/*.xml "${ac}/"
 	render "${SCRIPT_DIR}/files/freeswitch/event_socket.conf.xml" "${ac}/event_socket.conf.xml" ESL_PASSWORD "${ESL_PASS}"
+	cp -f "${SCRIPT_DIR}/files/freeswitch/logfile.conf.xml" "${ac}/logfile.conf.xml"
 
 	# Kapazitaeten wie im Upstream-Installer, RTP-Portbereich passend zur Firewall
 	sed -i -e 's#max-sessions" value="1000#max-sessions" value="2000#' \

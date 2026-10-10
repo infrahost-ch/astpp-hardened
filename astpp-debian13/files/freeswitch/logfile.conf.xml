@@ -1,0 +1,19 @@
+<!-- managed by astpp-debian13/install.sh
+     The log is rotated by logrotate only (/etc/logrotate.d/astpp: daily, 14 days,
+     compressed, copytruncate). Upstream vanilla also rolls over at 1 GB and renames
+     the file on HUP, which clashes with the logrotate file names. -->
+<configuration name="logfile.conf" description="File Logging">
+  <settings>
+    <param name="rotate-on-hup" value="false"/>
+  </settings>
+  <profiles>
+    <profile name="default">
+      <settings>
+        <param name="uuid" value="true"/>
+      </settings>
+      <mappings>
+        <map name="all" value="console,debug,info,notice,warning,err,crit,alert"/>
+      </mappings>
+    </profile>
+  </profiles>
+</configuration>

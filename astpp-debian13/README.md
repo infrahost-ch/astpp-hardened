@@ -286,7 +286,7 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
 | PHP-Fehlerdetails | standardmässig werden nur Fehler geloggt; für Warnungen/Deprecations `env[ASTPP_DEBUG_LOG] = 1` in `/etc/php/8.5/fpm/pool.d/astpp.conf`, dann `systemctl reload php8.5-fpm` |
 | FreeSWITCH-Konsole | `fs_cli` (Passwort aus `/etc/fs_cli.conf`) |
 | SIP-Status | `fs_cli -x 'sofia status'` |
-| Logs | `/var/log/astpp/`, `/var/log/freeswitch/freeswitch.log`, `/var/log/nginx/astpp_*.log` |
+| Logs | `/var/log/astpp/`, `/var/log/freeswitch/freeswitch.log`, `/var/log/nginx/astpp_*.log`; Rotation täglich, 14 Tage, komprimiert (`/etc/logrotate.d/astpp`, FreeSWITCH selbst rotiert nicht: `files/freeswitch/logfile.conf.xml`) |
 | fail2ban | `fail2ban-client status` (Jails `sshd`, `freeswitch-astpp`, `astpp-login`) / gesperrte IP freigeben: `fail2ban-client set astpp-login unbanip <IP>` (Web-Login, 10 Fehlversuche bzw. Limit-Treffer in 10 min) |
 | Firewall | `nft list table inet astpp` |
 | API-Zugriffe | `/var/log/astpp/api.log` (eine JSON-Zeile pro Anfrage: Zeit, IP, Schlüssel-ID, Konto, Pfad, Status; ohne Schlüssel, Passwörter, Inhalte) |
@@ -379,6 +379,7 @@ noch aus; die Funktionen für Abgleich, Rechte und Protokoll teilen sich Install
 - [ ] eingehender Anruf auf DID
 - [ ] Logo-Upload, Datenbank-Backup/-Restore über die Oberfläche
 - [ ] Zahlungsanbieter (PayPal/Stripe) – nur mit Sandbox-Zugang testbar
-- [ ] 10 falsche SIP-Passwörter innerhalb 5 Minuten → IP wird von fail2ban gesperrt
+- [ ] 10 falsche SIP-Passwörter innerhalb 5 Minuten → IP wird von fail2ban gesperrt, auch für UDP
+  (`nft list table inet f2b-table` zeigt `meta l4proto { tcp, udp }`)
 - [ ] `curl -k https://astpp.example.com/getstatus/reload_freeswitch/status` → 404
 - [ ] `curl -k https://astpp.example.com/purge/ProcessPurge` → 404
