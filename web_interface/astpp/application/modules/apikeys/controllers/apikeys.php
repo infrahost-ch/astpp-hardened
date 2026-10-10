@@ -40,7 +40,7 @@ class Apikeys extends MX_Controller {
 		}
 		$this->accountinfo = $this->session->userdata('accountinfo');
 		if (! is_array($this->accountinfo) || ! in_array((int) $this->accountinfo['type'], Api_keys::ACCOUNT_TYPES, true)) {
-			$this->session->set_flashdata('astpp_notification', gettext('Permission Denied!'));
+			$this->session->set_flashdata('astpp_errormsg', gettext('Permission Denied!'));
 			redirect(base_url() . 'dashboard/');
 		}
 		$this->is_admin = (int) $this->accountinfo['type'] === -1;
@@ -101,7 +101,7 @@ class Apikeys extends MX_Controller {
 		$this->db->where('id', (int) $row['id']);
 		$this->db->update(Api_keys::TABLE, array('name' => $name, 'allowed_ips' => $allowed, 'status' => $status));
 		$this->rotate_csrf();
-		$this->session->set_flashdata('astpp_errormsg', gettext('API key updated.'));
+		$this->session->set_flashdata('astpp_notification', gettext('API key updated.'));
 		redirect(base_url() . 'apikeys/apikeys_list/');
 	}
 
@@ -111,7 +111,7 @@ class Apikeys extends MX_Controller {
 		$this->db->where('id', (int) $row['id']);
 		$this->db->delete(Api_keys::TABLE);
 		$this->rotate_csrf();
-		$this->session->set_flashdata('astpp_errormsg', gettext('API key deleted. Requests with this key are rejected from now on.'));
+		$this->session->set_flashdata('astpp_notification', gettext('API key deleted. Requests with this key are rejected from now on.'));
 		redirect(base_url() . 'apikeys/apikeys_list/');
 	}
 
@@ -176,7 +176,7 @@ class Apikeys extends MX_Controller {
 		}
 		$row = $this->db->get_where(Api_keys::TABLE, $where)->row_array();
 		if (empty($row)) {
-			$this->session->set_flashdata('astpp_notification', gettext('Permission Denied!'));
+			$this->session->set_flashdata('astpp_errormsg', gettext('Permission Denied!'));
 			redirect(base_url() . 'apikeys/apikeys_list/');
 		}
 		return $row;
@@ -186,7 +186,7 @@ class Apikeys extends MX_Controller {
 		$token = (string) $this->input->post('csrf_token');
 		$expected = (string) $this->session->userdata(self::CSRF);
 		if (strtoupper((string) $this->input->server('REQUEST_METHOD')) !== 'POST' || $expected === '' || ! hash_equals($expected, $token)) {
-			$this->session->set_flashdata('astpp_notification', gettext('The form has expired. Please try again.'));
+			$this->session->set_flashdata('astpp_errormsg', gettext('The form has expired. Please try again.'));
 			redirect(base_url() . 'apikeys/apikeys_list/');
 		}
 	}
