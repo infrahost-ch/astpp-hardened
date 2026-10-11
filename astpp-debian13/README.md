@@ -149,6 +149,11 @@ folgt jede Änderung als eigener Commit (`git log -- astpp`): Härtung, PHP-8.5-
   `?i` Ganzzahl, `?l` Ganzzahl-Liste. Der Header-Filter in `astpp.lua` bleibt als zweite Schicht.
   Anrufverhalten im Vergleich alt/neu unverändert. Wirkt nach dem Deploy
   ab dem nächsten Anruf, ohne FreeSWITCH-Neustart (mod_lua liest die Skripte bei jeder Anfrage).
+  Nebenbefunde: gleichwertige Pakete in fester Reihenfolge (kleinste
+  Paket-ID zuerst, Dialplan und CDR); gesperrte, abgelaufene und unbekannte Konten werden mit
+  `ACCOUNT_INACTIVE_DELETED` bzw. `ACCOUNT_EXPIRE` abgewiesen statt mit Lua-Fehler; `ip_map`-Einträge
+  ohne `/Bits` gelten als `/32`, ungültige werden übersprungen; das Portal speichert IP-Map-Einträge
+  nur als gültiges `Adresse/Bits`.
 
 **Bibliotheken** (alle selbst ausgeliefert unter `assets/vendor/<name>-<version>/`, Downloads gegen
 npm-/Packagist-Prüfsummen verifiziert)
@@ -424,8 +429,15 @@ noch aus; die Funktionen für Abgleich, Rechte und Protokoll teilen sich Install
   ohne Filter, Calling Card (14) und Einzelfunktionen (124) Abweichungen nur bei Sonderzeichen und
   Injektionsversuchen; Escaping-Rundlauf 542/542; Kontrolllauf alt gegen alt ohne Abweichung
   (ausser einem Injektionsfall der alten Version, dessen Treffer MariaDB in wechselnder Reihenfolge liefert)
+- [x] Nebenbefunde der Lua-Härtung (11.10.2026, Testinstanz, Runde 2): alt gegen neu nur die gewollten Abweichungen, 44/44 neue
+  Prüfungen erfüllt (Paketwahl fest, gesperrtes/abgelaufenes/unbekanntes Konto sauber abgewiesen,
+  IP-Abfrage gegen CIDR-Orakel, `dptest.lua` erkennt SQL-Fehler, CDR ohne PHP-Warnung); IP-Map in
+  allen Portalpfaden 64/64
 - [ ] nach dem Deploy des Lua-Codes: je ein Testanruf national und international (Paket), CDR „FREE“
-  und Paketzähler +60 s; FreeSWITCH-Log ohne `db_sql:`-Meldungen
+  und Paketzähler +60 s; FreeSWITCH-Log ohne `db_sql:`-Meldungen; bei mehreren gleichen Paketen
+  zählt der Anruf auf das Paket mit der kleinsten ID (`counters`)
+- [ ] nach dem Deploy: IP-Map im Portal ohne `/Bits` speichern → Eintrag mit `/32`; `abc` oder
+  `/33` → Fehlermeldung, kein Eintrag
 - [ ] nach dem Deploy: Formular speichern und ein Popup im Admin-, Reseller- und Kundenportal;
   `curl -sk -X POST https://astpp.example.com/user/user_myprofile/` → Weiterleitung zum Login
   (ohne Sitzung) bzw. mit Sitzung, aber ohne Token → „This page has expired …“
