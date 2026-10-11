@@ -142,6 +142,13 @@ folgt jede Änderung als eigener Commit (`git log -- astpp`): Härtung, PHP-8.5-
   („This page has expired …“, bei AJAX HTTP 403). Ausgenommen: `/api/v1` (eigener Schlüssel),
   FreeSWITCH-/Cron-/interne Root-Controller, PayPal-Rückleitungen; Login, Signup und
   „Passwort vergessen“ prüfen nur die Origin.
+- **SQL im Lua-Dialplan** (Audit H2/O1, 11.10.2026): Dialplan, Calling-Card-Skript und die Lua-Teile
+  der Addons bauten ihre Abfragen per Text-Verkettung (gewählte Nummer, From-User, am
+  Calling-Card-Zugang die Caller-ID sogar ohne Quotes). Jetzt laufen alle Werte über `db_sql()`
+  (`freeswitch/scripts/astpp/lib/astpp.db.lua`) mit typisierten Platzhaltern – `?s` Text (escaped),
+  `?i` Ganzzahl, `?l` Ganzzahl-Liste. Der Header-Filter in `astpp.lua` bleibt als zweite Schicht.
+  Anrufverhalten im Vergleich alt/neu unverändert. Wirkt nach dem Deploy
+  ab dem nächsten Anruf, ohne FreeSWITCH-Neustart (mod_lua liest die Skripte bei jeder Anfrage).
 
 **Bibliotheken** (alle selbst ausgeliefert unter `assets/vendor/<name>-<version>/`, Downloads gegen
 npm-/Packagist-Prüfsummen verifiziert)
@@ -375,6 +382,12 @@ Regeln direkt in `/etc/nftables.conf` (Sets `ssh_allow4/6`, `sip_allow4/6`) pfle
   in `$get_protected` (`csrf_guard.php`) aufnehmen und per Skript erzeugte Navigationen zu solchen
   URLs über `csrf_url(url)` führen. Prüfung: Rollenmatrix mit `MX_CSRF=ohne` (keine Tabellen
   dürfen sich ändern), siehe Testplan.
+- **Lua-Dialplan und SQL:** Abfragen nur über `db_sql("… = ?s AND id = ?i", wert, id)` bauen; das
+  Template bleibt Code (keine Werte hineinverketten), Fragmente aus `number_loop()` hinten an das
+  Ergebnis von `db_sql()` hängen. Ein fehlender Wert oder eine Nicht-Zahl bei `?i`/`?l` bricht den
+  Dialplan ab – der Anruf wird dann nicht vermittelt, im FreeSWITCH-Log steht eine Meldung, die mit
+  `db_sql:` beginnt. Nach Änderungen am Lua-Code auf der Testinstanz den Vergleich alt/neu laufen
+  lassen (siehe Testplan).
 
 ## Validierung / Testplan
 
@@ -404,6 +417,15 @@ noch aus; die Funktionen für Abgleich, Rechte und Protokoll teilen sich Install
   unverändert; Matrix `MX_CSRF=ohne`/`fremd` ändert keine Daten (ausser dem PayPal-Platzhalter der
   Aufladeseite); `flow-csrf.php` 36/36; API 41/41, API-Portal 39/39; Browser-Stichprobe Admin,
   Reseller, Kunde (Popups, Sammelaktionen, Upload, TinyMCE, `login_as`, abgelaufene Seite)
+- [x] SQL im Lua-Dialplan (H2/O1, 11.10.2026, Testinstanz; Vergleich
+  alter gegen neuen Lua-Code auf einer jeweils frisch geladenen Kopie der Testdatenbank, Bericht
+  `vergleich.txt`): Dialplan 67 Fälle mit Header-Filter – 65 identisch inkl. XML und aller
+  Abfrageergebnisse, abweichend nur manipulierte Kontonummer; CDR-Paketzählung 32/32 identisch;
+  ohne Filter, Calling Card (14) und Einzelfunktionen (124) Abweichungen nur bei Sonderzeichen und
+  Injektionsversuchen; Escaping-Rundlauf 542/542; Kontrolllauf alt gegen alt ohne Abweichung
+  (ausser einem Injektionsfall der alten Version, dessen Treffer MariaDB in wechselnder Reihenfolge liefert)
+- [ ] nach dem Deploy des Lua-Codes: je ein Testanruf national und international (Paket), CDR „FREE“
+  und Paketzähler +60 s; FreeSWITCH-Log ohne `db_sql:`-Meldungen
 - [ ] nach dem Deploy: Formular speichern und ein Popup im Admin-, Reseller- und Kundenportal;
   `curl -sk -X POST https://astpp.example.com/user/user_myprofile/` → Weiterleitung zum Login
   (ohne Sitzung) bzw. mit Sitzung, aber ohne Token → „This page has expired …“
