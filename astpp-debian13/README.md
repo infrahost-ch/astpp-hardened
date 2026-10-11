@@ -15,6 +15,7 @@ Sicherheitslücken der Herstellerinstallation.
 | `tools/astpp-deploy.sh` | bringt eine bestehende Installation auf den Stand von `astpp/` (mit Sicherung und Prüfungen) |
 | `tools/astpp-postinstall.php` | wandelt Seed-Passwörter in Hashes um, setzt Admin-Passwort, sperrt Demo-Konten |
 | `tools/astpp-smoketest.php` | lesender Funktionstest der Weboberfläche (`php8.5 tools/astpp-smoketest.php`) |
+| `tools/password-list-build.php` | baut die Liste häufiger Passwörter der Passwortregel (N13) aus den SecLists-Quellen neu |
 | `tools/npmfetch.sh`, `tools/gitfetch.sh` | Bibliotheken für `astpp/` herunterladen und prüfen (npm: SHA-512 der Registry, Composer: Commit laut Packagist) |
 | `tools/php85-port/` | Werkzeuge der PHP-8.5-Portierung (Umschreiber, Kompatibilitätstest, A/B-Testsuite) – auch für Code, der später aus Upstream übernommen wird |
 | `files/` | Konfigurationsvorlagen (nginx, PHP-FPM, MariaDB, FreeSWITCH, fail2ban, nftables, cron) |
@@ -173,6 +174,14 @@ folgt jede Änderung als eigener Commit (`git log -- astpp`): Härtung, PHP-8.5-
   SIP-Geräte mehr. Massenangelegte Konten haben einen Sperrwert (`!…`) bis jemand ein Passwort setzt.
   SIP-Gerätepasswörter bleiben lesbar gespeichert, weil FreeSWITCH sie für die Anmeldung braucht.
   Ein Login kostet rund 0,14 s und 64 MiB Speicher für die Hash-Prüfung.
+- **Passwortregel** (Audit N13, 11.10.2026): Portal-Passwörter brauchen mindestens 12 Zeichen,
+  dürfen nicht in der lokalen Liste häufiger Passwörter stehen (auch nicht als einfache Abwandlung
+  wie `Sommer2024!`, Wiederholung oder Tastaturfolge) und nicht gleich Kontonummer, E-Mail-Adresse
+  oder Benutzername sein (`application/libraries/astpp/password_policy.php`, Liste
+  `password_policy_list.txt` daneben). Gilt in allen Kontoformularen, bei „Passwort ändern“ und
+  „Passwort vergessen“, in der API (`portal_password`) und im CSV-Import; erzeugte Passwörter haben
+  16 Zeichen. Bestehende Passwörter bleiben gültig, beim Login erscheint für regelwidrige die Warnung
+  „unsicheres Passwort“. SIP-Passwörter sind nicht betroffen.
 
 **Bibliotheken** (alle selbst ausgeliefert unter `assets/vendor/<name>-<version>/`, Downloads gegen
 npm-/Packagist-Prüfsummen verifiziert)
@@ -332,7 +341,7 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
 | fail2ban | `fail2ban-client status` (Jails `sshd`, `freeswitch-astpp`, `astpp-login`) / gesperrte IP freigeben: `fail2ban-client set astpp-login unbanip <IP>` (Web-Login und „Passwort vergessen“: 10 Fehlversuche, Code-Anforderungen bzw. Limit-Treffer in 10 min) |
 | Firewall | `nft list table inet astpp` |
 | Portal-Passwort vergessen | Kunden, Reseller, Provider: Seite „Passwort vergessen“ (Code per Mail). Admin/Reseller setzen ein neues Passwort im Kontoformular (leeres Feld = unverändert); auslesen lässt sich kein Passwort mehr |
-| Admin-Passwort zurücksetzen | Admins können „Passwort vergessen“ nicht nutzen. Ein anderer Admin setzt es im Kontoformular, sonst auf dem Server: `read -rs PW; H=$(PW="$PW" php8.5 -r 'echo password_hash(getenv("PW"), PASSWORD_ARGON2ID);'); mariadb astpp -e "UPDATE accounts SET password='$H' WHERE number='admin' AND type=-1"` (Passwort erscheint weder in der Prozessliste noch in der History) |
+| Admin-Passwort zurücksetzen | Admins können „Passwort vergessen“ nicht nutzen. Ein anderer Admin setzt es im Kontoformular, sonst auf dem Server (prüft die Passwortregel N13, das Passwort erscheint weder in der Prozessliste noch in der History): `read -rs PW; H=$(PW="$PW" php8.5 -r 'define("BASEPATH", 1); require "/opt/ASTPP/web_interface/astpp/application/libraries/astpp/password_policy.php"; $e = (new Password_policy)->check(getenv("PW"), ["admin"]); if ($e !== "") { fwrite(STDERR, "Passwortregel: $e" . PHP_EOL); exit(1); } echo password_hash(getenv("PW"), PASSWORD_ARGON2ID);') && mariadb astpp -e "UPDATE accounts SET password='$H' WHERE number='admin' AND type=-1"` |
 | API-Zugriffe | `/var/log/astpp/api.log` (eine JSON-Zeile pro Anfrage: Zeit, IP, Schlüssel-ID, Konto, Pfad, Status; ohne Schlüssel, Passwörter, Inhalte) |
 
 **Provisionierungs-API (`/api/v1/`)**
