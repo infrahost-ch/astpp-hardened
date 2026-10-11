@@ -13,7 +13,7 @@ Sicherheitslücken der Herstellerinstallation.
 | `install.conf.example` | Einstellungen (FQDN, E-Mail, FreeSWITCH-Token, Firewall) |
 | `lib/astpp-tree.sh` | gemeinsame Funktionen von Installer und Deploy (Syntaxprüfung, Abgleich, Rechte) |
 | `tools/astpp-deploy.sh` | bringt eine bestehende Installation auf den Stand von `astpp/` (mit Sicherung und Prüfungen) |
-| `tools/astpp-postinstall.php` | schlüsselt Seed-Passwörter um, setzt Admin-Passwort, sperrt Demo-Konten |
+| `tools/astpp-postinstall.php` | wandelt Seed-Passwörter in Hashes um, setzt Admin-Passwort, sperrt Demo-Konten |
 | `tools/astpp-smoketest.php` | lesender Funktionstest der Weboberfläche (`php8.5 tools/astpp-smoketest.php`) |
 | `tools/npmfetch.sh`, `tools/gitfetch.sh` | Bibliotheken für `astpp/` herunterladen und prüfen (npm: SHA-512 der Registry, Composer: Commit laut Packagist) |
 | `tools/php85-port/` | Werkzeuge der PHP-8.5-Portierung (Umschreiber, Kompatibilitätstest, A/B-Testsuite) – auch für Code, der später aus Upstream übernommen wird |
@@ -32,11 +32,14 @@ Sicherheitslücken der Herstellerinstallation.
 | Firewall | firewalld | **nftables** (+ fail2ban) | Debian-Standard, SIP-Rate-Limit pro IP |
 | Telemetrie | aktiv | **entfernt** | Datenschutz (DSGVO/revDSG) |
 
-**Blowfish/OpenSSL 3:** ASTPP speichert Passwörter mit `BF-ECB`. OpenSSL 3
-(Debian 13) lädt Blowfish nur mit dem *legacy provider*. Ohne Gegenmassnahme
-schlägt **jeder Login** fehl. Der Installer aktiviert den Provider ausschliesslich
-für die PHP-Prozesse von ASTPP (`/etc/astpp/openssl-legacy.cnf` via
-`OPENSSL_CONF`), die systemweite OpenSSL-Konfiguration bleibt unverändert.
+**Blowfish/OpenSSL 3:** Upstream speichert Portal-Passwörter mit `BF-ECB` (umkehrbar), der Fork seit
+11.10.2026 als Hash (Argon2id, Audit M6); alte Blowfish-Werte gelten bis zum nächsten Login des
+Kontos. Blowfish braucht ASTPP weiter für diese alten Werte und für interne Kennungen (z. B. die
+Tabellen-Kennung der Status-Schalter, Signup-Schlüssel). OpenSSL 3 (Debian 13) lädt Blowfish nur mit
+dem *legacy provider*; ohne Gegenmassnahme scheitern alte Logins und die Status-Schalter. Der
+Installer aktiviert den Provider ausschliesslich für die PHP-Prozesse von ASTPP
+(`/etc/astpp/openssl-legacy.cnf` via `OPENSSL_CONF`), die systemweite OpenSSL-Konfiguration bleibt
+unverändert.
 
 ## PHP 8.5
 
@@ -162,6 +165,14 @@ folgt jede Änderung als eigener Commit (`git log -- astpp`): Härtung, PHP-8.5-
   geht nicht mehr per Mail und ändert keine SIP-Geräte mehr. Admin-Konten können ihr Passwort so nicht
   zurücksetzen (wie bisher). Supportfall „Mail kommt nicht an“: zuerst SMTP prüfen, dann in
   `password_resets` nachsehen (Zeile mit `issued` = 3 heisst Stundenlimit erreicht).
+- **Portal-Passwörter als Hash** (Audit M6, 11.10.2026): `accounts.password` enthält Argon2id-Hashes
+  (`common::password_store()`), alte Blowfish-Werte werden beim nächsten erfolgreichen Login ersetzt.
+  Folgen für den Betrieb: Kontoformulare zeigen kein Passwort mehr (leeres Feld = unverändert), die
+  Willkommensmail enthält statt des Passworts den Link zu „Passwort vergessen“, das automatisch
+  angelegte SIP-Gerät hat ein eigenes Passwort, und eine Änderung des Portal-Passworts ändert keine
+  SIP-Geräte mehr. Massenangelegte Konten haben einen Sperrwert (`!…`) bis jemand ein Passwort setzt.
+  SIP-Gerätepasswörter bleiben lesbar gespeichert, weil FreeSWITCH sie für die Anmeldung braucht.
+  Ein Login kostet rund 0,14 s und 64 MiB Speicher für die Hash-Prüfung.
 
 **Bibliotheken** (alle selbst ausgeliefert unter `assets/vendor/<name>-<version>/`, Downloads gegen
 npm-/Packagist-Prüfsummen verifiziert)
@@ -280,7 +291,7 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
    `database_backup/`, `language/`, `assets/Rates_File/`, `assets/captcha/`, Caches/Logs.
    Der installierte Stand wird in `/opt/ASTPP/.git` festgehalten
 8. Konfiguration mit **pro Installation zufälligen** Schlüsseln/Passwörtern (DB, Krypto-Keys, ESL, Admin)
-9. DB-Import + `astpp-postinstall.php` (Seed-Passwörter umschlüsseln, Admin-Passwort, Demo-Konten sperren, ESL-Passwort)
+9. DB-Import + `astpp-postinstall.php` (Seed-Passwörter als Hash, Admin-Passwort, Demo-Konten sperren, ESL-Passwort)
 10. FreeSWITCH: ASTPP-Module/xml_curl/Lua, Event-Socket nur `127.0.0.1` mit Zufallspasswort,
     Vanilla-Benutzer (Passwort `1234`) entfernt, RTP-Ports = Firewall
 11. PHP-FPM: zwei Pools (Web, FreeSWITCH-Endpunkt), `open_basedir`, kein `www`-Pool
@@ -303,7 +314,9 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
 5. Testanruf intern / extern; CDR und Abrechnung prüfen (Reports → CDRs).
 6. **Backups** einrichten (Datenbank + `/var/lib/astpp/` + `/etc/freeswitch/` + Aufnahmen),
    z. B. täglich `mariadb-dump --single-transaction astpp`, verschlüsselt und extern.
-   Achtung: DB-Dump **plus** `astpp-config.conf` ergibt alle Kundenpasswörter (reversibel gespeichert).
+   Achtung: Der DB-Dump enthält die SIP-Passwörter im Klartext (FreeSWITCH braucht sie) und, zusammen
+   mit `astpp-config.conf`, die Portal-Passwörter der Konten, die sich seit der Umstellung auf Hashes
+   (Audit M6) noch nicht angemeldet haben.
 7. Die beiden Demo-Konten (`4727985745`, `3673942894`) sind gesperrt – bei Bedarf löschen.
 8. Monitoring (Dienste, Zertifikat, Disk, Anzahl fail2ban-Sperren).
 
@@ -318,6 +331,8 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
 | Logs | `/var/log/astpp/`, `/var/log/freeswitch/freeswitch.log`, `/var/log/nginx/astpp_*.log`; Rotation täglich, 14 Tage, komprimiert (`/etc/logrotate.d/astpp`, FreeSWITCH selbst rotiert nicht: `files/freeswitch/logfile.conf.xml`) |
 | fail2ban | `fail2ban-client status` (Jails `sshd`, `freeswitch-astpp`, `astpp-login`) / gesperrte IP freigeben: `fail2ban-client set astpp-login unbanip <IP>` (Web-Login und „Passwort vergessen“: 10 Fehlversuche, Code-Anforderungen bzw. Limit-Treffer in 10 min) |
 | Firewall | `nft list table inet astpp` |
+| Portal-Passwort vergessen | Kunden, Reseller, Provider: Seite „Passwort vergessen“ (Code per Mail). Admin/Reseller setzen ein neues Passwort im Kontoformular (leeres Feld = unverändert); auslesen lässt sich kein Passwort mehr |
+| Admin-Passwort zurücksetzen | Admins können „Passwort vergessen“ nicht nutzen. Ein anderer Admin setzt es im Kontoformular, sonst auf dem Server: `read -rs PW; H=$(PW="$PW" php8.5 -r 'echo password_hash(getenv("PW"), PASSWORD_ARGON2ID);'); mariadb astpp -e "UPDATE accounts SET password='$H' WHERE number='admin' AND type=-1"` (Passwort erscheint weder in der Prozessliste noch in der History) |
 | API-Zugriffe | `/var/log/astpp/api.log` (eine JSON-Zeile pro Anfrage: Zeit, IP, Schlüssel-ID, Konto, Pfad, Status; ohne Schlüssel, Passwörter, Inhalte) |
 
 **Provisionierungs-API (`/api/v1/`)**
