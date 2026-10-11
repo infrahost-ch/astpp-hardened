@@ -131,6 +131,24 @@ class order {
 		return astpp_n($info->price) + astpp_n($info->setup_fee);
 	}
 
+	/**
+	 * Offer of the seller of a reseller for a product: the parent reseller's reseller_products row or,
+	 * for resellers of the admin, the product itself. Its price is the reseller's purchase price
+	 * (buy_cost), as confirm_order() charges it. Null if the parent does not sell the product.
+	 */
+	public function parent_offer($product_id, $reseller) {
+		$parent = isset($reseller['reseller_id']) ? (int) $reseller['reseller_id'] : 0;
+		if ($parent > 0) {
+			$this->CI->db->select('reseller_products.price, reseller_products.setup_fee, products.commission, products.billing_type, products.billing_days, reseller_products.free_minutes');
+			$this->CI->db->join('products', 'products.id = reseller_products.product_id', 'inner');
+			$row = $this->CI->db->get_where('reseller_products', array('reseller_products.product_id' => (int) $product_id, 'reseller_products.account_id' => $parent, 'products.status' => 0, 'products.is_deleted' => 0))->row_array();
+		} else {
+			$row = $this->CI->db->select('price, setup_fee, commission, billing_type, billing_days, free_minutes')
+				->get_where('products', array('id' => (int) $product_id, 'status' => 0, 'is_deleted' => 0, 'reseller_id' => 0))->row_array();
+		}
+		return empty($row) ? null : $row;
+	}
+
 	function confirm_product_order($productarr,$account_id){
 		$orderobjArr = array();
 		$parent_order_id = 0;

@@ -44,7 +44,8 @@ class did_lib extends MX_Controller {
 			{
 				return array("NOT_AVAL_FOR_PURCHASE","This DID is already purchased by someone.");
 			}else{
-				$reseller_pricing_query = $this->db_model->getJionQuery('dids', 'dids.id,dids.number,dids.cost,dids.inc,dids.call_type,dids.extensions,dids.connectcost,dids.includedseconds,reseller_products.buy_cost,reseller_products.commission,reseller_products.setup_fee,reseller_products.price,reseller_products.billing_type,reseller_products.billing_days,reseller_products.status,reseller_products.billing_days,reseller_products.billing_type,dids.last_modified_date,dids.product_id', array('dids.number'=>$didinfo['number']), 'reseller_products','dids.product_id=reseller_products.product_id', 'inner','','','','');
+				// ASTPP fork (O9): the offer of this reseller's parent (upstream: first row of any reseller)
+				$reseller_pricing_query = $this->db_model->getJionQuery('dids', 'dids.id,dids.number,dids.cost,dids.inc,dids.call_type,dids.extensions,dids.connectcost,dids.includedseconds,reseller_products.buy_cost,reseller_products.commission,reseller_products.setup_fee,reseller_products.price,reseller_products.billing_type,reseller_products.billing_days,reseller_products.status,reseller_products.billing_days,reseller_products.billing_type,dids.last_modified_date,dids.product_id', array('dids.number'=>$didinfo['number'],'reseller_products.account_id'=>$accountinfo['reseller_id']), 'reseller_products','dids.product_id=reseller_products.product_id', 'inner','','','','');
 			if(!empty($reseller_pricing_query)){ 
 				$reseller_pricing_result = ( array ) $reseller_pricing_query->first_row ();
 				$didinfo ['call_type'] = (astpp_gt($reseller_pricing_result ['call_type'], 0))?$reseller_pricing_result ['call_type']:0;
@@ -137,9 +138,9 @@ class did_lib extends MX_Controller {
 
 		$account_balance = $accountinfo ['posttoexternal'] == 1 ? astpp_n($accountinfo ['credit_limit']) - (astpp_n($accountinfo ['balance'])) : $accountinfo ['balance'];
 
-		$didinfo ["setup_fee"] = (isset($extra_info['setup_fee']) && astpp_gt($extra_info['setup_fee'], 0))?$extra_info['setup_fee']:$didinfo ["setup_fee"];
-
-		$didinfo ["price"] = (isset($extra_info['price']) && astpp_gt($extra_info['price'], 0))?$extra_info['price']:$didinfo ["price"];
+		// ASTPP fork (O9): upstream replaced the price for this balance check by the selling price from
+		// the form ($extra_info = POST of did_resellerdid_save) - a reseller could buy a DID it cannot
+		// pay for by entering a low selling price. The check uses what the order charges.
 
 
 		if ($account_balance  >= (astpp_n($didinfo ["setup_fee"])+astpp_n($didinfo ["price"])) || $skip_balance_check==true) {

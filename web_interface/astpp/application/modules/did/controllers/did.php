@@ -317,7 +317,17 @@ class DID extends MX_Controller
             $did_id = $this->common->get_field_name("id", "dids", array(
                 "product_id" => $productid
             ));
-            $did_result = $this->did_lib->did_billing_process($this->session->userdata, $accountinfo['id'], $did_id, '', $add_array);
+            // ASTPP fork (O9): purchase price from the parent's offer, own selling price and setup fee
+            // only as plain amounts - checked before anything is booked
+            $offer = $this->order->parent_offer($productid, $accountinfo);
+            $price = isset($add_array['price']) ? order::amount($add_array['price']) : ($offer === null ? false : (float) $offer['price']);
+            $setup_fee = isset($add_array['setup_fee']) ? order::amount($add_array['setup_fee']) : ($offer === null ? false : (float) $offer['setup_fee']);
+            if ($offer === null || $price === false || $setup_fee === false) {
+                $this->session->set_flashdata('astpp_notification', gettext('Invalid price or setup fee!'));
+                redirect(base_url() . 'did/did_available_list/');
+            }
+            // the balance check uses the purchase price, not the selling price from the form
+            $did_result = $this->did_lib->did_billing_process($this->session->userdata, $accountinfo['id'], $did_id);
             if ($did_result[0] == "SUCCESS") {
                 $product_info = $this->db_model->getSelect("*", " products", array(
                     'id' => $productid,
@@ -329,18 +339,14 @@ class DID extends MX_Controller
                     $add_array['billing_days'] = $product_info['billing_days'];
                     $add_array['commission'] = $product_info['commission'];
                     $add_array['free_minutes'] = isset($product_info['free_minutes']) ? $product_info['free_minutes'] : 0;
-                    if ((astpp_gt($accountinfo['reseller_id'], 0) || $accountinfo['type'] == 1) && astpp_eq0($accountinfo['is_distributor'])) {
-                        $add_array['buy_cost'] = $this->common_model->add_calculate_currency($add_array['product_buy_cost'], "", '', false, false);
-                    } else {
-                        $add_array['buy_cost'] = $product_info['buy_cost'];
-                    }
+                    $add_array['buy_cost'] = $offer['price'];
 
                     if (astpp_eq0($accountinfo['is_distributor'])) {
-                        $add_array['price'] = isset($add_array['price']) ? $this->common_model->add_calculate_currency($add_array['price'], "", '', false, false) : $this->common_model->add_calculate_currency($product_info['price'], "", '', false, false);
-                        $add_array['setup_fee'] = isset($add_array['setup_fee']) ? $this->common_model->add_calculate_currency($add_array['setup_fee'], "", '', false, false) : $this->common_model->add_calculate_currency($product_info['setup_fee'], "", '', false, false);
+                        $add_array['price'] = isset($add_array['price']) ? $this->common_model->add_calculate_currency($price, "", '', false, false) : $price;
+                        $add_array['setup_fee'] = isset($add_array['setup_fee']) ? $this->common_model->add_calculate_currency($setup_fee, "", '', false, false) : $setup_fee;
                     } else {
-                        $add_array['price'] = $product_info['price'];
-                        $add_array['setup_fee'] = $product_info['setup_fee'];
+                        $add_array['price'] = $offer['price'];
+                        $add_array['setup_fee'] = $offer['setup_fee'];
                     }
 
                     $query = "INSERT INTO reseller_products (product_id, account_id, reseller_id, buy_cost,commission, setup_fee, price, free_minutes, billing_type, billing_days, status, is_optin,is_owner,optin_date)
