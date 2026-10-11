@@ -812,9 +812,13 @@ function user_invoice_config()
     $add_array = $this->input->post();
     $data["account_data"] = $add_array;
     if (isset($add_array['submit'])) {
-        if ($_FILES['file']['name'] == '') {
-            $invoiceconf = $this->user_model->get_invoiceconf();
-            $file_name = ($invoiceconf['logo'] != '') ? $invoiceconf['logo'] : '';
+        if (! isset($_FILES['file']['name']) || $_FILES['file']['name'] == '') {
+            // BUGFIX: get_invoiceconf() was called without its argument (HTTP 500 when saving
+            // without a new logo); keep the logo of the own company profile
+            $invoiceconf = (array) $this->db->get_where('invoice_conf', array(
+                'accountid' => $accountinfo['id']
+            ))->first_row();
+            $file_name = isset($invoiceconf['logo']) ? $invoiceconf['logo'] : '';
         }
         if (isset($_FILES['file']['name']) && $_FILES['file']['name'] != '') {
             $files = $_FILES['file'];
