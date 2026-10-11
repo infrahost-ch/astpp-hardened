@@ -10,6 +10,7 @@
 #    3. Sicherung: /opt/ASTPP (tar), Datenbank (mariadb-dump), nginx-Site
 #    4. rsync nach /opt/ASTPP - Laufzeitdaten (Uploads, Rechnungen, Logs, ...) bleiben
 #    5. Rechte, nginx-Site aus der Vorlage (FQDN/Zertifikat bleiben), fail2ban-Filter,
+#       Sync-Werkzeug der Admin-Freigabe (nur wenn installiert),
 #       PHP-FPM neu laden
 #    6. Funktionspruefung (Weboberflaeche, FreeSWITCH-xml_curl, Admin-Seiten)
 #    7. Stand in /opt/ASTPP/.git festhalten ("git -C /opt/ASTPP status" zeigt spaeter
@@ -243,6 +244,21 @@ deploy_fail2ban() {
 	fi
 }
 
+# Sync-Werkzeug der Admin-Freigabe (O5) nur aktualisieren, wenn es installiert ist; Einstellungen
+# (/etc/astpp/admin-allowlist.conf), Abschaltdatei und Cron bleiben, wie sie sind
+deploy_admin_allowlist() {
+	local dst=/usr/local/sbin/astpp-admin-allowlist-sync
+	[ -f "${dst}" ] || return 0
+	step "Admin-Freigabe (O5): Sync-Werkzeug"
+	if cmp -s "${SCRIPT_DIR}/tools/astpp-admin-allowlist-sync.php" "${dst}"; then
+		log "Sync-Werkzeug unveraendert"
+		return 0
+	fi
+	cp -a "${dst}" "${BACKUP_ROOT}/astpp-admin-allowlist-sync-${TS}"
+	install -m 755 "${SCRIPT_DIR}/tools/astpp-admin-allowlist-sync.php" "${dst}"
+	log "Sync-Werkzeug aktualisiert (Sicherung ${BACKUP_ROOT}/astpp-admin-allowlist-sync-${TS})"
+}
+
 reload_php() {
 	"php-fpm${PHP_VER}" -t 2>/dev/null || die "PHP-FPM-Konfiguration ungueltig"
 	systemctl reload "php${PHP_VER}-fpm"
@@ -307,6 +323,7 @@ main() {
 		deploy_database
 		deploy_nginx
 		deploy_fail2ban
+		deploy_admin_allowlist
 		reload_php
 		healthcheck
 	else

@@ -43,6 +43,14 @@ RTP_END="32768"
 # PHP open_basedir fuer die Weboberflaeche (bei unerklaerlichen Fehlern testweise "no")
 PHP_OPEN_BASEDIR="yes"
 
+# Admin-Zugang nur aus den zentralen Verwaltungsnetzen (Audit O5): yes = astpp-admin-allowlist-sync
+# holt die Listen alle 15 Minuten (nur https, eine Adresse/ein Netz pro Zeile) und setzt
+# admin_allowed_ips in /var/lib/astpp/astpp-config.conf, ergaenzt um die Adressen dieses Servers.
+# Bei Abruffehlern oder leerer/ungueltiger Liste bleibt der bisherige Wert. no = installiert, aber
+# abgeschaltet (/etc/astpp/admin-allowlist.disabled). Die URLs landen in /etc/astpp/admin-allowlist.conf.
+ADMIN_ALLOWLIST_SYNC="no"
+ADMIN_ALLOWLIST_URLS=""    # z.B. "https://whitelist.example.net/lists/management-ipv4.txt https://whitelist.example.net/lists/management-ipv6.txt"
+
 # ASTPP-Quellbaum (Standard: astpp/ neben astpp-debian13/) und gepruefte FreeSWITCH-Versionen
 #ASTPP_TREE="/root/astpp/astpp"
 #FS_VERSION="v1.11.3"

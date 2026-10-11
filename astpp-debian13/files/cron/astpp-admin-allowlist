@@ -1,0 +1,9 @@
+# ASTPP admin allowlist sync (audit O5) - managed by astpp-debian13/install.sh
+# Every 15 minutes: lists from /etc/astpp/admin-allowlist.conf (https only) + addresses of this
+# server -> admin_allowed_ips in /var/lib/astpp/astpp-config.conf. On errors the value stays.
+# Off: touch /etc/astpp/admin-allowlist.disabled (the value stays; empty the line to lift the
+# restriction). Messages: journalctl -t astpp-admin-allowlist
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+*/15 * * * * root /usr/bin/php@PHP_VER@ /usr/local/sbin/astpp-admin-allowlist-sync >/dev/null 2>&1

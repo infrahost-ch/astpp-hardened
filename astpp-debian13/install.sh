@@ -50,6 +50,8 @@ SIP_BURST="${SIP_BURST:-200}"
 RTP_START="${RTP_START:-16384}"
 RTP_END="${RTP_END:-32768}"
 PHP_OPEN_BASEDIR="${PHP_OPEN_BASEDIR:-yes}"
+ADMIN_ALLOWLIST_SYNC="${ADMIN_ALLOWLIST_SYNC:-no}"   # yes = admin_allowed_ips alle 15 min aus den Listen (Audit O5)
+ADMIN_ALLOWLIST_URLS="${ADMIN_ALLOWLIST_URLS:-}"     # https-URLs, z.B. https://whitelist.example.net/lists/management-ipv4.txt
 FORCE="${FORCE:-no}"
 
 ASTPP_TREE="${ASTPP_TREE:-}"                 # leer = astpp/ neben astpp-debian13/
@@ -122,7 +124,7 @@ preflight() {
 		|| die "Nur Debian 13 (trixie) wird unterstuetzt - gefunden: ${PRETTY_NAME:-unbekannt}"
 	[ "$(dpkg --print-architecture)" = "amd64" ] || die "Nur amd64 wird unterstuetzt."
 	[ -d /run/systemd/system ] || die "systemd wird benoetigt."
-	for f in lib/astpp-tree.sh tools/astpp-postinstall.php files/nginx/astpp.conf; do
+	for f in lib/astpp-tree.sh tools/astpp-postinstall.php files/nginx/astpp.conf tools/astpp-admin-allowlist-sync.php files/cron/astpp-admin-allowlist; do
 		[ -f "${SCRIPT_DIR}/${f}" ] || die "Datei fehlt im Installationspaket: ${f}"
 	done
 	ASTPP_TREE="$(astpp_tree_dir)"
@@ -148,6 +150,12 @@ preflight() {
 	if [ "${LETSENCRYPT}" = "yes" ] && [ -z "${ADMIN_EMAIL}" ]; then
 		warn "ADMIN_EMAIL ist leer - Let's-Encrypt-Konto wird ohne E-Mail registriert (keine Ablauf-Warnungen)."
 	fi
+	case "${ADMIN_ALLOWLIST_SYNC}" in yes|no) ;; *) die "ADMIN_ALLOWLIST_SYNC muss yes oder no sein." ;; esac
+	local u
+	for u in ${ADMIN_ALLOWLIST_URLS}; do
+		[[ "${u}" =~ ^https://[A-Za-z0-9.-]+(:[0-9]+)?/[A-Za-z0-9._~/%+-]*$ ]] || die "ADMIN_ALLOWLIST_URLS: nur https-Adressen (ohne Zugangsdaten, Query): ${u}"
+	done
+	[ "${ADMIN_ALLOWLIST_SYNC}" = "no" ] || [ -n "${ADMIN_ALLOWLIST_URLS// /}" ] || die "ADMIN_ALLOWLIST_SYNC=yes braucht ADMIN_ALLOWLIST_URLS."
 	log "FQDN: ${ASTPP_FQDN} | FreeSWITCH: ${FS_INSTALL_METHOD} | SSH-Port: ${SSH_PORT} | Let's Encrypt: ${LETSENCRYPT}"
 }
 
@@ -747,6 +755,38 @@ start_services() {
 	done
 }
 
+# ------------------------------------------- admin allowlist sync (O5) ---
+# Werkzeug, Einstellungen (/etc/astpp/admin-allowlist.conf) und Cron werden immer installiert;
+# ohne ADMIN_ALLOWLIST_SYNC=yes bleibt der Abgleich per Datei abgeschaltet (admin_allowed_ips leer).
+configure_admin_allowlist() {
+	step "Admin-Freigabe aus zentralen Listen (Audit O5)"
+	local settings="${ASTPP_ETC}/admin-allowlist.conf" off="${ASTPP_ETC}/admin-allowlist.disabled" u
+	install -m 755 "${SCRIPT_DIR}/tools/astpp-admin-allowlist-sync.php" /usr/local/sbin/astpp-admin-allowlist-sync
+	if [ ! -f "${settings}" ]; then
+		{
+			printf '; astpp-admin-allowlist-sync (audit O5) - lists for admin_allowed_ips, written by install.sh\n'
+			printf '; https only, one address or network per line; the addresses of this server are added.\n'
+			printf '; Off: touch %s (the value stays; empty admin_allowed_ips to lift the restriction)\n' "${off}"
+			for u in ${ADMIN_ALLOWLIST_URLS}; do printf 'url[] = "%s"\n' "${u}"; done
+			printf '; further own entries, e.g. a VPN exit:\n;extra[] = "203.0.113.10"\n'
+		} >"${settings}"
+		chmod 644 "${settings}"
+	fi
+	render "${SCRIPT_DIR}/files/cron/astpp-admin-allowlist" /etc/cron.d/astpp-admin-allowlist PHP_VER "${PHP_VER}"
+	chmod 644 /etc/cron.d/astpp-admin-allowlist
+	if [ "${ADMIN_ALLOWLIST_SYNC}" != "yes" ]; then
+		touch "${off}"
+		log "Abgleich abgeschaltet (ADMIN_ALLOWLIST_SYNC=no) - einschalten: rm ${off}"
+		return 0
+	fi
+	rm -f "${off}"
+	if "/usr/bin/php${PHP_VER}" /usr/local/sbin/astpp-admin-allowlist-sync; then
+		log "admin_allowed_ips aus den Listen gesetzt, Abgleich alle 15 Minuten"
+	else
+		warn "Erster Abgleich der Admin-Freigabe fehlgeschlagen (Ausgabe oben) - admin_allowed_ips bleibt, wie es ist; der Cron versucht es alle 15 Minuten"
+	fi
+}
+
 healthcheck() {
 	step "Funktionspruefung"
 	local code
@@ -802,6 +842,7 @@ summary() {
 	echo "  URL:            https://${ASTPP_FQDN}/"
 	echo "  Zugangsdaten:   ${CRED_FILE}  (nur root lesbar)"
 	echo "  FreeSWITCH:     ${FS_INSTALL_METHOD}"
+	echo "  Admin-Freigabe: ADMIN_ALLOWLIST_SYNC=${ADMIN_ALLOWLIST_SYNC} (admin_allowed_ips in ${ASTPP_CONF_DIR}/astpp-config.conf)"
 	if [ "${#WARNINGS[@]}" -gt 0 ]; then
 		echo
 		printf '%sWarnungen:%s\n' "${C_WARN}" "${C_OFF}"
@@ -831,6 +872,7 @@ main() {
 	configure_firewall
 	configure_fail2ban
 	start_services
+	configure_admin_allowlist
 	healthcheck
 	summary
 }
