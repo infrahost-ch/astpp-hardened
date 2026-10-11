@@ -382,6 +382,14 @@ if (userinfo ~= nil) then
 		    return 0
 	    end
 
+	    -- ASTPP fork: doauthorization() returns early for an expired reseller, before the blocked
+	    -- prefixes are checked; the blocklist of the reseller applies anyway (audit O11)
+	    if(reseller_userinfo['ACCOUNT_ERROR'] == 'ACCOUNT_EXPIRE' and call_direction == 'outbound'
+	    		and check_blocked_prefix(reseller_userinfo,destination_number,number_loop_str) == "false") then
+		    Logger.warning("[Dialplan] [Reseller "..reseller_userinfo['id'].."] Destination blocked (reseller expired) : "..destination_number)
+		    reseller_userinfo['ACCOUNT_ERROR'] = 'DESTINATION_BLOCKED'
+	    end
+
 	    -- ASTPP fork: blocked prefixes of a reseller were looked up but never enforced
 	    if(reseller_userinfo['ACCOUNT_ERROR'] == 'DESTINATION_BLOCKED') then
 		    error_xml_without_cdr(destination_number,"DESTINATION_BLOCKED",calltype,config['playback_audio_notification'],reseller_userinfo['id'])
