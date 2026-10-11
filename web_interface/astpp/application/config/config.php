@@ -316,6 +316,8 @@ $config ['global_xss_filtering'] = TRUE;
  * | 'csrf_cookie_name' = The cookie name
  * | 'csrf_expire' = The number in seconds the token should expire.
  */
+// HARDENING (audit M1/O2): the CI 2 filter stays off (it needs the token in every hand-built form and
+// AJAX call); the fork protects against CSRF in hooks/csrf_guard.php (token per session, Origin check).
 $config ['csrf_protection'] = FALSE;
 $config ['csrf_token_name'] = 'csrf_test_name';
 $config ['csrf_cookie_name'] = 'csrf_cookie_name';

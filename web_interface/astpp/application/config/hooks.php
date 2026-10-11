@@ -37,6 +37,19 @@ $hook ['pre_controller'][] = array (
 		'filename' => 'router.php',
 		'filepath' => 'hooks'
 );
+// HARDENING (audit M1/O2): CSRF token - output filter, check before every controller method
+$hook ['pre_controller'][] = array (
+		'class' => 'Csrf_guard',
+		'function' => 'start',
+		'filename' => 'csrf_guard.php',
+		'filepath' => 'hooks'
+);
+$hook ['post_controller_constructor'][] = array (
+		'class' => 'Csrf_guard',
+		'function' => 'check',
+		'filename' => 'csrf_guard.php',
+		'filepath' => 'hooks'
+);
 // HARDENING: central record ownership / role check before every controller method
 $hook ['post_controller_constructor'][] = array (
 		'class' => 'Access_control',
