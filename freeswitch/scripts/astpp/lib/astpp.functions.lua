@@ -148,7 +148,17 @@ end
 
 -- Do IP base authentication 
 function ipauthentication(destination_number,from_ip)
-	local query = db_sql("SELECT "..TBL_IP_MAP..".*, (SELECT number FROM "..TBL_USERS.." where id=accountid AND status=0 AND deleted=0) AS account_code FROM "..TBL_IP_MAP.." WHERE INET_ATON(?s) BETWEEN(INET_ATON(SUBSTRING_INDEX(`ip`, '/', 1)) & 0xffffffff ^((0x1 <<(32 -  SUBSTRING_INDEX(`ip`, '/', -1))) -1 )) AND(INET_ATON(SUBSTRING_INDEX(`ip`, '/', 1)) |((0x100000000 >> SUBSTRING_INDEX(`ip`,'/', -1)) -1))  AND ?s  LIKE CONCAT(prefix,'%') ORDER BY LENGTH(prefix) DESC LIMIT 1", from_ip, destination_number)
+	-- ASTPP fork: the network of every row is read in the CIDR subquery: no "/bits" = one address
+	-- (/32); bits that are not a number up to 32, and IPv6 or other text INET_ATON cannot read, never
+	-- match. Upstream computed the mask with unsigned arithmetic, so a single such row failed the whole
+	-- query ("BIGINT UNSIGNED value is out of range") and IP authentication for every account.
+	-- address >> (32 - bits) = network >> (32 - bits) is the same range as upstream's BETWEEN.
+	-- Equal prefix length: the most specific network wins, then the oldest row (was random).
+	local query = db_sql("SELECT "..TBL_IP_MAP..".*, (SELECT number FROM "..TBL_USERS.." where id=accountid AND status=0 AND deleted=0) AS account_code FROM "..TBL_IP_MAP..
+		" INNER JOIN (SELECT id AS cidr_id, INET_ATON(SUBSTRING_INDEX(`ip`, '/', 1)) AS cidr_net, CASE WHEN LOCATE('/', `ip`) = 0 THEN 32"..
+		" WHEN TRIM(SUBSTRING_INDEX(`ip`, '/', -1)) REGEXP '^[0-9]{1,3}$' THEN CAST(TRIM(SUBSTRING_INDEX(`ip`, '/', -1)) AS SIGNED) END AS cidr_bits FROM "..TBL_IP_MAP..") AS CIDR"..
+		" ON CIDR.cidr_id = "..TBL_IP_MAP..".id WHERE CIDR.cidr_bits <= 32 AND (INET_ATON(?s) >> (32 - CIDR.cidr_bits)) = (CIDR.cidr_net >> (32 - CIDR.cidr_bits))"..
+		" AND ?s LIKE CONCAT(prefix,'%') ORDER BY LENGTH(prefix) DESC, CIDR.cidr_bits DESC, "..TBL_IP_MAP..".id LIMIT 1", from_ip, destination_number)
 	Logger.debug("[IPAUTHENTICATION] Query :" .. query)
 	local ipinfo;
 	assert (dbh:query(query, function(u)
