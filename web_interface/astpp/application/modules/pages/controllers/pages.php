@@ -233,7 +233,13 @@ function services($category= '') {
 	
 		if(!isset($productinfo['error'])){	
 			$payment_method = isset($_POST['pay_from_account']) ? $_POST['pay_from_account'] : '';
-			$quantity = (isset($_POST['product_quantity']) && astpp_gt($_POST['product_quantity'], 0) ) ? $_POST['product_quantity'] : 1;
+			// ASTPP fork (O9): whole pieces only (upstream accepted 0.001 or 1e9 and charged price x quantity)
+			$quantity = order::quantity(isset($_POST['product_quantity']) ? $_POST['product_quantity'] : '');
+			if ($quantity === false) {
+				$this->session->set_flashdata ( 'astpp_notification',  gettext('Invalid quantity!'));
+				redirect ( base_url () . 'pages/services/'.$productinfo['product_category'].'' );
+				exit;
+			}
 			$product_info = array();
 			if($payment_method == "account_balance" && $productinfo['product_category'] != 3){  		
 				$product_info['is_parent_billing'] = true;

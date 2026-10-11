@@ -231,8 +231,15 @@ class Orders extends MX_Controller
                 if ($customer_data->num_rows > 0) {
                     $customer_data = $customer_data->result_array()[0];
                 }
-		$quantity = (isset($ProductData['quantity']) && $ProductData['quantity'] > 1)?$ProductData['quantity']:1;
-                $total_amt = ((astpp_n($ProductData['price']) + astpp_n($ProductData['setup_fee'])) * astpp_n($quantity));
+                // ASTPP fork (O9): $ProductData holds the admin's product row merged over the POST data;
+                // the balance check uses what confirm_order() books for this customer (seller's offer)
+                $quantity = order::quantity(isset($ProductData['quantity']) ? $ProductData['quantity'] : '');
+                $unit_price = $this->order->unit_price($ProductData['product_id'], $account_id);
+                if ($quantity === false || $unit_price === false) {
+                    $this->session->set_flashdata('astpp_notification', gettext('Invalid price, quantity or product!'));
+                    redirect(base_url() . 'orders/orders_add/');
+                }
+                $total_amt = astpp_n($unit_price) * $quantity;
                 $account_balance = $customer_data['posttoexternal'] == 1 ? astpp_n($customer_data['credit_limit']) - (astpp_n($customer_data['balance'])) : $customer_data['balance'];
                 if ($account_balance >= $total_amt) {
                     $ProductData['invoice_type'] = ($ProductData['category'] == 3) ? "credit" : "debit";

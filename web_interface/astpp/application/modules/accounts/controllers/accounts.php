@@ -2788,6 +2788,19 @@ function customer_products_action($action, $accountid, $accounttype, $product_id
             "id" => $product_id
         ));
         $data['product_info'] = (array) $product_info->first_row();
+        // ASTPP fork (O9): a reseller sells at its own offer - start the form with it, not with the
+        // admin's price (an unchanged form sold at the admin's price)
+        $me = $this->session->userdata('accountinfo');
+        if (isset($me['type']) && ($me['type'] == 1 || $me['type'] == 5)) {
+            $offer = (array) $this->db->get_where('reseller_products', array(
+                'product_id' => $product_id,
+                'account_id' => $me['id']
+            ))->first_row();
+            if (! empty($offer)) {
+                $data['product_info']['price'] = $offer['price'];
+                $data['product_info']['setup_fee'] = $offer['setup_fee'];
+            }
+        }
         $this->load->view("view_customer_orders_assign", $data);
     }
 
@@ -2822,7 +2835,19 @@ function customer_orders_save()
     $this->form_validation->set_rules('quantity', 'Quantity', 'numeric|is_natural|xss_clean');
     $this->form_validation->set_message('max_length', '%s field can not excced  numbers in length %s');
 
-    $total_amt = astpp_n($ProductData['price']) + astpp_n($ProductData['setup_fee']);
+    // ASTPP fork (O9): the seller may set price, setup fee and billing period for this customer
+    // (fields of the assignment form); everything else comes from the product or the seller's offer.
+    // The balance check uses the amount that confirm_order() really books (incl. quantity).
+    $order_options = array(
+        'overrides' => array(
+            'price' => isset($ProductData['price']) ? $ProductData['price'] : '',
+            'setup_fee' => isset($ProductData['setup_fee']) ? $ProductData['setup_fee'] : '',
+            'billing_days' => isset($ProductData['billing_days']) ? $ProductData['billing_days'] : ''
+        )
+    );
+    $unit_price = $this->order->unit_price($ProductData['product_id'], $account_id, $order_options['overrides']);
+    $quantity = order::quantity(isset($ProductData['quantity']) ? $ProductData['quantity'] : '');
+    $total_amt = ($unit_price === false || $quantity === false) ? false : astpp_n($unit_price) * $quantity;
     $account_balance = $customer_data['posttoexternal'] == 1 ? astpp_n($customer_data['credit_limit']) - (astpp_n($customer_data['balance'])) : $customer_data['balance'];
     $category_id = $this->common->get_field_name('product_category', 'products', array(
         'id' => $ProductData['product_id']
@@ -2856,9 +2881,13 @@ function customer_orders_save()
         $this->load->view("view_customer_orders_assign", $data);
     } else {
 
+        if ($total_amt === false) {
+            $this->session->set_flashdata('astpp_notification', gettext('Invalid price, quantity or product!'));
+            redirect(base_url() . 'accounts/customer_product/' . $account_id . '/');
+        }
         // ASTPP fork: ">=" - a free package (price 0) could not be assigned to a prepaid customer with balance 0
         if ($account_balance >= $total_amt) {
-            $last_id = $this->order->confirm_order($ProductData, $account_id, $accountinfo);
+            $last_id = $this->order->confirm_order($ProductData, $account_id, $accountinfo, $order_options);
             if ($last_id != "") {
                 $ProductData['name'] = $this->common->get_field_name("name", "products", array(
                     "id" => $ProductData['product_id']

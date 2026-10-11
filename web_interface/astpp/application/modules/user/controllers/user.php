@@ -324,7 +324,6 @@ class User extends MX_Controller
                 $this->load->library('did_lib');
                 $did_result = $this->did_lib->did_billing_process($this->session->userdata, $accountinfo['id'], $did_id);
                 if ($did_result[0] == "SUCCESS") {
-                    $did_arr['is_parent_billing'] = "false";
                     $order_id = '';
                     $payment_gateway = '';
                     if (astpp_gt($reseller_id, 0)) {
@@ -348,7 +347,8 @@ class User extends MX_Controller
                     $did_arr['price'] = $this->common_model->calculate_currency($product_array['price'], '', '', true, false);
                     $did_arr['setup_fee'] = $this->common_model->calculate_currency($product_array['setup_fee'], '', '', true, false);
                     $did_arr['next_billing_date'] = (astpp_eq0($product_array['billing_days'])) ? astpp_gmdate('Y-m-d 23:59:59', strtotime('+10 years')) : astpp_gmdate("Y-m-d 23:59:59", strtotime("+" . $product_array['billing_days'] . " days"));
-                    $last_id = $this->order->confirm_order($did_arr, $accountinfo['id'], $accountinfo);
+                    // ASTPP fork (O9): the DID belongs to the seller, only the customer is charged
+                    $last_id = $this->order->confirm_order($did_arr, $accountinfo['id'], $accountinfo, array('parent_billing' => false));
                     $final_array = astpp_array_merge($account_arr, $did_arr);
                     if (astpp_gt($last_id, 0)) {
                         $final_array['quantity'] = 1;

@@ -346,9 +346,9 @@ class DID extends MX_Controller
                     $query = "INSERT INTO reseller_products (product_id, account_id, reseller_id, buy_cost,commission, setup_fee, price, free_minutes, billing_type, billing_days, status, is_optin,is_owner,optin_date)
 		VALUES(" . (int)$productid . "," . (int)$accountinfo['id'] . "," . (int)$accountinfo['reseller_id'] . "," . (float)$add_array['buy_cost'] . "," . (float)$add_array['commission'] . "," . (float)$add_array['setup_fee'] . "," . (float)$add_array['price'] . "," . (int)$add_array['free_minutes'] . "," . (int)$add_array['billing_type'] . "," . (int)$add_array['billing_days'] . ", 0, 0, 1, '" . gmdate('Y-m-d H:i:s') . "') ON DUPLICATE KEY UPDATE product_id = VALUES(product_id), account_id = VALUES(account_id), reseller_id = VALUES(reseller_id),buy_cost = VALUES(buy_cost),commission = VALUES(commission), setup_fee = VALUES(setup_fee), price = VALUES(price), free_minutes = VALUES(free_minutes), billing_type = VALUES(billing_type), billing_days = VALUES(billing_days), status = VALUES(status), is_optin = VALUES(is_optin), is_owner = VALUES(is_owner), optin_date = VALUES(optin_date)";
                     $query = $this->db->query($query);
-                    $add_array['is_parent_billing'] = 'false';
                     $add_array['payment_by'] = "Account Balance";
-                    $order_id = $this->order->confirm_order($add_array, $accountinfo['id'], $accountinfo);
+                    // ASTPP fork (O9): only the reseller buys here, the chain above is not charged again
+                    $order_id = $this->order->confirm_order($add_array, $accountinfo['id'], $accountinfo, array('parent_billing' => false));
 
                     if ($order_id != '') {
                         $this->db->where("product_id", $productid);
@@ -407,7 +407,6 @@ class DID extends MX_Controller
         $add_array = $this->input->post();
         if (! empty($add_array) && astpp_gt($add_array['accountid'], 0)) {
             $accountinfo = $this->session->userdata("accountinfo");
-            $add_array['is_parent_billing'] = 'false';
             $add_array['payment_by'] = 0;
             $account_info = $this->db_model->getSelect("*", "accounts", array(
                 "id" => $add_array["accountid"],
@@ -417,21 +416,10 @@ class DID extends MX_Controller
             if ($account_info->num_rows > 0) {
                 $accountdata = $account_info->result_array()[0];
                 $balance = $accountdata['posttoexternal'] == 1 ? astpp_n($accountdata['credit_limit']) - (astpp_n($accountdata['balance'])) : $accountdata['balance'];
-                if ($this->session->userdata('logintype') == 1 || $this->session->userdata('logintype') == 5) {
-                    $where = array(
-                        'product_id' => $add_array['product_id']
-                    );
-                    $product_info = (array) $this->db->get_where("reseller_products", $where)->result_array()[0];
-                } else {
-                    $where = array(
-                        'id' => $add_array['product_id']
-                    );
-                    $product_info = (array) $this->db->get_where("products", $where)->result_array()[0];
-                }
-                if (! empty($product_info)) {
-                    $total_amt = astpp_n($product_info['price']) + astpp_n($product_info['setup_fee']);
-
-                    $total_amt = $this->common->convert_to_currency('', '', $total_amt);
+                // ASTPP fork (O9): balance check with the price confirm_order() charges (offer of the
+                // customer's reseller); upstream took the first reseller_products row of any reseller
+                $total_amt = $this->order->unit_price($add_array['product_id'], $add_array['accountid']);
+                if ($total_amt !== false) {
                     $did_id = $this->common->get_field_name("id","dids",array("product_id"=>$add_array['product_id']));
                     $this->load->library('did_lib');
                     $accountdata['logintype'] = $accountdata['type'];
@@ -441,7 +429,8 @@ class DID extends MX_Controller
                         $add_array['payment_by'] = "Account Balance";
                         $add_array['charge_type'] = "DID";
                         $add_array['is_update_balance'] = "true";
-                        $order_id = $this->order->confirm_order($add_array, $add_array['accountid'], $accountinfo);
+                        // the DID belongs to the seller already: only the customer is charged
+                        $order_id = $this->order->confirm_order($add_array, $add_array['accountid'], $accountinfo, array('parent_billing' => false));
                         if (astpp_gt($order_id, 0)) {
                             $this->db->where("product_id", $add_array['product_id']);
                             $this->db->update("dids", array(
@@ -453,6 +442,8 @@ class DID extends MX_Controller
                         $this->session->set_flashdata('astpp_notification', gettext('Insufficient Balance !'));
                         redirect(base_url() . 'did/did_list/');
                     }
+                } else {
+                    $this->session->set_flashdata('astpp_notification', gettext('Product Not Found!'));
                 }
             } else {
                 $this->session->set_flashdata('astpp_notification', gettext('Account Not Found!'));

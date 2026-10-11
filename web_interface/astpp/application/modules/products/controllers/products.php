@@ -836,7 +836,12 @@ class Products extends MX_Controller {
 			$ProductData = $this->input->post(); 
 			$account_id = $this->input->post('account_id');
 			$accountinfo = $this->session->userdata ( "accountinfo" );
+			// ASTPP fork (O9): price, period and minutes come from the offer (the form shows them read-only)
 			$order_id =$this->order->confirm_order($ProductData,$account_id,$accountinfo);
+			if (! astpp_gt($order_id, 0)) {
+				$this->session->set_flashdata ( 'astpp_notification', gettext('Invalid price, quantity or product!'));
+				redirect ( base_url () . 'products/products_list/' );
+			}
 			$this->session->set_flashdata ( 'astpp_errormsg', gettext('Product assigned successfully!'));
 			redirect ( base_url () . 'products/products_list/' );
 		}else{

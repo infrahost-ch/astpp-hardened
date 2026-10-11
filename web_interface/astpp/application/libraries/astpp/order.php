@@ -24,20 +24,122 @@ if (! defined ( 'BASEPATH' ))
 	exit ( 'No direct script access allowed' );
 #[\AllowDynamicProperties]
 class order {
+	/*
+	 * ASTPP fork (audit O9): prices, setup fees, billing periods and free minutes of an order come
+	 * from the product (admin) or the offer of the seller (reseller_products). Upstream took them
+	 * from the POST array that most callers pass on unchanged, so a browser could set its own price,
+	 * free minutes or a billing period of 0 days (never billed again), stop the reseller chain with
+	 * is_parent_billing=false or order 0.001 pieces. Only the seller's own assignment form
+	 * (accounts/customer_orders_save) passes a price, a setup fee and a billing period, checked here.
+	 */
+	/** Highest quantity of one order (portal, assignment forms; the API allows 50). */
+	const MAX_QUANTITY = 100;
+	/** Highest price or setup fee a seller can enter (reseller_products: decimal(10,5)). */
+	const MAX_PRICE = 99999;
+	/** Longest billing period in days. */
+	const MAX_BILLING_DAYS = 3650;
+
 	function __construct($library_name = '') {
 		$this->CI = & get_instance ();
 		$this->CI->load->model ( 'db_model' );
 		$this->CI->load->library ('email');
-		$this->CI->load->library ( 'session' );	
+		$this->CI->load->library ( 'session' );
 		$this->CI->load->library ('astpp/payment');
 		$this->CI->load->library ('astpp/invoice');
 		$this->CI->load->model ( 'common_model' );
 	}
 
-	
-	function confirm_product_order($productarr,$account_id){ 
+	/** Quantity of an order: whole number 1..MAX_QUANTITY, '' or missing is 1, false for anything else. */
+	public static function quantity($value) {
+		if ($value === null || $value === '') {
+			return 1;
+		}
+		$value = is_int($value) ? (string) $value : $value;
+		if (! is_string($value) || ! ctype_digit(trim($value))) {
+			return false;
+		}
+		$n = (int) trim($value);
+		return ($n >= 1 && $n <= self::MAX_QUANTITY) ? $n : false;
+	}
+
+	/** Amount entered in a form (price, setup fee, payment): plain number 0..$max with '.' as separator, false otherwise. */
+	public static function amount($value, $max = self::MAX_PRICE) {
+		$value = (is_int($value) || is_float($value)) ? (string) $value : $value;
+		if (! is_string($value) || ! preg_match('/^\d{1,9}(\.\d{1,5})?$/', trim($value))) {
+			return false;
+		}
+		$f = (float) trim($value);
+		return $f <= $max ? $f : false;
+	}
+
+	/** Seller's price, setup fee and billing period for one order; false if a value is invalid. */
+	private function check_overrides($overrides) {
+		$out = array();
+		foreach (array('price', 'setup_fee') as $k) {
+			if (! isset($overrides[$k]) || $overrides[$k] === '') {
+				continue;
+			}
+			$v = self::amount($overrides[$k]);
+			if ($v === false) {
+				return false;
+			}
+			// upstream semantics: 0 keeps the product price; the form shows amounts in the seller's currency
+			if ($v > 0) {
+				$out[$k] = (float) $this->CI->common_model->add_calculate_currency($v, '', '', false, false);
+			}
+		}
+		if (isset($overrides['billing_days']) && $overrides['billing_days'] !== '') {
+			$d = trim((string) $overrides['billing_days']);
+			if (! ctype_digit($d) || (int) $d > self::MAX_BILLING_DAYS) {
+				return false;
+			}
+			$out['billing_days'] = (int) $d;
+		}
+		return $out;
+	}
+
+	private function apply_overrides($product_info, $overrides) {
+		foreach (array('price', 'setup_fee', 'billing_days') as $k) {
+			if (isset($overrides[$k])) {
+				$product_info->$k = $overrides[$k];
+			}
+		}
+		return $product_info;
+	}
+
+	/**
+	 * Price plus setup fee of one piece of a product for an account, as confirm_order() charges it
+	 * (seller's offer, optional seller overrides); false if the account cannot order the product.
+	 * Used for the balance check before an order.
+	 */
+	public function unit_price($product_id, $account_id, $overrides = array()) {
+		$overrides = $this->check_overrides($overrides);
+		if ($overrides === false) {
+			return false;
+		}
+		$account = $this->CI->db->select('id,number,reseller_id,type,balance,credit_limit,email,posttoexternal,currency_id,is_distributor')
+			->get_where('accounts', array('id' => $account_id, 'status' => '0', 'deleted' => '0'))->first_row();
+		if (empty($account)) {
+			return false;
+		}
+		$category = $this->CI->common->get_field_name('product_category', 'products', array('id' => $product_id));
+		$orderobjArr = array();
+		$info = $this->get_account_product_info($orderobjArr, $account, array('product_id' => $product_id, 'product_category' => $category), $overrides);
+		if (! is_object($info) || ! isset($info->id)) {
+			return false;
+		}
+		return astpp_n($info->price) + astpp_n($info->setup_fee);
+	}
+
+	function confirm_product_order($productarr,$account_id){
 		$orderobjArr = array();
 		$parent_order_id = 0;
+		// ASTPP fork (O9): the quantity of a pending order is checked like in confirm_order()
+		$quantity = self::quantity(isset($productarr['quantity']) ? $productarr['quantity'] : '');
+		if ($quantity === false) {
+			return 0;
+		}
+		$productarr['quantity'] = $quantity;
 		$this->get_account_info($orderobjArr,$account_id);
 
 		foreach($orderobjArr['accounts'] as $key => $accountdata){
@@ -80,20 +182,27 @@ class order {
 			$resellerid = $temparray->reseller_id;
 			while(astpp_gt($resellerid, 0) && $is_parent_billing == 'true'){
 				$temparray = $this->CI->db_model->getSelect($select,"accounts",array("id"=>$resellerid,"status"=>"0","deleted"=>"0"));
-				if($temparray->num_rows > 0){ 
+				if($temparray->num_rows > 0){
 					$temparray = $temparray->first_row();
 					$accountarr[$temparray->id] = $temparray;
 					$tempkeyarr[] = $temparray->id;
 					$resellerid = $temparray->reseller_id;
+				}else{
+					// ASTPP fork: an inactive or deleted reseller in the chain looped forever; no order
+					// without charging the whole chain
+					log_message('error', 'order: reseller ' . (int) $resellerid . ' of account ' . (int) $account_id . ' is inactive or deleted');
+					return $orderobjArr['accounts'] = array();
 				}
 			}
 			array_multisort($tempkeyarr, SORT_ASC, $accountarr);
 			return $orderobjArr['accounts'] = $accountarr;
 
-		} 
-	}	
+		}
+		// ASTPP fork: inactive or unknown account - nothing to order (was an undefined index)
+		return $orderobjArr['accounts'] = array();
+	}
 
-	function get_account_product_info(&$orderobjArr,$accountdata,$productdata){
+	function get_account_product_info(&$orderobjArr,$accountdata,$productdata,$overrides = array()){
 	 	// Kinjal ASTPPCOM-1021 Start 
 		if($accountdata->type == '1' && $productdata['product_category'] != 3){
 	 	// Kinjal ASTPPCOM-1021 END 
@@ -119,12 +228,8 @@ class order {
 
 				if($product_info->num_rows > 0 ){
 				    	$product_info = $product_info->first_row();
-					$product_info->price = (isset($productdata['price']) && astpp_gt($productdata['price'], 0) && $productdata['price'] != $product_info->price)?$this->CI->common_model->add_calculate_currency($productdata['price'],'', '', true, false):$product_info->price;
-					$product_info->setup_fee = (isset($productdata['setup_fee']) && astpp_gt($productdata['setup_fee'], 0) && $productdata['setup_fee'] != $product_info->setup_fee)?$this->CI->common_model->add_calculate_currency($productdata['setup_fee'],'', '', true, false):$product_info->setup_fee;
-					$product_info->billing_days = (isset($productdata['billing_days']) && $productdata['billing_days']!= '')?$productdata['billing_days']:$product_info->billing_days;
-					$product_info->billing_type = (isset($productdata['billing_type']) && $productdata['billing_days']!= '')?$productdata['billing_type']:$product_info->billing_type;
-					$product_info->free_minutes = (isset($productdata['free_minutes']) && astpp_gt($productdata['free_minutes'], 0))?$productdata['free_minutes']:$product_info->free_minutes;
-					
+					// ASTPP fork (O9): only checked seller overrides, nothing from the POST array
+					$this->apply_overrides($product_info, $overrides);
 				   	$orderobjArr['product'][$accountdata->id] = $product_info;
 				  	 return $orderobjArr['product'][$accountdata->id];
 				}else{
@@ -135,12 +240,8 @@ class order {
 				$product_info = $this->CI->db_model->getSelect("*","products",array("id"=>$productdata['product_id'],"status"=>"0"));
 				if($product_info->num_rows > 0 ){
 				    	$product_info = $product_info->first_row();
-					$product_info->price = (isset($productdata['price']) && astpp_gt($productdata['price'], 0) && $productdata['price'] != $product_info->price)?$this->CI->common_model->add_calculate_currency($productdata['price'],'', '', true, false):$product_info->price;
-
-					$product_info->setup_fee = (isset($productdata['setup_fee']) && astpp_gt($productdata['setup_fee'], 0) && $productdata['setup_fee'] != $product_info->setup_fee)?$this->CI->common_model->add_calculate_currency($productdata['setup_fee'],'', '', true, false):$product_info->setup_fee;
-					$product_info->billing_days = (isset($productdata['billing_days']) && $productdata['billing_days']!= '')?$productdata['billing_days']:$product_info->billing_days;
-					$product_info->billing_type = (isset($productdata['billing_type']) && $productdata['billing_days']!= '')?$productdata['billing_type']:$product_info->billing_type;
-					$product_info->free_minutes = (isset($productdata['free_minutes']) && astpp_gt($productdata['free_minutes'], 0))?$productdata['free_minutes']:$product_info->free_minutes;
+					// ASTPP fork (O9): only checked seller overrides, nothing from the POST array
+					$this->apply_overrides($product_info, $overrides);
 					$orderobjArr['product'][$accountdata->id] = $product_info;
 				  	 return $orderobjArr['product'][$accountdata->id];
 				}else{
@@ -152,13 +253,26 @@ class order {
 		}
 	}
 
-	function confirm_order($productdata,$account_id,$created_by_accountinfo){ 
+	/**
+	 * $options (ASTPP fork, O9): 'parent_billing' => false orders for the account only (DIDs the reseller
+	 * already owns), default true = the whole reseller chain; 'overrides' => array(price, setup_fee,
+	 * billing_days) as entered by the seller in its assignment form. Values of $productdata other than
+	 * product_id, product_category, quantity and payment_by are ignored. Returns '' if the quantity or an
+	 * override is invalid (nothing is booked).
+	 */
+	function confirm_order($productdata,$account_id,$created_by_accountinfo,$options = array()){
 		$parent_array = array();
 		$parent_key_arr = array();
 		$orderobjArr = array();
 		$parent_order_id = 0;
 		$parent_commission = false;
-		$is_parent_billing = (isset($productdata['is_parent_billing']))?$productdata['is_parent_billing']:'true';
+		$quantity = self::quantity(isset($productdata['quantity']) ? $productdata['quantity'] : '');
+		$overrides = $this->check_overrides(isset($options['overrides']) ? (array) $options['overrides'] : array());
+		if ($quantity === false || $overrides === false) {
+			log_message('error', 'order: invalid quantity or price for product ' . (isset($productdata['product_id']) ? (int) $productdata['product_id'] : 0) . ', account ' . (int) $account_id);
+			return '';
+		}
+		$is_parent_billing = (isset($options['parent_billing']) && ! $options['parent_billing']) ? 'false' : 'true';
 		$this->get_account_info($orderobjArr,$account_id,$is_parent_billing);
 
 
@@ -168,7 +282,7 @@ class order {
 				$parent_array[$accountdata->id] = $accountdata;
 				$parent_key_arr[] = $accountdata->id;
 			}
-			$product_info = $this->get_account_product_info($orderobjArr,$accountdata,$productdata);
+			$product_info = $this->get_account_product_info($orderobjArr,$accountdata,$productdata,$overrides);
 			$orderobjArr['accounts'][$key]->product_info=$product_info;
 			if(isset($product_info->id) && astpp_gt($product_info->id, 0)){
 				
@@ -180,7 +294,7 @@ class order {
 				}	
 				$product_info->payment_status = "PAID";
 				$product_info->payment_by = astpp_eq0($productdata['payment_by']) ? "Account Balance" : "Card";
-				$product_info->quantity = (isset($productdata['quantity']) && astpp_gt($productdata['quantity'], 0) )?$productdata['quantity']:'1';
+				$product_info->quantity = $quantity;
 
 				$parent_order_id = $this->generate_order($product_info,$accountdata,$created_by_accountinfo,$parent_order_id,$account_currency_info);
 
