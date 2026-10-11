@@ -154,6 +154,14 @@ folgt jede Änderung als eigener Commit (`git log -- astpp`): Härtung, PHP-8.5-
   `ACCOUNT_INACTIVE_DELETED` bzw. `ACCOUNT_EXPIRE` abgewiesen statt mit Lua-Fehler; `ip_map`-Einträge
   ohne `/Bits` gelten als `/32`, ungültige werden übersprungen; das Portal speichert IP-Map-Einträge
   nur als gültiges `Adresse/Bits`.
+- **Passwort vergessen** (Audit M8, 11.10.2026): `/forgotpassword` → `/confirmpassword` zeigt für
+  jede Eingabe dieselbe Seite (keine Aussage, ob das Konto existiert). Nur ein aktives Kunden-,
+  Reseller- oder Providerkonto mit genau dieser Nummer und E-Mail-Adresse erhält einen 8-stelligen
+  Code per Mail (Tabelle `password_resets`, gültig `otp_expire` Minuten, 5 Versuche, 3 Codes pro
+  Stunde). Mit dem Code setzt der Benutzer sein neues Passwort selbst (`signup/reset_password`); es
+  geht nicht mehr per Mail und ändert keine SIP-Geräte mehr. Admin-Konten können ihr Passwort so nicht
+  zurücksetzen (wie bisher). Supportfall „Mail kommt nicht an“: zuerst SMTP prüfen, dann in
+  `password_resets` nachsehen (Zeile mit `issued` = 3 heisst Stundenlimit erreicht).
 
 **Bibliotheken** (alle selbst ausgeliefert unter `assets/vendor/<name>-<version>/`, Downloads gegen
 npm-/Packagist-Prüfsummen verifiziert)
@@ -308,7 +316,7 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
 | FreeSWITCH-Konsole | `fs_cli` (Passwort aus `/etc/fs_cli.conf`) |
 | SIP-Status | `fs_cli -x 'sofia status'` |
 | Logs | `/var/log/astpp/`, `/var/log/freeswitch/freeswitch.log`, `/var/log/nginx/astpp_*.log`; Rotation täglich, 14 Tage, komprimiert (`/etc/logrotate.d/astpp`, FreeSWITCH selbst rotiert nicht: `files/freeswitch/logfile.conf.xml`) |
-| fail2ban | `fail2ban-client status` (Jails `sshd`, `freeswitch-astpp`, `astpp-login`) / gesperrte IP freigeben: `fail2ban-client set astpp-login unbanip <IP>` (Web-Login, 10 Fehlversuche bzw. Limit-Treffer in 10 min) |
+| fail2ban | `fail2ban-client status` (Jails `sshd`, `freeswitch-astpp`, `astpp-login`) / gesperrte IP freigeben: `fail2ban-client set astpp-login unbanip <IP>` (Web-Login und „Passwort vergessen“: 10 Fehlversuche, Code-Anforderungen bzw. Limit-Treffer in 10 min) |
 | Firewall | `nft list table inet astpp` |
 | API-Zugriffe | `/var/log/astpp/api.log` (eine JSON-Zeile pro Anfrage: Zeit, IP, Schlüssel-ID, Konto, Pfad, Status; ohne Schlüssel, Passwörter, Inhalte) |
 
