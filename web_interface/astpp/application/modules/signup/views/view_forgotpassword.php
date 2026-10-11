@@ -103,7 +103,7 @@ body {
 </head>
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<body style="background: linear-gradient(135deg, #0E2638 0%, #1B4F87 60%, #347CCB 100%) fixed;" onload="FocusOnInput()">
+<body style="background: linear-gradient(135deg, #0E2638 0%, #1B4F87 60%, #347CCB 100%) fixed;">
 
 
 	<div class="container">
@@ -135,7 +135,7 @@ body {
 				<form class="card p-4 col-12"
 					action="<?php echo base_url(); ?>confirmpassword/"
 					class="form-light col-md-12 no-padding"
-					onsubmit="return validateemail();" method="post"
+					method="post"
 					accept-charset="utf-8" id="customer_form" name="customer_form"
 					style="background: rgba(255, 255, 255, 0.8);">
 					<div>
@@ -214,11 +214,18 @@ body {
 	</div>
 	<script type="text/javascript"
 		src="<?php echo base_url(); ?>assets/js/custome_index.js"></script>
-	<script type="text/javascript">
+	<script<?php echo csp_nonce_attr(); ?> type="text/javascript">
 
      function FocusOnInput() {
         document.getElementById("number").focus();
        }
+     // ASTPP fork (O4): no inline onload/onsubmit (CSP); this script runs after the form
+     document.getElementById("customer_form").addEventListener("submit", function (e) {
+        if (! validateemail()) {
+           e.preventDefault();
+        }
+     });
+     document.addEventListener("DOMContentLoaded", FocusOnInput);
 
 		function validateemail()  
 		{

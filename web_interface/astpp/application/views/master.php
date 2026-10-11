@@ -36,7 +36,7 @@ if (strpos($url, 'customer_cdrs') != true) {
                  <div class="float-right"> </div>
 
 	        <?php if (isset($test_email_flag) && $test_email_flag) { ?>
-	                <div id="show_search" class="float-right btn btn-warning btn margin-t-51"><a data-ripple onclick="PopupCenter('<?=base_url()?>newmail/',resizable=1,width=580,height=700) "><font color="#fff"><i class= " fa fa-envelope-o"></i> &nbsp;<?php echo gettext('Test Mail'); ?></font></a></div>
+	                <div id="show_search" class="float-right btn btn-warning btn margin-t-51"><a data-ripple href="#" class="js-popup-newmail" data-url="<?=base_url()?>newmail/"><font color="#fff"><i class= " fa fa-envelope-o"></i> &nbsp;<?php echo gettext('Test Mail'); ?></font></a></div>
                 <?php } ?>
 	        <div class="col-4 float-right pl-2 align-self-center dashboard-right">
 		 <?php if (isset($batch_update_flag) && $batch_update_flag) { 
@@ -161,7 +161,7 @@ if (strpos($url, 'customer_cdrs') != true) {
    }
    if ($astpp_msg) {
 ?>
-<script> 
+<script<?php echo csp_nonce_attr(); ?>> 
     var validate_ERR = '<?= $astpp_msg; ?>';
     var ERR_type = '<?= $msg_type; ?>';
     display_astpp_message(validate_ERR,ERR_type);

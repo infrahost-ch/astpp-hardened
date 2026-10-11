@@ -625,7 +625,7 @@ function submit_form(form_id) {
             }
             if (!tmp.SUCCESS) {
                 //$(".error_div").css("display","block");
-                var myObject = eval('(' + response + ')');
+                var myObject = tmp; // ASTPP fork (O4): already parsed - the CSP forbids evaluating strings
                 for (i in myObject) {
                     var fieldname = i.replace("_error", "");
                     $("input[name='" + fieldname + "']").addClass("borderred");
@@ -659,7 +659,11 @@ function display_astpp_message(validate_ERR, ERR_type) {
     }
 }
 function print_error(ERR_STR) {
-    var myObject = eval('(' + ERR_STR + ')');
+    // ASTPP fork (O4): the errors are JSON (Form_validation::error_string_custom); JSON.parse, the CSP forbids evaluating strings
+    if (!ERR_STR) {
+        return;
+    }
+    var myObject = (typeof ERR_STR === 'object') ? ERR_STR : JSON.parse(ERR_STR);
     for (i in myObject) {
         var fieldname = i.replace("_error", "");
         $("input[name='" + fieldname + "']").addClass("borderred");

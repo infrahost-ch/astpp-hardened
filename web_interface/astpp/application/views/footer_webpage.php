@@ -1,7 +1,7 @@
 </section>
 </span></span>
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.dlmenu.js"></script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
   $('.btn-quick > div:first-child').on('click', function(){
     $('.btn-quick').toggleClass('open');
@@ -12,7 +12,7 @@
         })
 })
 </script>
-<script type="text/javascript" language="javascript">
+<script<?php echo csp_nonce_attr(); ?> type="text/javascript" language="javascript">
 $('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
   if (!$(this).next().hasClass('show')) {
     $(this).parents('.dropdown-menu').first().find('.show').removeClass("show");
@@ -30,7 +30,7 @@ $('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
 
 
 
-<script type="text/javascript" language="javascript">
+<script<?php echo csp_nonce_attr(); ?> type="text/javascript" language="javascript">
 $(document).ready(function() {
   var cnt = $("#ListForm").contents();
   $("#ListForm").replaceWith(cnt);
@@ -60,13 +60,13 @@ $(document).ready(function() {
   
 });
 </script>
- <script>
+ <script<?php echo csp_nonce_attr(); ?>>
  jQuery(document).ready(function($) {
   $('a[rel*=facebox]').facebox()
 }) 
 </script>
 
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 function createOptions(number) {
   var options = [], _options;
 
@@ -82,7 +82,7 @@ function createOptions(number) {
 
 </script>
 
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 
 jQuery(function($) {
 

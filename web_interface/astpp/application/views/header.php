@@ -35,7 +35,7 @@
 <?php } else { ?>
     <link rel="icon" href="<? echo base_url(); ?>assets/images/favicon.ico"/>
 <?php } ?>
-	<script>
+	<script<?php echo csp_nonce_attr(); ?>>
 		var page_gettext = "<?php echo gettext('Page '); ?>";
 		var no_records_gettext = "<?php echo gettext('No Records'); ?>";
 		var records_gettext = "<?php echo gettext(' Records'); ?>";
@@ -43,7 +43,7 @@
 		var date = "<?php echo gettext($date);?>";
 	</script>
 
-    <script language="javascript" type="text/javascript">
+    <script<?php echo csp_nonce_attr(); ?> language="javascript" type="text/javascript">
  	function Termination_Rates(){
  		var flag = 'termination_rates';
 		$.ajax({
@@ -175,7 +175,7 @@
     <? start_block_marker('extra_head') ?>
     <? end_block_marker() ?>	
 
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 
 function PopupCenter(url, title, w, h) {
     var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : screen.left;
@@ -189,8 +189,17 @@ function PopupCenter(url, title, w, h) {
     if (window.focus) {
         newWindow.focus();
     }
-}        
-</script> 
+}
+// ASTPP fork (O4): click handlers of the menu and the test-mail button, no inline onclick (CSP)
+$(document).on('click', '.js-termination-rates', function (e) {
+    e.preventDefault();
+    Termination_Rates();
+});
+$(document).on('click', '.js-popup-newmail', function (e) {
+    e.preventDefault();
+    PopupCenter($(this).data('url'), 1, 580, 700);
+});
+</script>
 </head>
 <body>   
 <nav class="navbar navbar-expand-lg navbar-light bg-light mainmenu px-lg-4">
@@ -464,7 +473,7 @@ function PopupCenter(url, title, w, h) {
 	    <li><a href="<?php echo base_url();?>trunk/trunk_add/"  rel="facebox"><?php echo gettext("Trunks"); ?></a></li>
 	    
 
-		<li><a href="#" onclick=Termination_Rates();><?php echo gettext("Termination Rates"); ?></a></li>
+		<li><a href="#" class="js-termination-rates"><?php echo gettext("Termination Rates"); ?></a></li>
 
 
 	    <li><a href="<?php echo base_url();?>products/products_add/"><?php echo gettext("Products"); ?></a></li>

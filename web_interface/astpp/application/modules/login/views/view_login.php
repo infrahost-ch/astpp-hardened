@@ -59,7 +59,7 @@ rel="stylesheet" type="text/css">
 </noscript>
 
 
-<script type="text/javascript">
+<script<?php echo csp_nonce_attr(); ?> type="text/javascript">
       $(document).ready(function () {
         setTimeout(function () {
         var $Input = $('input');
@@ -70,6 +70,8 @@ rel="stylesheet" type="text/css">
      function FocusOnInput() {
         document.getElementById("username").focus();
        }
+     // ASTPP fork (O4): no inline onload (CSP)
+     document.addEventListener("DOMContentLoaded", FocusOnInput);
 
          $('document').ready(function() { 
              $("#login_form").validate({
@@ -121,7 +123,7 @@ body {
 </style>
 
 </head>
-<body style="background: linear-gradient(135deg, #0E2638 0%, #1B4F87 60%, #347CCB 100%) fixed;" onload="FocusOnInput()">
+<body style="background: linear-gradient(135deg, #0E2638 0%, #1B4F87 60%, #347CCB 100%) fixed;">
 	<div class="col-md-12 m-auto form_card">
 		<form role="form" id="login_form" class="card p-4 col-12 "
 			name="login_form" action="<?php echo base_url(); ?>login/login"

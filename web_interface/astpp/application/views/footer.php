@@ -4,7 +4,7 @@
     <div id="loading-img"></div>
 </div>
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.dlmenu.js"></script>
-<script type="text/javascript">
+<script<?php echo csp_nonce_attr(); ?> type="text/javascript">
     $(document).ready(function(){
         var jqueryarray = <?php echo json_encode($this->tooltip_data); ?>;
         //console.log(jqueryarray);
@@ -25,7 +25,7 @@
         }
     });
   </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
 
   //ASTPPENT-1172 Start
@@ -52,7 +52,7 @@
 })
 </script>
 
-<script type="text/javascript" language="javascript">
+<script<?php echo csp_nonce_attr(); ?> type="text/javascript" language="javascript">
 $('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
   if (!$(this).next().hasClass('show')) {
     $(this).parents('.dropdown-menu').first().find('.show').removeClass("show");
@@ -70,7 +70,7 @@ $('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
 
 
 
-<script type="text/javascript" language="javascript">
+<script<?php echo csp_nonce_attr(); ?> type="text/javascript" language="javascript">
 $(document).ready(function() {
   var cnt = $("#ListForm").contents();
   $("#ListForm").replaceWith(cnt);
@@ -106,7 +106,7 @@ $(document).ready(function() {
 });
 
 </script>
- <script>
+ <script<?php echo csp_nonce_attr(); ?>>
  jQuery(document).ready(function($) {
   $('a[rel*=facebox]').facebox();
   <?php // ASTPPCOM-941 Start ?>
@@ -117,11 +117,11 @@ $(document).ready(function() {
   <?php //ASTPPCOM-941 END ?>
 }) 
 </script>
-    <script type="text/javascript" charset="utf-8">
+    <script<?php echo csp_nonce_attr(); ?> type="text/javascript" charset="utf-8">
 
     function css_browser_selector(u){var ua=u.toLowerCase(),is=function(t){return ua.indexOf(t)>-1},g='gecko',w='webkit',s='safari',o='opera',m='mobile',h=document.documentElement,b=[(!(/opera|webtv/i.test(ua))&&/msie\s(\d)/.test(ua))?('ie ie'+RegExp.$1):is('firefox/2')?g+' ff2':is('firefox/3.5')?g+' ff3 ff3_5':is('firefox/3.6')?g+' ff3 ff3_6':is('firefox/3')?g+' ff3':is('gecko/')?g:is('opera')?o+(/version\/(\d+)/.test(ua)?' '+o+RegExp.$1:(/opera(\s|\/)(\d+)/.test(ua)?' '+o+RegExp.$2:'')):is('konqueror')?'konqueror':is('blackberry')?m+' blackberry':is('android')?m+' android':is('chrome')?w+' chrome':is('iron')?w+' iron':is('applewebkit/')?w+' '+s+(/version\/(\d+)/.test(ua)?' '+s+RegExp.$1:''):is('mozilla/')?g:'',is('j2me')?m+' j2me':is('iphone')?m+' iphone':is('ipod')?m+' ipod':is('ipad')?m+' ipad':is('mac')?'mac':is('darwin')?'mac':is('webtv')?'webtv':is('win')?'win'+(is('windows nt 6.0')?' vista':''):is('freebsd')?'freebsd':(is('x11')||is('linux'))?'linux':'','js']; c = b.join(' '); h.className += ' '+c; return c;}; css_browser_selector(navigator.userAgent);
     </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 $(document).bind('reveal.facebox', function() { 
     $(".main").removeClass("d-none");
     $("body").remove('#facebox_overlay');
@@ -132,7 +132,7 @@ $(document).bind('close.facebox', function() {
     $(".main").addClass("d-none");
   })
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 function createOptions(number) {
   var options = [], _options;
 
@@ -148,7 +148,7 @@ function createOptions(number) {
 
 </script>
 
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 
 jQuery(function($) {
 
@@ -229,7 +229,7 @@ jQuery(function($) {
 	<?php echo gettext('Free software under the'); ?> <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL v3</a>, <?php echo gettext('without any warranty'); ?>.
    </div>
    <div class="col-md-4 py-2 px-2 text-md-right" id="floating-label">
-     <select class="col-lg-3 col-md-6 form-control selectpicker language" data-live-search='false' data-live-search-style='begins' id="language_drp_sown" onchange="get_lang(this.value)">
+     <select class="col-lg-3 col-md-6 form-control selectpicker language" data-live-search='false' data-live-search-style='begins' id="language_drp_sown">
   <?php
 
   
