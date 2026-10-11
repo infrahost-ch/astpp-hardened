@@ -168,7 +168,7 @@ class notification {
 		$push_alert_template = $notification_template_data['template'];
 			$email_template = str_replace ( '#NAME#', $accountinfo['first_name'] . " " . $accountinfo['last_name'], $email_template);
 			$email_template = str_replace ( '#NUMBER#', $accountinfo['number'],$email_template);
-			$email_template = str_replace ( '#PASSWORD#', $accountinfo['password'],$email_template);
+			$email_template = str_replace ( '#PASSWORD#', $this->CI->common->password_mail_hint (), $email_template); // M6: portal passwords are not readable
 			$email_template = str_replace ( '#COMPANY_WEBSITE#',$invoiceconf['website'],$email_template);
 			$email_template = str_replace ( '#COMPANY_EMAIL#',$invoiceconf['emailaddress'],$email_template);
 			$email_template = str_replace ( '#COMPANY_NAME#',$invoiceconf['company_name'],$email_template);

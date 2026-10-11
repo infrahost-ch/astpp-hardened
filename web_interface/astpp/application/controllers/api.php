@@ -331,11 +331,11 @@ class Api extends CI_Controller {
 			'last_name' => '',
 			'email' => '',
 			'telephone_1' => '',
-			// signup_lib sends the welcome e-mail (with the portal password) when notifications
+			// signup_lib sends the welcome e-mail (account number, link to set the password) when notifications
 			// is 0; only on request, the account gets the system default afterwards
 			'notifications' => $welcome ? '0' : '1',
 			'number' => $number,
-			'password' => $this->common->encode($password),
+			'password' => $this->common->password_store($password), // M6: hash; the response carries the password once
 			'type' => 0,
 			'reseller_id' => $owner,
 			'sweep_id' => 2,

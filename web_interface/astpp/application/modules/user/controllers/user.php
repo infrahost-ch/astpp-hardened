@@ -255,7 +255,7 @@ class User extends MX_Controller
             if ($this->form_validation->run() == FALSE) {
                 $data['validation_errors'] = validation_errors();
             } else {
-                $add_array['password'] = $this->common->encode($add_array['password']);
+                $this->common->password_from_form($add_array); // M6: hash, empty keeps the password
                 unset($add_array['number']);
                 $this->accounts->accounts_model->edit_account($add_array, $add_array['id']);
                 $accountinfo = $this->session->userdata('accountinfo');
@@ -281,7 +281,7 @@ class User extends MX_Controller
             foreach ($account->result_array() as $key => $value) {
                 $editable_data = $value;
             }
-            $editable_data['password'] = $this->common->decode($editable_data['password']);
+            $editable_data['password'] = ''; // M6: not readable
             $data['form'] = $this->form->build_form($this->accounts->accounts_form->get_user_form_fields($editable_data['id']), $editable_data);
             $this->load->view('view_user_details', $data);
         }
@@ -551,43 +551,19 @@ class User extends MX_Controller
         $this->user_cdrreport_export();
     }
 
+    /*
+     * ASTPP fork (M6): old "change password" page (view_changepassword, linked nowhere). It compared
+     * the stored value with the typed old password and stored the new one unencrypted, without the
+     * password rules. The portal page is user/user_change_password.
+     */
     function change_password()
     {
-        $accountinfo = $this->session->userdata('accountinfo');
-        $id = $accountinfo['id'];
-        $this->load->model('user_model');
-
-        $query = $this->user_model->change_password($id);
-        foreach ($query as $row) {
-            $data['password'] = $row->password;
-        }
-        $databasepassword = $data['password'];
-        $password = $_POST['oldpassword'];
-        $newpassword = $_POST['newpassword'];
-        $conformpassword = $_POST['conformpassword'];
-        if ($databasepassword == $password) {
-
-            if ($conformpassword == $newpassword) {
-                $update = $newpassword;
-                $this->load->model('user_model');
-                $this->user_model->change_db_password($update, $id);
-                $this->session->set_flashdata('astpp_errormsg', gettext("Password changed Sucessfully....!!!"));
-                redirect(base_url() . 'user/user/changepassword/');
-            } else {
-                $this->session->set_flashdata('astpp_notification', gettext("New Password & Conformpassword not match."));
-                redirect(base_url() . 'user/user/changepassword/');
-            }
-        } else {
-            $this->session->set_flashdata('astpp_notification', gettext("Invalid old passwword."));
-            redirect(base_url() . 'user/user/changepassword/');
-        }
+        redirect(base_url() . 'user/user_change_password/');
     }
 
     function changepassword()
     {
-        $data['username'] = $this->session->userdata('user_name');
-        $data['page_title'] = gettext('Change Password');
-        $this->load->view('view_changepassword', $data);
+        redirect(base_url() . 'user/user_change_password/');
     }
 
     function user_generate_password()
@@ -905,7 +881,7 @@ function user_myprofile()
         foreach ($account->result_array() as $key => $value) {
             $editable_data = $value;
         }
-        $editable_data['password'] = $this->common->decode($editable_data['password']);
+        $editable_data['password'] = ''; // M6: not readable
         $data['form'] = $this->form->build_form($this->user_form->get_userprofile_form_fields($editable_data), $editable_data);
     }
     $this->load->view('view_user_details', $data);
@@ -921,34 +897,15 @@ function user_change_password()
         if ($this->form_validation->run() == FALSE) {
             $data['validation_errors'] = validation_errors();
         } else {
-            $password_encode = $this->common->encode($add_array['new_password']);
+            // ASTPP fork (M6): stored as hash. Upstream also wrote the new portal password as SIP
+            // password of the device named like the account (readable in sip_devices, and a
+            // connected PBX lost its registration); portal and SIP passwords are separate now.
             $data = array(
-                'password' => $password_encode
+                'password' => $this->common->password_store($add_array['new_password'])
             );
             // HARDENING: the password of the account in the POST field id was changed (any account)
             $this->db->where('id', $accountinfo['id']);
             $this->db->update('accounts', $data);
-
-            $this->db->where('accountid', $accountinfo['id']);
-            $this->db->where('username', $accountinfo['number']);
-            $sip_info = (array) $this->db->get_where("sip_devices")->first_row();
-            if (! empty($sip_info)) {
-                $did_params = (array) (json_decode($sip_info['dir_params']));
-                $sipdevice_array = array(
-                    'dir_params' => json_encode(array(
-                        "password" => $add_array['new_password'],
-                        'vm-enabled' => "true",
-                        "vm-password" => $did_params['vm-password'],
-                        "vm-mailto" => $did_params['vm-mailto'],
-                        "vm-attach-file" => "true",
-                        "vm-keep-local-after-email" => "true",
-                        "vm-email-all-messages" => "true"
-                    ))
-                );
-                $this->db->where('accountid', $accountinfo['id']);
-                $this->db->where('username', $accountinfo['number']);
-                $this->db->update('sip_devices', $sipdevice_array);
-            }
             $this->session->set_flashdata('astpp_errormsg', gettext('Password Updated Successfully!'));
             redirect(base_url() . 'user/user_change_password/');
         }

@@ -269,7 +269,7 @@ class Account_import extends MX_Controller
 
                     $new_array['password'] = ! empty($add_array["password-select"]) && ! empty($csv_data[$add_array["password-select"]]) ? $csv_data[$add_array["password-select"]] : (! empty($add_array['password']) ? $add_array['password'] : $this->common->generate_password());
                     $current_password = $new_array['password'];
-                    $new_array['password'] = $this->common->encode($current_password);
+                    $new_array['password'] = $this->common->password_store($current_password); // M6: hash
                     $new_array['first_name'] = ! empty($add_array["first_name-select"]) && ! empty($csv_data[$add_array["first_name-select"]]) ? $csv_data[$add_array["first_name-select"]] : (! empty($add_array['first_name']) ? $add_array['first_name'] : $new_array['number']);
 
                     $new_array['last_name'] = ! empty($add_array["last_name-select"]) && ! empty($csv_data[$add_array["last_name-select"]]) ? $csv_data[$add_array["last_name-select"]] : $add_array['last_name'];
@@ -385,7 +385,7 @@ class Account_import extends MX_Controller
                         }
                         $sip_username_array[$username] = $username;
                         $params_array = array(
-                            'password' => ! empty($add_array["sip_password-select"]) && isset($csv_data[$add_array["sip_password-select"]]) && ! empty($csv_data[$add_array["sip_password-select"]]) ? $csv_data[$add_array["sip_password-select"]] : ($add_array['sip_password'] == 'number' ? $new_array['number'] : ($add_array['sip_password'] == "password" ? $current_password : ($add_array['sip_password'] == "random" ? $this->common->find_uniq_rendno('10', '', '') : ''))),
+                            'password' => ! empty($add_array["sip_password-select"]) && isset($csv_data[$add_array["sip_password-select"]]) && ! empty($csv_data[$add_array["sip_password-select"]]) ? $csv_data[$add_array["sip_password-select"]] : ($add_array['sip_password'] == 'number' ? $new_array['number'] : (($add_array['sip_password'] == "random" || $add_array['sip_password'] == "password") ? $this->common->find_uniq_rendno('10', '', '') : '')),
                             "vm-enabled" => "false",
                             "vm-password" => "",
                             "vm-mailto" => "",
@@ -622,9 +622,8 @@ class Account_import extends MX_Controller
                             $custom_array[$value] = str_replace('col-md-5', 'col-md-12', str_replace('form-control', '', form_dropdown($params_arr, $this->_sip_user_option(), '')));
                         }
                         if ($value == "sip_password") {
-                            $custom_array[$value] = str_replace('col-md-5', 'col-md-12', str_replace('form-control', '', form_dropdown($params_arr, astpp_array_merge($this->_sip_user_option(), array(
-                                "password" => "Same as Password"
-                            )), '')));
+                            // M6: no "same as password" any more - the portal password must not be readable in sip_devices (old value "password" = random)
+                            $custom_array[$value] = str_replace('col-md-5', 'col-md-12', str_replace('form-control', '', form_dropdown($params_arr, $this->_sip_user_option(), '')));
                         }
                     }
                 } elseif ($value == "number") {

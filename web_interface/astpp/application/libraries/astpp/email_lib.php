@@ -204,7 +204,7 @@ class email_lib {
 			$this->message  = str_replace ( '#USERNAME#', $templateinfo ['username'], $this->message );
 			$this->message  = str_replace ( '#PIN#', $templateinfo ['pin'], $this->message );
 			$this->message  = str_replace ( '#BALANCE#', $templateinfo ['balance'], $this->message );
-			$this->message  = str_replace ( '#PASSWORD#', $templateinfo ['password'], $this->message );
+			$this->message  = str_replace ( '#PASSWORD#', $this->CI->common->password_mail_hint (), $this->message ); // M6: never the stored value
 			$this->subject  = str_replace ( "#NAME#", $templateinfo ['first_name'] . " " . $templateinfo ['last_name'], $this->subject );
 			$this->subject  = str_replace ( "#COMPANY_NAME#", $this->company_name, $this->subject );
 			switch ($template_type) {

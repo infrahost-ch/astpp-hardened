@@ -229,7 +229,7 @@
                     $taxes_data = $taxes_data->result_array();
                     $account_data["tax_id"] = explode(",", $taxes_data[0]['taxes_id']);
                 }
-                $account_data['password'] = $this->common->decode($account_data['password']);
+                $account_data['password'] = ''; // M6: not readable, the form shows an empty field
                 $account_data['first_used'] = $this->common->convert_GMT_to($account_data['first_used'], $account_data['first_used'], $account_data['first_used']);
                 $reseller_id = (astpp_gt($account_data['reseller_id'], 0)) ? $account_data['reseller_id'] : 0;
                 $data['form'] = $this->form->build_form($this->accounts_form->get_customer_form_fields($entity_name, $edit_id, $reseller_id), $account_data);
@@ -280,7 +280,7 @@
                         $add_array['credit_limit'] = 0;
                     }
 
-                    $add_array['password'] = $this->common->encode($add_array['password']);
+                    $this->common->password_from_form($add_array); // M6: hash, empty keeps the password
                     $add_array['credit_limit'] = $this->common_model->add_calculate_currency($add_array['credit_limit'], '', '', false, false);
 
                     $query = $this->accounts_model->remove_all_account_tax($add_array['id']);
@@ -319,7 +319,7 @@
                 if ($this->form_validation->run() == FALSE) {
                     $data['validation_errors'] = validation_errors();
                 } else {
-                    $add_array['password'] = $this->common->encode($add_array['password']);
+                    $this->common->password_from_form($add_array); // M6: hash, empty keeps the password
                     $add_array['credit_limit'] = $this->common_model->add_calculate_currency($add_array['credit_limit'], '', '', false, false);
                     $add_array['notification_email'] = (! empty($add_array['notification_email'])) ? $add_array['notification_email'] : $add_array['email'];
                     if ($add_array['posttoexternal'] == 1) {
@@ -1657,7 +1657,7 @@ function reseller_edit($edit_id = '')
         $encrypted_string = $this->common->encode($edit_data['id']);
         $encrypt = $this->common->encode_params($encrypted_string);
         $edit_data['registration_url'] = base_url() . "signup/" . $encrypt;
-        $edit_data['password'] = $this->common->decode($edit_data['password']);
+        $edit_data['password'] = ''; // M6: not readable, the form shows an empty field
         $edit_data['credit_limit'] = $this->common_model->calculate_currency(($edit_data['credit_limit']), '', '', true, false);
 
         $entity_name = strtolower($this->common->get_entity_type('', '', $edit_data['type']));
@@ -1725,7 +1725,7 @@ function reseller_save()
                 // ASTPP fork: edit_account() writes the whole POST array - not the account type, the
                 // owner, internal columns or the balance (changed through payments only)
                 unset($add_array['type'], $add_array['reseller_id'], $add_array['deleted'], $add_array['creation'], $add_array['balance'], $add_array['last_bill_date'], $add_array['inuse']);
-                $add_array['password'] = $this->common->encode($add_array['password']);
+                $this->common->password_from_form($add_array); // M6: hash, empty keeps the password
                 $this->accounts_model->edit_account($add_array, $add_array['id']);
                 $this->session->set_flashdata('astpp_errormsg', gettext('Reseller updated successfully!'));
                 redirect(base_url() . 'accounts/reseller_list/');
@@ -1764,7 +1764,7 @@ function reseller_save()
                     ))->first_row();
                     $add_array['is_distributor'] = $is_distributor['is_distributor'];
                 }
-                $add_array['password'] = $this->common->encode($add_array['password']);
+                $this->common->password_from_form($add_array); // M6: hash, empty keeps the password
                 $add_array['credit_limit'] = $this->common_model->add_calculate_currency($add_array['credit_limit'], '', '', false, false);
                 $add_array['notification_email'] = (! empty($add_array['notification_email'])) ? $add_array['notification_email'] : $add_array['email'];
                 $last_id = $this->accounts_model->add_account($add_array);
@@ -1857,7 +1857,7 @@ function admin_edit($edit_id = '')
         $type = $accountinfo['type'] == - 1 ? 2 : $accountinfo['type'];
         $entity_type = strtolower($this->common->get_entity_type('', '', $type));
         $entitytype = str_replace(' ', '', $entity_type);
-        $accountinfo['password'] = $this->common->decode($accountinfo['password']);
+        $accountinfo['password'] = ''; // M6: not readable, the form shows an empty field
         $admin_type = $this->common->get_field_name('type', 'accounts', array(
             'id' => $edit_id
         ));
@@ -1890,7 +1890,7 @@ function admin_save($add_array = false)
             if ($this->form_validation->run() == FALSE) {
                 $data['validation_errors'] = validation_errors();
             } else {
-                $add_array['password'] = $this->common->encode($add_array['password']);
+                $this->common->password_from_form($add_array); // M6: hash, empty keeps the password
                 if ($add_array['type'] == - 1) {
                     unset($add_array['status']);
                 }
@@ -1915,7 +1915,7 @@ function admin_save($add_array = false)
             if ($this->form_validation->run() == FALSE) {
                 $data['validation_errors'] = validation_errors();
             } else {
-                $add_array['password'] = $this->common->encode($add_array['password']);
+                $this->common->password_from_form($add_array); // M6: hash, empty keeps the password
                 $add_array['notification_email'] = (! empty($add_array['notification_email'])) ? $add_array['notification_email'] : $add_array['email'];
                 $last_id = $this->accounts_model->add_account($add_array);
                 $this->session->set_flashdata('astpp_errormsg', gettext(ucfirst($entity_type)) .' '.gettext('Added Successfully!'));
@@ -2628,14 +2628,13 @@ function provider_edit_account()
     $this->customer_edit_account();
 }
 
+/*
+ * ASTPP fork (M6): returned the decoded portal password of an account (no page calls it).
+ * Portal passwords are not readable any more.
+ */
 function customer_show_password($id)
 {
-    $account = $this->db_model->getSelect("password", "accounts", array(
-        'id' => $id
-    ));
-    $account_data = $account->result_array();
-    $password = $this->common->decode($account_data[0]['password']);
-    echo $password;
+    show_404();
 }
 
 function reseller_export_cdr_xls()

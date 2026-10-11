@@ -293,10 +293,12 @@ class Accounts_form extends common
                     'id' => 'password_show',
                     'onmouseover' => 'seetext(password_show)',
                     'onmouseout' => 'hidepassword(password_show)',
+                    'placeholder' => gettext('unchanged'),
+                    'autocomplete' => 'new-password',
                     'size' => '20',
                     'class' => "text field medium"
                 ),
-                'required|notMatch[number]|chk_password_expression',
+                'notMatch[number]|chk_password_expression', // M6: empty keeps the stored password
                 'tOOL TIP',
                 ''
             );
@@ -1695,10 +1697,12 @@ class Accounts_form extends common
                     'id' => 'password_show',
                     'onmouseover' => 'seetext(password_show)',
                     'onmouseout' => 'hidepassword(password_show)',
+                    'placeholder' => gettext('unchanged'),
+                    'autocomplete' => 'new-password',
                     'size' => '20',
                     'class' => "text field medium"
                 ),
-                'required|notMatch[number]|chk_password_expression',
+                'notMatch[number]|chk_password_expression', // M6: empty keeps the stored password
                 'tOOL TIP',
                 ''
             );
@@ -2359,10 +2363,12 @@ class Accounts_form extends common
                     'id' => 'password_show',
                     'onmouseover' => 'seetext(password_show)',
                     'onmouseout' => 'hidepassword(password_show)',
+                    'placeholder' => gettext('unchanged'),
+                    'autocomplete' => 'new-password',
                     'size' => '20',
                     'class' => "text field medium"
                 ),
-                'required|notMatch[number]|chk_password_expression',
+                'notMatch[number]|chk_password_expression', // M6: empty keeps the stored password
                 'tOOL TIP',
                 ''
             );

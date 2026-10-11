@@ -172,7 +172,7 @@ class Signup extends MX_Controller
                             }
                             $insert_array = $new_account_details;
                         } else {
-                            $password = $this->common->encode($this->common->generate_password());
+                            $password = $this->common->password_store($this->common->generate_password()); // M6: the user sets the password via the link in the welcome mail
 
                             $insert_array = array(
                                 'number' => $number,
@@ -785,7 +785,7 @@ class Signup extends MX_Controller
             if (! empty($account) && $this->reset_check_code($account, $code)) {
                 $this->db->where('id', $account['id']);
                 $this->db->update('accounts', array(
-                    'password' => $this->common->encode($password)
+                    'password' => $this->common->password_store($password)
                 ));
                 $account['password'] = ''; // the notice never carries a password
                 $this->common->mail_to_users('new_password', $account);

@@ -164,7 +164,9 @@ class Signup_lib {
 				"reseller_id"=>$accountinfo ['reseller_id'],
 				'accountid' => $accountinfo['id'],
 				'dir_params' => json_encode(array(
-					"password"=> $this->CI->common->decode ( $accountinfo ['password'] ),
+					// ASTPP fork (M6): own random password; upstream used the portal password, which
+					// is no longer readable (and must not be readable in sip_devices either)
+					"password"=> $this->CI->common->generate_password (),
 					'vm-enabled' => "true",
 					"vm-password"=> $random_password,
 					"vm-mailto"=> (isset($accountinfo['email']))?$accountinfo['email']:'',
@@ -270,8 +272,10 @@ class Signup_lib {
 		if ($accountinfo ['id'] == "") {
 			$accountinfo ['id'] = $last_id;
 		}
-		$accountinfo ['password'] = $this->CI->common->decode ( $accountinfo ['password'] );
-		$this->CI->common->mail_to_users ( 'create_account', $accountinfo );	
+		// ASTPP fork (M6): the welcome mail names the account number and links the page where the
+		// user sets the password (#PASSWORD#, see common::password_mail_hint())
+		$accountinfo ['password'] = '';
+		$this->CI->common->mail_to_users ( 'create_account', $accountinfo );
 	}
 	public function bulk_account_creation($add_array){
 		$current_date = gmdate ( "Y-m-d H:i:s" );
@@ -302,7 +306,6 @@ class Signup_lib {
 			$acc_num = $number [$i];
 			$email="$acc_num"."@gmail.com";
 			
-			$current_password = $this->CI->common->generate_password ();
 			$insert_array = array();
 			$insert_array = $default_settings;
 			$tax_id = $insert_array['tax_id'];
@@ -311,7 +314,9 @@ class Signup_lib {
 			$insert_array['email']=$email;
 			$insert_array['validfordays']=$add_array ['validfordays'];
 			$insert_array['first_name']=$acc_num;
-			$insert_array['password'] =$this->CI->common->encode ( $current_password );
+			// ASTPP fork (M6): upstream stored a random password nobody was told; now a value that
+			// matches no password (set it in the account form or with "forgot password")
+			$insert_array['password'] =$this->CI->common->password_locked ();
 			$insert_array['pricelist_id'] =$add_array ['pricelist_id'];
 			$insert_array['reseller_id'] =$add_array ['reseller_id'];
 			$insert_array['status'] = "0";

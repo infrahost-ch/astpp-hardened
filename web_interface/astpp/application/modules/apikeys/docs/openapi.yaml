@@ -632,7 +632,7 @@ components:
         max_channels: { type: integer, minimum: 0, maximum: 1000 }
         rate_group_id: { type: integer }
         localization_id: { type: integer, nullable: true }
-        send_welcome_email: { type: boolean, default: false, description: Requires email }
+        send_welcome_email: { type: boolean, default: false, description: "Requires email. The mail names the account number and links the page to set the password; it never contains a password." }
     CustomerUpdate:
       type: object
       additionalProperties: false

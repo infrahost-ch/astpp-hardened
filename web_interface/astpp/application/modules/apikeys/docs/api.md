@@ -210,7 +210,7 @@ Pakete, die Kunden zugewiesen werden können. Reseller sehen die Pakete, die sie
 | `max_channels` | Zahl 0-1000 | ja | ja | gleichzeitige Gespräche, `0` = unbegrenzt |
 | `rate_group_id` | Zahl | **Pflicht** | ja | Tarifgruppe aus `GET /rate-groups` |
 | `localization_id` | Zahl oder `null` | ja | ja | Nummernumschreibung (Wahlformat) |
-| `send_welcome_email` | `true` / `false` | ja | - | Willkommensmail mit Portal-Zugang senden, nur mit `email` |
+| `send_welcome_email` | `true` / `false` | ja | - | Willkommensmail senden (Kontonummer und Link zum Setzen des Passworts, kein Passwort), nur mit `email` |
 | `created_at`, `expires_at` | Zeitpunkt | - | - | Anlage, Ablauf des Kontos |
 
 ¹ Beim Anlegen ist `company_name` oder `first_name` nötig.
@@ -243,7 +243,7 @@ curl -s -X POST {{API_BASE}}customers \
       }'
 ```
 
-Antwort `201` mit dem Kunden und zusätzlich `portal_password`, dem Passwort für das Kundenportal. Es wird nur in dieser Antwort geliefert.
+Antwort `201` mit dem Kunden und zusätzlich `portal_password`, dem Passwort für das Kundenportal. Es wird nur in dieser Antwort geliefert; gespeichert ist nur ein Hash (Argon2id), niemand kann es später auslesen. Ohne Weitergabe setzt der Kunde sein Passwort selbst über „Passwort vergessen“ (Kontonummer und E-Mail-Adresse).
 
 ```json
 {
@@ -260,7 +260,7 @@ Antwort `201` mit dem Kunden und zusätzlich `portal_password`, dem Passwort fü
 }
 ```
 
-Ohne `send_welcome_email: true` verschickt das System keine Willkommensmail. SIP-Geräte werden nicht automatisch angelegt, siehe [SIP-Geräte](#sip-geraete).
+Ohne `send_welcome_email: true` verschickt das System keine Willkommensmail. Die Willkommensmail enthält nie ein Passwort, sondern den Link zur Seite „Passwort vergessen“. SIP-Geräte werden nicht automatisch angelegt, siehe [SIP-Geräte](#sip-geraete).
 
 ### PATCH /customers/{id}
 
