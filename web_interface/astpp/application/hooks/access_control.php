@@ -29,6 +29,7 @@ if (! defined('BASEPATH')) {
  *          'unless' => [n, v] rule applies only if URI parameter n differs from v
  *          'required' => true a missing value is denied too
  *          'empty' => true    check 'reseller': '' and '0' select the own customers (logintype 1)
+ *          'topup' => true    check 'product_buyable': also top-up products of the parents up to the admin
  * Values '' and '0' mean "no record" and are not checked (except check 'reseller' and
  * 'required').
  */
@@ -262,9 +263,9 @@ class Access_control
 		'orders/orders_users_terminate' => array(array('post:order_id', 'orders', 'col' => 'order_id')),
 		'orders/orders_reseller_accounts_dependency_dropdown' => array(array('post:reseller_id', 'reseller', 'empty' => true)),
 		'pages/checkout' => array(array(1, 'product_buyable')),
-		'pages/proceed_payment' => array(array(1, 'product_buyable')),
-		'pages/payment_proceed' => array(array(1, 'product_buyable')),
-		'pages/get_product_info' => array(array('post:id', 'product_buyable')),
+		'pages/proceed_payment' => array(array(1, 'product_buyable', 'topup' => true)),
+		'pages/payment_proceed' => array(array(1, 'product_buyable', 'topup' => true)),
+		'pages/get_product_info' => array(array('post:id', 'product_buyable', 'topup' => true)),
 		'pages/user_refill_coupon_number' => array(array(2, 'accounts', 'self' => true)),
 		'products/products_edit' => array(array(1, 'products')),
 		'products/products_save' => array(array('post:id', 'products')),
@@ -511,9 +512,12 @@ class Access_control
 			case 'own':
 				return $v === $me;
 			case 'product_buyable':
-				// products the account may buy: those of its parent (reseller or admin)
+				// products the account may buy: those of its parent (reseller or admin); with 'topup' also the
+				// top-up products (category 3) of the resellers above and the admin, which pages/topup_reseller
+				// lists without owner filter
 				$sql = "SELECT COUNT(*) AS n FROM products WHERE id = $v AND is_deleted = 0 AND (reseller_id = $parent"
-					. ($parent > 0 ? " OR id IN (SELECT product_id FROM reseller_products WHERE account_id = $parent)" : '') . ")";
+					. ($parent > 0 ? " OR id IN (SELECT product_id FROM reseller_products WHERE account_id = $parent)" : '')
+					. (! empty($rule['topup']) ? " OR (product_category = 3 AND reseller_id IN (" . implode(',', $this->ancestors()) . "))" : '') . ")";
 				return $this->count($sql) > 0;
 			case 'product_visible':
 				if ($this->role !== 'reseller') {
@@ -600,6 +604,18 @@ class Access_control
 				return "accountid = $me";
 		}
 		return ($owner === 'a' || $owner === 'ar') ? "accountid = $me" : null;
+	}
+
+	/** Parent accounts of the current account up to the admin (0). */
+	private function ancestors()
+	{
+		$ids = array();
+		for ($id = $this->parent; $id > 0 && count($ids) < 10 && ! in_array($id, $ids, true); ) {
+			$ids[] = $id;
+			$id = $this->count("SELECT COALESCE(MAX(reseller_id), 0) AS n FROM accounts WHERE id = $id");
+		}
+		$ids[] = 0;
+		return $ids;
 	}
 
 	private function count($sql)
