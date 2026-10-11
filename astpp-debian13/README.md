@@ -15,6 +15,7 @@ Sicherheitslücken der Herstellerinstallation.
 | `tools/astpp-deploy.sh` | bringt eine bestehende Installation auf den Stand von `astpp/` (mit Sicherung und Prüfungen) |
 | `tools/astpp-postinstall.php` | wandelt Seed-Passwörter in Hashes um, setzt Admin-Passwort, sperrt Demo-Konten |
 | `tools/astpp-smoketest.php` | lesender Funktionstest der Weboberfläche (`php8.5 tools/astpp-smoketest.php`) |
+| `tools/astpp-admin-allowlist-sync.php` | setzt `admin_allowed_ips` aus der zentralen Verwaltungsliste (Audit O5, Cron alle 15 min, siehe *Betrieb*) |
 | `tools/password-list-build.php` | baut die Liste häufiger Passwörter der Passwortregel (N13) aus den SecLists-Quellen neu |
 | `tools/npmfetch.sh`, `tools/gitfetch.sh` | Bibliotheken für `astpp/` herunterladen und prüfen (npm: SHA-512 der Registry, Composer: Commit laut Packagist) |
 | `tools/php85-port/` | Werkzeuge der PHP-8.5-Portierung (Umschreiber, Kompatibilitätstest, A/B-Testsuite) – auch für Code, der später aus Upstream übernommen wird |
@@ -308,7 +309,9 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
     Login-Rate-Limit, FreeSWITCH-Endpunkt nur auf localhost:8735; Let's Encrypt mit Auto-Renew
 13. Cron als `www-data` (`/etc/cron.d/astpp`), Logrotation
 14. nftables (SSH, 80/443, SIP mit Rate-Limit pro Quell-IP, RTP), fail2ban (SSH, SIP-Auth-Fehler, Web-Login)
-15. Funktionsprüfung (Web, xml_curl, ODBC, SIP-Profil, Event-Scheduler, Dienste)
+15. Admin-Freigabe (Audit O5): `astpp-admin-allowlist-sync`, `/etc/astpp/admin-allowlist.conf`, Cron;
+    aktiv nur mit `ADMIN_ALLOWLIST_SYNC="yes"`, sonst abgeschaltet (`/etc/astpp/admin-allowlist.disabled`)
+16. Funktionsprüfung (Web, xml_curl, ODBC, SIP-Profil, Event-Scheduler, Dienste)
 
 ## Nach der Installation
 
@@ -382,7 +385,73 @@ Aktivieren (wirkt ab der nächsten Anfrage, kein Neustart; der Deploy ändert di
    bleibt kein gültiger Eintrag übrig, kommt kein Admin mehr hinein.
 
 Ausgesperrt? Per SSH die Zeile leeren (`admin_allowed_ips = ""`) oder die eigene Adresse ergänzen –
-wirkt sofort.
+wirkt sofort. Mit dem Sync (unten) zuerst den Sync abschalten, sonst setzt er die Liste beim nächsten
+Lauf wieder (siehe *Notfall*).
+
+**Freigabe aus der zentralen Verwaltungsliste (Sync, Audit O5)**
+
+`astpp-admin-allowlist-sync` (im Paket `tools/astpp-admin-allowlist-sync.php`, installiert als
+`/usr/local/sbin/astpp-admin-allowlist-sync`, Cron `/etc/cron.d/astpp-admin-allowlist`) setzt
+`admin_allowed_ips` alle 15 Minuten aus den zentralen Listen:
+
+- **Quellen** in `/etc/astpp/admin-allowlist.conf`: `url[] = "https://…"` (nur https, Zertifikat und
+  Hostname werden geprüft, auch nach Weiterleitungen nur https), optional `extra[] = "…"` für weitere
+  eigene Adressen und `ca_file = "…"` für eine eigene CA. Standard (Installer):
+  `https://whitelist.example.net/lists/management-ipv4.txt` und `…/management-ipv6.txt`.
+- **Format:** eine Adresse oder ein Netz pro Zeile, Kommentare mit `#` oder `;`, CRLF und BOM erlaubt.
+  Einträge werden geprüft und normalisiert (Host-Bits maskiert, Einzeladressen ohne Präfix, Duplikate
+  entfernt).
+- **Breite Netze:** ASTPP nimmt IPv4-Netze ab `/8` und IPv6-Netze ab `/32` an (dieselbe Prüfung wie
+  für die Freigabelisten der API-Schlüssel, Schutz gegen Tippfehler wie `::/0`). Breitere IPv6-Netze
+  bis `/24` zerlegt das Werkzeug in `/32`-Netze – aus einem `/29` werden so acht `/32`-Netze. Gewählt statt einer Code-Änderung: dieselben Adressen,
+  und die Prüfung in ASTPP bleibt als Sicherheitsnetz für Handeinträge und API-Schlüssel unverändert.
+  IPv4 breiter als `/8` und IPv6 breiter als `/24` gelten als ungültig.
+- **Eigene Adressen** kommen immer dazu: `127.0.0.0/8`, `::1` und alle Adressen der Schnittstellen
+  (ohne link-lokale) – Smoketest und Deploy melden sich über `127.0.0.1` an.
+- **Schreiben:** atomar (temporäre Datei im selben Verzeichnis + `rename`) mit Besitzer, Gruppe und
+  Rechten der bisherigen Datei (`root:www-data 640`); nur die Zeile `admin_allowed_ips` ändert sich
+  (fehlt sie, wird sie angehängt); vorher wird geprüft, dass alle anderen Werte gleich gelesen werden.
+  Wirkt ab der nächsten Anfrage, kein Neustart.
+- **Kein Aussperren durch Fehler:** Abruffehler (TLS, HTTP-Status, Zeitüberschreitung, Liste über
+  256 KB), eine leere Liste oder ein einziger ungültiger Eintrag (z. B. eine HTML-Wartungsseite) →
+  es wird nichts geschrieben, der bisherige Wert bleibt (Exit-Status 1, Meldung im Journal).
+- **Abschalten:** `touch /etc/astpp/admin-allowlist.disabled` – der Sync ändert dann nichts mehr, der
+  aktuelle Wert bleibt stehen. Wieder einschalten: Datei löschen.
+- **Meldungen:** `journalctl -t astpp-admin-allowlist` (nur Änderungen und Fehler, unveränderte Läufe
+  nicht). Probelauf ohne Schreiben: `php8.5 /usr/local/sbin/astpp-admin-allowlist-sync --dry-run`.
+- **Installer:** `ADMIN_ALLOWLIST_SYNC="yes"` in `install.conf` richtet alles ein und gleicht sofort
+  ab; Standard `no` = installiert, aber abgeschaltet (Abschaltdatei). URLs: `ADMIN_ALLOWLIST_URLS`.
+  Der Deploy aktualisiert das Werkzeug, wenn es installiert ist (Einstellungen und Cron bleiben).
+
+Aktivieren auf einem bestehenden Server (als root; Stand des Repositories mit dem Werkzeug in
+`/root/astpp`):
+
+1. Werkzeug und Einstellungen:
+   `install -m 755 /root/astpp/astpp-debian13/tools/astpp-admin-allowlist-sync.php /usr/local/sbin/astpp-admin-allowlist-sync`
+   und `/etc/astpp/admin-allowlist.conf` (644) mit
+   `url[] = "https://whitelist.example.net/lists/management-ipv4.txt"` und
+   `url[] = "https://whitelist.example.net/lists/management-ipv6.txt"` anlegen.
+2. Probelauf: `php8.5 /usr/local/sbin/astpp-admin-allowlist-sync --dry-run` – die Liste muss die
+   Adresse enthalten, von der aus der Admin im Browser arbeitet (sonst zuerst die zentrale Liste
+   ergänzen oder `extra[]` setzen).
+3. Eine Admin-Sitzung im Browser offen lassen, dann `php8.5 /usr/local/sbin/astpp-admin-allowlist-sync`.
+4. In einem zweiten (privaten) Browserfenster als Admin anmelden; Smoketest:
+   `php8.5 /root/astpp/astpp-debian13/tools/astpp-smoketest.php`. Erst danach die erste Sitzung schliessen.
+5. Cron einrichten:
+   `sed 's/@PHP_VER@/8.5/' /root/astpp/astpp-debian13/files/cron/astpp-admin-allowlist > /etc/cron.d/astpp-admin-allowlist && chmod 644 /etc/cron.d/astpp-admin-allowlist`;
+   nach 15 Minuten `journalctl -t astpp-admin-allowlist` prüfen (ein unveränderter Lauf schreibt nichts).
+
+**Notfall bei Aussperrung** (SSH ist von `admin_allowed_ips` nicht betroffen):
+
+1. Sync anhalten: `touch /etc/astpp/admin-allowlist.disabled`.
+2. Dann entweder die eigene Adresse ergänzen (`extra[] = "<Adresse>"` in
+   `/etc/astpp/admin-allowlist.conf`, Abschaltdatei löschen,
+   `php8.5 /usr/local/sbin/astpp-admin-allowlist-sync`) oder die Beschränkung ganz aufheben:
+   `sed -i 's/^admin_allowed_ips[[:space:]]*=.*/admin_allowed_ips = ""/' /var/lib/astpp/astpp-config.conf`
+   (GNU `sed -i` behält Rechte und Besitzer) – wirkt sofort.
+3. Ursache: `journalctl -t astpp-admin-allowlist`, abgelehnte Logins mit Adresse:
+   `grep 'ASTPP O5' /var/log/astpp/php_errors.log`.
+4. Danach `rm /etc/astpp/admin-allowlist.disabled` – der nächste Lauf setzt die Liste wieder.
 
 **Content-Security-Policy (Audit O4)**
 
