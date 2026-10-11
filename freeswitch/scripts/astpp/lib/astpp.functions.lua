@@ -520,13 +520,20 @@ function package_calculation (destination_number,userinfo,call_direction)
 				if(remaining_minutes > 0 and package_maxlength ~= nil) then
 					package_maxlength = package_maxlength + remaining_minutes
 				elseif(remaining_minutes > 0) then
-					if (tonumber(balance) <= 0) then
+					-- ASTPP fork: balance is the global set by get_balance() in doauthorization();
+					-- if it was never set, count it as 0 instead of failing with a Lua error
+					local current_balance = tonumber(balance) or 0
+					if (current_balance <= 0) then
 						userinfo['balance'] = 100
 						userinfo['credit_limit'] = 200
-						Logger.notice("Actual Balance : "..balance)
+						Logger.notice("Actual Balance : "..current_balance)
 						Logger.notice("Allocating static balance for package calls, Balance : "..userinfo['balance'].. ", Credit limit : "..userinfo['credit_limit'])
 					end
-					userinfo['ACCOUNT_ERROR'] = ''
+					-- ASTPP fork: package minutes make up for a missing fund only (upstream cleared
+					-- any account error, also an inactive or expired account or a blocked number)
+					if (userinfo['ACCOUNT_ERROR'] ~= 'ACCOUNT_INACTIVE_DELETED' and userinfo['ACCOUNT_ERROR'] ~= 'ACCOUNT_EXPIRE' and userinfo['ACCOUNT_ERROR'] ~= 'DESTINATION_BLOCKED') then
+						userinfo['ACCOUNT_ERROR'] = ''
+					end
 					--remaining_sec = remaining_sec + 5
 					package_maxlength = remaining_minutes;
 					package_id = package_info['package_id']

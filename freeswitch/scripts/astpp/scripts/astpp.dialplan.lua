@@ -157,6 +157,14 @@ number_loop_str = number_loop(destination_number,'blocked_patterns')
 -- Do authorization
 userinfo = doauthorization("number",accountcode,call_direction,destination_number,number_loop_str,config)
 
+-- ASTPP fork: unknown or deleted account (no row, doauthorization() logged it): reject it here.
+-- Upstream went on and failed with a Lua error in the speed dial lookup (no account id), so the
+-- call was not routed at all, without announcement.
+if (userinfo['id'] == nil) then
+	error_xml_without_cdr(destination_number,"ACCOUNT_INACTIVE_DELETED",calltype,config['playback_audio_notification'],0)
+	return 0
+end
+
 --------------------------------------- SPEED DIAL --------------------------------------
 --if(string.len(destination_number) == 1 ) then
 	destination_number = get_speeddial_number(destination_number,userinfo['id'])
@@ -212,13 +220,9 @@ if(userinfo ~= nil) then
 		error_xml_without_cdr(destination_number,"DESTINATION_BLOCKED",calltype,config['playback_audio_notification'],userinfo['id'])
 		return 0
 	end
-    -- Get package information of customer	
-	package_array = package_calculation (destination_number,userinfo,call_direction)
-
-	if(userinfo['ACCOUNT_ERROR'] == 'NO_SUFFICIENT_FUND') then
-		error_xml_without_cdr(destination_number,"NO_SUFFICIENT_FUND",calltype,config['playback_audio_notification'],userinfo['id'])
-		return 0
-	end
+	-- ASTPP fork: expired and inactive accounts are rejected before the package lookup (upstream
+	-- checked them after it: package_calculation() then failed with a Lua error, because balance is
+	-- never set for such an account, and package minutes would even have cleared the account error)
     if(userinfo['ACCOUNT_ERROR'] == 'ACCOUNT_EXPIRE') then
 		error_xml_without_cdr(destination_number,"ACCOUNT_EXPIRE",calltype,config['playback_audio_notification'],userinfo['id'])
 		return 0
@@ -230,6 +234,13 @@ if(userinfo ~= nil) then
 		error_xml_without_cdr(destination_number,"ACCOUNT_INACTIVE_DELETED",calltype,config['playback_audio_notification'],accountid)
 		return 0
     end
+    -- Get package information of customer	
+	package_array = package_calculation (destination_number,userinfo,call_direction)
+
+	if(userinfo['ACCOUNT_ERROR'] == 'NO_SUFFICIENT_FUND') then
+		error_xml_without_cdr(destination_number,"NO_SUFFICIENT_FUND",calltype,config['playback_audio_notification'],userinfo['id'])
+		return 0
+	end
 
 	-- Code for Prefix based routing to select rate group
 	original_destination_number = destination_number	
@@ -356,7 +367,8 @@ if (userinfo ~= nil) then
 				end
 		end		
         if(reseller_userinfo['ACCOUNT_ERROR'] == 'ACCOUNT_INACTIVE_DELETED') then
-		    error_xml_without_cdr(destination_number,"ACCOUNT_INACTIVE_DELETED",calltype,config['playback_audio_notification'],userinfo)
+		    -- ASTPP fork: an account id, not the account table (upstream: Lua error in tonumber())
+		    error_xml_without_cdr(destination_number,"ACCOUNT_INACTIVE_DELETED",calltype,config['playback_audio_notification'],customer_userinfo['id'])
 		    return 0
 	    end
 
