@@ -59,7 +59,7 @@ class Access_control
 	/** Admin-only modules and methods (denied for resellers; customers/providers see the portal only). */
 	private static $admin_only = array(
 		'~^(trunk|calltype|cronsettings|localization|login_activity|audit|activity_report|addons|permissions)/~',
-		'~^accessnumber/(?!accessnumber_list(_json|_search|_clearsearchfilter)?$)~',
+		'~^accessnumber/(?!accessnumber_(list(_json|_search|_clearsearchfilter)?|export_data_xls)$)~',
 		'~^accounts/(admin|subadmin|callshop)_~',
 		'~^did/(did_import|did_preview_file|did_error_download)~',
 		'~^freeswitch/(fsgateway|fssipprofile|livecall)~',
@@ -77,7 +77,7 @@ class Access_control
 		'~^(user|apikeys|login|dashboard|signup)/~',
 		'~^pages/(services|topup_reseller|checkout|proceed_payment|get_product_info|payment_proceed|products_purchase|refill_coupon_add_view|user_refill_coupon_number)$~',
 		'~^products/products_topuplist$~',
-		'~^accessnumber/accessnumber_list(_json|_search|_clearsearchfilter)?$~',
+		'~^accessnumber/accessnumber_(list(_json|_search|_clearsearchfilter)?|export_data_xls)$~',
 		'~^invoices/invoice_main_download$~',
 		'~^freeswitch/user_fssipdevices_(save|delete_multiple)$~',
 		'~^reports/user_refillreport(_search|_clearsearchfilter)?$~',
