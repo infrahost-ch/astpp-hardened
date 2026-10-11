@@ -349,6 +349,32 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
   `application/modules/apikeys/docs/api.md`, OpenAPI-Beschreibung `docs/openapi.yaml` daneben.
 - Neue Menüpunkte erscheinen erst nach dem nächsten Login (das Menü wird beim Login aufgebaut).
 
+**Admin-Zugang auf freigegebene Netze beschränken (Audit O5)**
+
+Standardmässig aus. Ist `admin_allowed_ips` gesetzt, gilt für Administratorkonten (Typ -1 und 2):
+
+- Login nur von diesen Adressen/Netzen; sonst dieselbe Meldung wie bei falschem Passwort, der Grund
+  steht im PHP-Fehlerlog (`ASTPP O5: login of administrator account … refused from …`).
+- Jede Anfrage einer Admin-Sitzung wird geprüft, auch nach „Anmelden als“ Reseller/Kunde: von einer
+  anderen Adresse endet die Sitzung (Weiterleitung auf den Login, bei AJAX HTTP 403).
+- Admin-API-Schlüssel gelten zusätzlich nur von diesen Adressen (Reseller- und Kundenschlüssel nicht
+  betroffen; jeder Schlüssel hat ohnehin seine eigene Freigabeliste).
+- Reseller, Kunden und Provider sind nicht betroffen.
+
+Aktivieren (wirkt ab der nächsten Anfrage, kein Neustart; der Deploy ändert die Datei nicht):
+
+1. Die eigenen festen Adressen bzw. Netze bestimmen (Büro, VPN-Ausgang), IPv4 und IPv6. Erlaubt sind
+   einzelne Adressen und Netze ab `/8` (IPv4) bzw. `/32` (IPv6), Trennung mit Komma.
+2. In `/var/lib/astpp/astpp-config.conf` (root:www-data, 640) eintragen bzw. die Zeile ergänzen:
+   `admin_allowed_ips = "203.0.113.10, 198.51.100.0/24, 2001:db8::/48"` (Beispielwerte).
+3. Mit einer **zweiten, schon angemeldeten** Admin-Sitzung aus dem freigegebenen Netz prüfen, dass
+   die Oberfläche weiter funktioniert; erst dann die erste Sitzung schliessen.
+4. Ungültige Einträge werden ignoriert und protokolliert (`ASTPP O5: admin_allowed_ips: entry ignored`);
+   bleibt kein gültiger Eintrag übrig, kommt kein Admin mehr hinein.
+
+Ausgesperrt? Per SSH die Zeile leeren (`admin_allowed_ips = ""`) oder die eigene Adresse ergänzen –
+wirkt sofort.
+
 **Updates**
 - Debian-Sicherheitsupdates laufen automatisch (`unattended-upgrades`).
 - **PHP 8.5 (Sury) und FreeSWITCH** werden *nicht* automatisch aktualisiert – monatlich
