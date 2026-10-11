@@ -449,8 +449,12 @@ class order {
 					"reseller_id"=>$account_info->reseller_id,
 					"billing_date"=>gmdate("Y-m-d 00:00:01"),
 					"next_billing_date"=>(astpp_eq0($product_info->billing_days))?astpp_gmdate('Y-m-d 23:59:59', strtotime('+10 years')):astpp_gmdate("Y-m-d 23:59:59",strtotime("+".(astpp_n($product_info->billing_days)-1)." days")),
-					"is_terminated"=>0,
-					"termination_date"=>"",
+					// ASTPP fork (O10): an order waiting for a PayPal payment is not active yet - upstream's
+					// packages_view counted its free minutes at once (PaymentStatus only ends it after 30
+					// minutes); pages/paypal_response activates it after the verified payment
+					"is_terminated"=>($product_info->payment_status === "PENDING") ? 1 : 0,
+					"termination_date"=>($product_info->payment_status === "PENDING") ? gmdate("Y-m-d H:i:s") : "",
+					"termination_note"=>($product_info->payment_status === "PENDING") ? "Waiting for payment" : "",
 					"from_currency"=>$from_currency,
 					"exchange_rate"=>$account_currency_info['currencyrate'],
 					"to_currency"=>$account_currency_info['currency']

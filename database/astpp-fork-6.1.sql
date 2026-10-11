@@ -57,3 +57,29 @@ UPDATE userlevels U
   JOIN menu_modules M ON M.id = 9002
    SET U.module_permissions = CONCAT(U.module_permissions, ',', M.id)
  WHERE U.userlevelid = 0 AND NOT FIND_IN_SET(M.id, U.module_permissions);
+
+-- PayPal payments (audit O10): every PayPal form is created on the server with the amount, the
+-- currency and the receiver it expects; the IPN (pages/paypal_response) is verified with PayPal
+-- (cmd=_notify-validate), compared with this row and booked once (txn_id unique, status 0 -> 1).
+-- kind: order (ref_id = orders.id), topup, invoice (ref_id = invoices.id); credit = amount to book
+-- in base currency.
+CREATE TABLE IF NOT EXISTS `paypal_payments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `token` char(32) NOT NULL,
+  `accountid` int(11) NOT NULL,
+  `kind` varchar(10) NOT NULL,
+  `ref_id` int(11) NOT NULL DEFAULT 0,
+  `amount` decimal(20,5) NOT NULL,
+  `currency` char(3) NOT NULL,
+  `credit` decimal(20,5) NOT NULL,
+  `receiver` varchar(127) NOT NULL,
+  `receiver_reseller_id` int(11) NOT NULL DEFAULT 0,
+  `status` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0-Pending,1-Booked',
+  `txn_id` varchar(32) DEFAULT NULL,
+  `created_date` datetime NOT NULL,
+  `booked_date` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`),
+  UNIQUE KEY `txn_id` (`txn_id`),
+  KEY `accountid` (`accountid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

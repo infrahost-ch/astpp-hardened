@@ -1162,148 +1162,15 @@ class Invoices extends MX_Controller
         echo astpp_number_format($amount, 2);
     }
 
+    /*
+     * ASTPP fork (O10): upstream booked an invoice payment from the POST data of the PayPal return
+     * (no question to PayPal; account from the field "custom", amount from payment_gross). Invoice
+     * payments with PayPal are booked only by the verified IPN in pages/paypal_response.
+     */
     function invoice_list_responce()
     {
-        $response_arr = $_POST;
-        /*
-         * $response_arr = array(
-         * 'payer_email' => 'hard_patel09@yahoo.com',
-         * 'payer_id' => 'B329Y9JFAJUMJ',
-         * 'payer_status' => 'Pending',
-         * 'first_name' => 'Rodney',
-         * 'last_name' => 'Carmichael',
-         * 'txn_id' => '6PG83205H56085047',
-         * 'mc_currency' => 'USD',
-         * 'mc_gross' => '5.00',
-         * 'protection_eligibility' => 'INELIGIBLE',
-         * 'payment_gross' => '5.00',
-         * 'payment_status' => 'Pending',
-         * 'pending_reason' => 'unilateral',
-         * 'payment_type' => 'instant',
-         * 'item_name' => 'asdsasdads',
-         * 'item_number' => '4',
-         * 'quantity' => '1',
-         * 'txn_type' => 'web_accept',
-         * 'payment_date' => '2019-04-24T06:14:13Z',
-         * 'business' => 'your@paypal.com',
-         * 'notify_version' => 'UNVERSIONED',
-         * 'custom' => '7',
-         * 'verify_sign' => 'A76bwlv2Z01mOclk1JxeCgsePvJ8ARjvcfASrPU3Mwwb6Cqm.77RpV4-',
-         * );
-         */
-        $logintype = $this->session->userdata('logintype');
-        if (($response_arr["payment_status"] == "Pending" || $response_arr["payment_status"] == "Complete" || $response_arr["payment_status"] == "Completed")) {
-            $invoice_id = $response_arr['item_number'];
-            $amount = $response_arr['payment_gross'];
-            $description = $response_arr['item_name'];
-            $debit = '';
-
-            $paypal_fee = $this->db_model->getSelect("value", "system", array(
-                "name" => "paypal_fee",
-                "sub_group" => "paypal"
-            ));
-            $paypal_fee = $paypal_fee->result();
-            $paypal_fee = $paypal_fee[0]->value;
-
-            $paypalfee = (astpp_eq0($paypal_fee)) ? '0' : $response_arr["mc_gross"];
-
-            $account_data = $this->db_model->getSelect("*", "accounts", array(
-                "id" => $response_arr["custom"],
-                "deleted" => 0
-            ));
-
-            if ($account_data->num_rows > 0) {
-                $account_data = $account_data->result_array();
-                $account_data = $account_data[0];
-                $currency = $this->db_model->getSelect('currency,currencyrate', 'currency', array(
-                    "id" => $account_data["currency_id"]
-                ));
-                $currency = $currency->result_array();
-                $currency = $currency[0];
-                $date = date('Y-m-d H:i:s');
-
-                $invoice_total_query = $this->db_model->getSelect("*", "view_invoices", array(
-                    "id" => $invoice_id
-                ));
-                if ($invoice_total_query->num_rows() > 0) {
-                    $invoice_total_query = $invoice_total_query->result_array();
-                    $debit = $invoice_total_query[0]['debit'];
-                    $debit = astpp_number_format($debit, 2);
-
-                    $query = "select  sum(credit) as credit,exchange_rate,base_currency,account_currency from invoice_details where invoiceid = " . $invoice_id . " Group By invoiceid";
-                    $invoice_total_query = $this->db->query($query);
-                    if ($invoice_total_query->num_rows() > 0) {
-                        $invoice_total_query = $invoice_total_query->result_array();
-                        $total_debit = $invoice_total_query[0]['credit'];
-                        $credit_total = astpp_n($total_debit) + astpp_n($amount);
-                    }
-                    $account_balance = $account_data['posttoexternal'] == 1 ? astpp_n($account_data['credit_limit']) - (astpp_n($account_data['balance'])) : $account_data['balance'];
-
-                    if ($debit >= $credit_total) {
-                        if ($amount > $debit) {
-                            $this->session->set_flashdata('astpp_notification', gettext('Invoice payment amount should be higher then the invoice amount.'));
-                            redirect(base_url() . 'invoices/invoice_summary/' . $invoice_id);
-                        }
-                        $payment_array = array(
-                            "is_apply_tax" => "false",
-                            "tax" => 0,
-                            'payment_by' => "Paypal",
-                            'price' => $amount,
-                            "payment_fee" => 0,
-                            "user_currency" => isset($invoice_total_query[0]['account_currency']) ? $invoice_total_query[0]['account_currency'] : 0,
-                            "currency_rate" => isset($invoice_total_query[0]['exchange_rate']) ? $invoice_total_query[0]['exchange_rate'] : 0,
-                            "base_currency" => isset($invoice_total_query[0]['base_currency']) ? $invoice_total_query[0]['base_currency'] : 0,
-                            "invoiceid" => (astpp_gt($invoice_id, 0)) ? $invoice_id : 0,
-                            "order_item_id" => 0,
-                            "charge_type" => "INVPAY",
-                            "product_category" => 0,
-                            "is_tax" => 0,
-                            "transaction_details" => json_encode($response_arr),
-                            "transaction_id" => $response_arr["txn_id"],
-                            "description" => "Invoice payment for unpaid",
-                            'invoice_type' => "debit"
-                        );
-                        $payment_array['response_array'] = $response_arr;
-                        $payment_array['INV_DIRECT_PAY'] = "true";
-                        $payment_array['name'] = "Invoice Payment";
-                        $payment_array['is_update_balance'] = "true";
-                        $payment_array['payment_by'] = "Paypal";
-                        $payment_array['description'] = "Refill Done success";
-                        $invoiceid = $this->payment->add_payments_transcation($payment_array, $account_data, $currency);
-                        $reseller_id = (astpp_gt($account_data['reseller_id'], 0)) ? $account_data['reseller_id'] : 0;
-                        $reseller_data = $this->db_model->getSelect('*', 'accounts', array(
-                            'id' => $reseller_id,
-                            'status' => 0,
-                            'deleted' => 0
-                        ));
-
-                        if ($reseller_data->num_rows > 0) {
-
-                            $reseller_data = $reseller_data->result_array()[0];
-                            unset($payment_array['invoiceid']);
-                            $payment_array['add_invoice_credit'] = "true";
-
-                            $this->payment->add_payments_transcation($payment_array, $reseller_data, $currency);
-                        }
-                    } else {
-                        if ($logintype = 0 || $logintype = 3) {
-                            $this->session->set_flashdata('astpp_notification', gettext('Invoice payment amount should be higher then the invoice amount.'));
-                            redirect(base_url() . 'user/user_invoice_payment/' . $invoice_id);
-                        } else {
-                            $this->session->set_flashdata('astpp_notification', gettext('Invoice payment amount should be higher then the invoice amount.'));
-                            redirect(base_url() . 'invoices/invoice_summary/' . $invoice_id);
-                        }
-                    }
-
-                    $this->session->set_flashdata('astpp_errormsg', gettext('Invoice payment done successfully!'));
-
-                    redirect(base_url() . 'user/user_invoices_list/');
-                }
-            } else {
-                $this->session->set_flashdata('astpp_notification', gettext('Account Not Found.'));
-                redirect(base_url() . 'user/user_invoice_payment/' . $invoice_id);
-            }
-        }
+        log_message('error', 'invoices/invoice_list_responce: old PayPal URL called, nothing booked');
+        show_404();
     }
 
     function invoice_admin_payment()

@@ -361,141 +361,16 @@ class Login extends MX_Controller
         redirect(base_url());
     }
 
+    /*
+     * ASTPP fork (O10): upstream credited the amount from the POST field "custom" for any request
+     * that named a pending top-up (no question to PayPal, also with PayPal switched off). PayPal
+     * payments are booked only by the verified IPN in pages/paypal_response; this old notify/return
+     * URL books nothing.
+     */
     function paypal_response()
     {
-        if (astpp_count($_POST) > 0) {
-            $response_arr = $_POST;
-
-            $logger = (array) $this->db->get_where("system", array(
-                "name" => "log_path",
-                "group_title" => "global"
-            ))->first_row();
-            $logger_path = $logger['value'];
-            $fp = fopen($logger_path . "astpp_payment.log", "a+");
-            $date = date("Y-m-d H:i:s");
-            fwrite($fp, "====================" . $date . "===============================\n");
-            foreach ($response_arr as $key => $value) {
-                fwrite($fp, $key . ":::>" . $value . "\n");
-            }
-
-            $payment_transaction = (array) $this->db->get_where("payment_transaction", array(
-                "transaction_details" => $response_arr['item_number'],
-                "amount" => "0",
-                "actual_amount" => "0",
-                "user_currency" => ""
-            ))->first_row();
-            $accountid = $payment_transaction['accountid'];
-
-            $this->db->where(array(
-                "transaction_details" => $response_arr['item_number']
-            ));
-            $this->db->delete("payment_transaction");
-
-            $balance_amt = $actual_amount = $response_arr["custom"];
-
-            $paypal_fee = (array) $this->db->get_where("system", array(
-                "name" => "paypal_fee",
-                "group_title" => "paypal"
-            ))->first_row();
-            $paypal_fee = $paypal_fee['value'];
-            $paypalfee = (astpp_eq0($paypal_fee)) ? '0' : $response_arr["mc_gross"];
-
-            if (($response_arr["payment_status"] == "Pending" || $response_arr["payment_status"] == "Complete" || $response_arr["payment_status"] == "Completed") && $accountid != '') {
-
-                $paypal_tax = (array) $this->db->get_where("system", array(
-                    "name" => "paypal_tax",
-                    "group_title" => "paypal"
-                ))->first_row();
-                $paypal_tax = $paypal_tax['value'];
-
-                $account_data = (array) $this->db->get_where("accounts", array(
-                    "id" => $accountid
-                ))->first_row();
-
-                $currency = (array) $this->db->get_where('currency', array(
-                    "id" => $account_data["currency_id"]
-                ))->first_row();
-                $date = date('Y-m-d H:i:s');
-
-                $payment_trans_array = array(
-                    "accountid" => $accountid,
-                    "amount" => $response_arr["payment_gross"],
-                    "tax" => "1",
-                    "payment_method" => "Paypal",
-                    "actual_amount" => $actual_amount,
-                    "paypal_fee" => $paypalfee,
-                    "user_currency" => $currency["currency"],
-                    "currency_rate" => $currency["currencyrate"],
-                    "transaction_details" => json_encode($response_arr),
-                    "date" => $date
-                );
-                $paymentid = $this->db->insert('payment_transaction', $payment_trans_array);
-                $parent_id = astpp_gt($account_data['reseller_id'], 0) ? $account_data['reseller_id'] : '-1';
-                $payment_arr = array(
-                    "accountid" => $accountid,
-                    "payment_mode" => "1",
-                    "credit" => $balance_amt,
-                    "type" => "PAYPAL",
-                    "payment_by" => $parent_id,
-                    "notes" => "Payment Made by Paypal on date:-" . $date,
-                    "paypalid" => $paymentid,
-                    "txn_id" => $response_arr["txn_id"],
-                    'payment_date' => astpp_gmdate('Y-m-d H:i:s', strtotime($response_arr['payment_date']))
-                );
-                $this->db->insert('payments', $payment_arr);
-                $this->db->select('invoiceid');
-                $this->db->order_by('id', 'desc');
-                $this->db->limit(1);
-                $last_invoice_result = (array) $this->db->get('invoices')->first_row();
-                $last_invoice_ID = isset($last_invoice_result['invoiceid']) && astpp_gt($last_invoice_result['invoiceid'], 0) ? $last_invoice_result['invoiceid'] : 1;
-                $reseller_id = astpp_gt($account_data['reseller_id'], 0) ? $account_data['reseller_id'] : 0;
-                $where = "accountid IN ('" . $reseller_id . "','1')";
-                $this->db->where($where);
-                $this->db->select('*');
-                $this->db->order_by('accountid', 'desc');
-                $this->db->limit(1);
-                $invoiceconf = $this->db->get('invoice_conf');
-                $invoiceconf = (array) $invoiceconf->first_row();
-                $invoice_prefix = $invoiceconf['invoice_prefix'];
-
-                $due_date = astpp_gmdate("Y-m-d H:i:s", strtotime(gmdate("Y-m-d H:i:s") . " +" . $invoiceconf['interval'] . " days"));
-                $invoice_id = $this->generate_receipt($account_data['id'], $balance_amt, $account_data, astpp_n($last_invoice_ID) + 1, $invoice_prefix, $due_date);
-                $details_insert = array(
-                    'created_date' => $date,
-                    'credit' => $balance_amt,
-                    'debit' => '-',
-                    'accountid' => $account_data["id"],
-                    'reseller_id' => $account_data['reseller_id'],
-                    'invoiceid' => $invoice_id,
-                    'description' => "Payment Made by Paypal on date:-" . $date,
-                    'item_type' => 'PAYMENT',
-                    'before_balance' => $account_data['balance'],
-                    'after_balance' => astpp_n($account_data['balance']) + astpp_n($balance_amt)
-                );
-                $this->db->insert("invoice_details", $details_insert);
-                $this->db_model->update_balance($balance_amt, $account_data["id"], "credit");
-                $this->session->set_flashdata('astpp_errormsg', 'Payment done successfully!');
-                redirect(base_url() . 'user/user/');
-            } else {
-                $response_arr['astpp_status'] = "Invalid request. No transaction id found in database.";
-
-                $payment_trans_array = array(
-                    "accountid" => ($accountid) ? $accountid : 0,
-                    "amount" => $response_arr["payment_gross"],
-                    "tax" => "1",
-                    "payment_method" => "Paypal",
-                    "actual_amount" => $actual_amount,
-                    "paypal_fee" => $paypalfee,
-                    "user_currency" => ($currency["currency"]) ? $currency["currency"] : '',
-                    "currency_rate" => ($currency["currencyrate"]) ? $currency["currencyrate"] : '',
-                    "transaction_details" => json_encode($response_arr),
-                    "date" => $date
-                );
-                $paymentid = $this->db->insert('payment_transaction', $payment_trans_array);
-                $this->session->set_flashdata('astpp_notification', gettext('Payment transaction invalid. Please contact Administrator.'));
-            }
-        }
-        redirect(base_url() . 'user/user/');
+        log_message('error', 'login/paypal_response: old PayPal URL called, nothing booked');
+        show_404();
     }
 
     function generate_receipt($accountid, $amount, $accountinfo, $last_invoice_ID, $invoice_prefix, $due_date)

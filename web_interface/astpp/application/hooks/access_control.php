@@ -77,7 +77,7 @@ class Access_control
 	/** Customer portal (customers, providers): everything else is denied. */
 	private static $portal = array(
 		'~^(user|apikeys|login|dashboard|signup)/~',
-		'~^pages/(services|topup_reseller|checkout|proceed_payment|get_product_info|payment_proceed|products_purchase|refill_coupon_add_view|user_refill_coupon_number)$~',
+		'~^pages/(services|topup_reseller|checkout|proceed_payment|get_product_info|payment_proceed|products_purchase|refill_coupon_add_view|user_refill_coupon_number|paypal_return)$~',
 		'~^products/products_topuplist$~',
 		'~^accessnumber/accessnumber_(list(_json|_search|_clearsearchfilter)?|export_data_xls)$~',
 		'~^invoices/invoice_main_download$~',

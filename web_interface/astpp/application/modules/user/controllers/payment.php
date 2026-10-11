@@ -35,42 +35,51 @@ class Payment extends MX_Controller
         $this->load->helper('form');
     }
 
+    /*
+     * ASTPP fork (O10): top-up with PayPal. Upstream stored a placeholder payment_transaction on
+     * every page view and let the browser post the amount straight to PayPal; login/paypal_response
+     * then credited the field "custom" without asking PayPal. Now the page posts the amount to
+     * checkout(), which stores the expected payment (libraries/astpp/paypal.php); only the verified
+     * IPN books it.
+     */
     function index()
     {
         $account_data = $this->session->userdata("accountinfo");
-        $data["accountid"] = $account_data["id"];
+        $this->load->library('astpp/paypal');
+        $account = (array) $this->db->get_where('accounts', array('id' => $account_data['id']))->row_array();
+        $settings = $this->paypal->for_account($account);
+        if ($settings === null || $account['posttoexternal'] == 1) {
+            $this->session->set_flashdata('astpp_notification', gettext('PayPal is not available.'));
+            redirect(base_url() . 'user/user/');
+            exit();
+        }
         $data["accountid"] = $account_data["id"];
         $data["page_title"] = gettext("Recharge");
-
-        $system_config = common_model::$global_config['system_config'];
-        if (astpp_eq0($system_config["paypal_mode"])) {
-            $data["paypal_url"] = $system_config["paypal_url"];
-            $data["paypal_email_id"] = $system_config["paypal_id"];
-        } else {
-            $data["paypal_url"] = $system_config["paypal_sandbox_url"];
-            $data["paypal_email_id"] = $system_config["paypal_sandbox_id"];
-        }
-        $data["paypal_tax"] = $system_config["paypal_tax"];
-
+        $data["paypal_tax"] = $settings['fee'];
         $data["from_currency"] = $this->common->get_field_name('currency', 'currency', $account_data["currency_id"]);
         $data["to_currency"] = Common_model::$global_config['system_config']['base_currency'];
-        $this->db->where(array(
-            "amount" => "0",
-            "actual_amount" => "0",
-            "user_currency" => "",
-            "accountid" => $data["accountid"]
-        ));
-        $this->db->delete("payment_transaction");
-        $this->load->helper('string');
-        $data['item_number'] = random_string('alnum', 80);
-        $this->db->insert("payment_transaction", array(
-            "accountid" => $data["accountid"],
-            "payment_method" => "Paypal",
-            "transaction_details" => $data['item_number'],
-            "date" => gmdate("Y-m-d H:i:s")
-        ));
-
         $this->load->view("user_payment", $data);
+    }
+
+    function checkout()
+    {
+        $account_data = $this->session->userdata("accountinfo");
+        $this->load->library('astpp/paypal');
+        $this->load->library('astpp/order');
+        $account = (array) $this->db->get_where('accounts', array('id' => $account_data['id']))->row_array();
+        $settings = $this->paypal->for_account($account);
+        // credit in base currency as converted by user/user_convert_amount (field custom)
+        $credit = order::amount(str_replace(',', '', trim((string) $this->input->post('custom'))), paypal::MAX_AMOUNT);
+        $row = null;
+        if ($settings !== null && $account['posttoexternal'] != 1 && $credit !== false && $credit > 0) {
+            $row = $this->paypal->create($account, 'topup', 0, $credit + ($credit * $settings['fee'] / 100), $credit, $settings);
+        }
+        if ($row === null) {
+            $this->session->set_flashdata('astpp_notification', gettext('PayPal is not available or the amount is invalid.'));
+            redirect(base_url() . 'user/user_payment/');
+            exit();
+        }
+        $this->load->view('paypal_redirect', $this->paypal->form_data($row, $settings, 'Recharge'));
     }
 
     function convert_amount($amount)

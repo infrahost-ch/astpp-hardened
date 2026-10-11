@@ -1965,6 +1965,9 @@ function user_payment($action = "")
     if ($action == "GET_AMT") {
         $amount = $this->input->post("value", true);
         $this->user_convert_amount($amount);
+    } elseif ($action == "CHECKOUT" && $this->input->server('REQUEST_METHOD') === 'POST') {
+        // ASTPP fork (O10): store the PayPal payment on the server, then redirect to PayPal
+        $this->payment->checkout();
     } else {
         $this->payment->index();
     }
@@ -2825,17 +2828,32 @@ function user_orders_termination()
 
 function user_invoice_unpaid_pay()
 {
-    $paymnet_array = $this->input->post();
-    $data['paypal_url'] = $paymnet_array['paypal_url'];
-    $data['total_amt'] = $paymnet_array['amount'];
-    $data['paypal_email_id'] = $paymnet_array['business'];
-    $data['item_name'] = (isset($paymnet_array['item_name']) && $paymnet_array['item_name'] != '') ? $paymnet_array['item_name'] : "Product";
-    $data['account_id'] = $paymnet_array['custom'];
-    $data['order_id'] = $paymnet_array['item_number'];
-    $data['to_currency'] = $paymnet_array['currency_code'];
-    $data['notify_url'] = $paymnet_array['notify_url'];
-    $data['return'] = $paymnet_array['return'];
-    $data['cancel_return'] = $paymnet_array['cancel_return'];
+    // ASTPP fork (O10): upstream built the PayPal form from POST fields (receiver, amount, notify and
+    // return URL). Now: own unpaid invoice, amount (base currency, from the convert field) > 0 and at
+    // most the open amount, pending payment stored on the server (libraries/astpp/paypal.php).
+    $accountinfo = $this->session->userdata('accountinfo');
+    $this->load->library('astpp/order');
+    $this->load->library('astpp/paypal');
+    $account = (array) $this->db->get_where('accounts', array('id' => $accountinfo['id']))->row_array();
+    $invoice_id = (int) $this->input->post('item_number');
+    $invoice = $this->db->get_where('view_invoices', array('id' => $invoice_id, 'accountid' => $accountinfo['id']))->row_array();
+    $settings = $this->paypal->for_account($account);
+    $amount = order::amount(trim((string) $this->input->post('amount')), paypal::MAX_AMOUNT);
+    $paid = 0;
+    if (! empty($invoice)) {
+        $paid = astpp_n($this->db->select_sum('credit')->get_where('invoice_details', array('invoiceid' => $invoice_id))->row()->credit);
+    }
+    $open = empty($invoice) ? 0 : astpp_n($invoice['debit']) - $paid;
+    $row = null;
+    if (! empty($invoice) && $settings !== null && $amount !== false && $amount > 0 && $amount <= $open + 0.005) {
+        $row = $this->paypal->create($account, 'invoice', $invoice_id, $amount + ($amount * $settings['fee'] / 100), $amount, $settings);
+    }
+    if ($row === null) {
+        $this->session->set_flashdata('astpp_notification', gettext('PayPal is not available or the amount is invalid.'));
+        redirect(base_url() . 'user/user_invoices_list/');
+        exit();
+    }
+    $data = $this->paypal->form_data($row, $settings, 'Invoice ' . $invoice_id);
     $this->load->view("paypal_redirect", $data);
 }
 

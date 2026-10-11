@@ -54,7 +54,7 @@
         </div>
         <div class="card float-right col-md-6">
             <div class="p-4">
-		<form method="post" id="topup_form" action="<?php base_url().'pages/stripe_response/'?>">
+		<form method="post" id="topup_form" action="" onsubmit="return false;">
                   <label class="font-weight-bold"><?php echo gettext("Selected Plan"); ?></label>
                   <br>
                   <?php echo gettext("Amount Without Tax"); ?><h1 id="amount_without_tax_label"></h1>
@@ -82,8 +82,7 @@
 </section>
 <? endblock() ?>
 <? end_extend() ?>
-<script src="https://js.stripe.com/v3/"></script>
-<script src="https://checkout.stripe.com/checkout.js"></script>
+<?php /* ASTPP fork: Stripe scripts (third-party JS on every top-up page) removed - no Stripe payment exists server-side */ ?>
 <script type="text/javascript">
 
 $(document).ready(function(){
