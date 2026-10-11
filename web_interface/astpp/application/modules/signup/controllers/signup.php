@@ -526,7 +526,10 @@ class Signup extends MX_Controller
 
     function successpassword()
     {
-        $this->load->view('view_successpassword');
+        // ASTPP fork (M8): end of the password reset (view_successpassword expected undefined variables)
+        $this->load->view('view_reset_password', array(
+            'done' => true
+        ));
     }
 
     function send_otp($username, $country_id, $account_id, $mg_type)
@@ -562,6 +565,12 @@ class Signup extends MX_Controller
 
     function check_otp()
     {
+        // ASTPP fork (M8): only the signup uses this check (the password reset has its own code
+        // check in reset_password); with the signup switched off it creates no account.
+        if (Common_model::$global_config['system_config']['enable_signup'] == 1) {
+            echo 'false';
+            return;
+        }
         $post = $this->input->post();
         $current_date = gmdate('Y-m-d H:i:s');
         $this->db->where("number", $post['number']);
@@ -631,42 +640,8 @@ class Signup extends MX_Controller
                 }
                 echo $message;
             } else {
-                $account_arr = (array) $this->db->get_where("accounts", array(
-                    "id" => $post['account_id']
-                ))->first_row();
-                $otp_verify = (array) $this->db->get_where("account_unverified", array(
-                    "number" => $account_arr["number"]
-                ))->first_row();
-                $password = $this->common->encode($this->common->generate_password());
-                if ($otp_verify['otp'] == $post['otp_number']) {
-                    $this->db->where("id", $post['account_id']);
-                    $this->db->update("accounts", array(
-                        "password" => $password
-                    ));
-                    $sipdevice_array = array(
-                        'dir_params' => json_encode(array(
-                            "password" => $this->common->decode($password),
-                            'vm-enabled' => "true",
-                            "vm-password" => $this->common->decode($password),
-                            "vm-mailto" => $account_arr['email'],
-                            "vm-attach-file" => "true",
-                            "vm-keep-local-after-email" => "true",
-                            "vm-email-all-messages" => "true"
-                        ))
-                    );
-                    $this->db->where("accountid", $post['account_id']);
-                    $this->db->where("username", $account_arr['number']);
-                    $this->db->update("sip_devices", $sipdevice_array);
-                    $account_arr = (array) $this->db->get_where("accounts", array(
-                        "id" => $post['account_id']
-                    ))->first_row();
-                    $account_arr['password'] = $this->common->decode($account_arr['password']);
-                    // $last_id = $this->common->mail_to_users("new_password", $account_arr, "", "");
-                    $last_id = $this->common->mail_to_users("reset_password", $account_arr, "", "");
-                    if (! empty($last_id)) {
-                        $message = 'forgot';
-                    }
-                }
+                // ASTPP fork (M8): the old password reset (account id from the POST, code never
+                // void, new password mailed and set on the SIP device) - see reset_password
                 echo $message;
             }
         } else {
@@ -677,11 +652,20 @@ class Signup extends MX_Controller
     function resend_otp()
     {
         $post = $this->input->post();
+        // ASTPP fork (M8): signup only; a new reset code comes from confirmpassword
+        if (Common_model::$global_config['system_config']['enable_signup'] == 1) {
+            return;
+        }
         if (! empty($post)) {
             $acc_id = $post['account_id'];
             $otp_number = $post['otp_number'];
             $number = $post['number'];
             $email = $post['email'];
+            $this->db->where("number", $number);
+            $this->db->where("email", $email);
+            if ($this->db->count_all_results("accounts") > 0) {
+                return; // existing account: not a signup (M8)
+            }
             $numberlength = common_model::$global_config['system_config']['pinlength'];
             $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
             $uniq_rendno = astpp_random_int(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
@@ -719,6 +703,32 @@ class Signup extends MX_Controller
         }
     }
 
+    /*
+     * ASTPP fork (audit M8): password reset without account enumeration.
+     *
+     * Upstream answered "forgot password" with different messages for unknown, deleted and
+     * inactive accounts and showed the code page (with the account id in a hidden field) only
+     * for existing accounts. The code lived in account_unverified (with a copy of the password),
+     * check_otp took the account id from the POST, the code stayed valid after use and could be
+     * guessed without limit; the new password was mailed and also set as password of the SIP
+     * device named like the account. Now:
+     *  - confirmpassword shows the same page with the same text for every input; only for an
+     *    active customer/reseller/provider account with this number AND e-mail address a code is
+     *    stored and mailed (template forgot_password_confirmation);
+     *  - codes: RESET_CODE_DIGITS digits, stored as HMAC in password_resets, valid otp_expire
+     *    minutes (default 30), RESET_MAX_ATTEMPTS attempts each, at most RESET_MAX_CODES codes per
+     *    account and hour, void after use;
+     *  - reset_password takes code and new password in one request and answers every failure
+     *    with the same message. The user chooses the password (no password in a mail), the
+     *    account gets the notification new_password, SIP devices are not touched;
+     *  - the answers take at least RESET_MIN_TIME seconds, so the mail work for an existing
+     *    account is not measurable; nginx limits the requests per address (astpp_auth).
+     */
+    const RESET_CODE_DIGITS = 8;
+    const RESET_MAX_ATTEMPTS = 5;
+    const RESET_MAX_CODES = 3;
+    const RESET_MIN_TIME = 0.5;
+
     function forgotpassword()
     {
         $this->load->view('view_forgotpassword');
@@ -726,118 +736,167 @@ class Signup extends MX_Controller
 
     function confirmpassword()
     {
-        $current_date = gmdate('Y-m-d H:i:s');
-        $email = $_POST['email'];
-        $number = $_POST['number'];
-        $post_data['email'] = $email;
-        $post_data['number'] = $number;
-        $data['value']['email'] = $email;
-        $data['value']['number'] = $number;
-        unset($_POST['action']);
-        $where = array(
-            'email' => $email
-        );
-        $this->db->where($where);
-        $this->db->or_where('number', $email);
-        $cnt_result = $this->db_model->countQuery("*", 'accounts', "");
-
-        if (! empty($email)) {
-            $names = array(
-                '0',
-                '1',
-                '3'
+        $start = microtime(true);
+        if ($this->input->server('REQUEST_METHOD') !== 'POST') {
+            redirect(base_url() . 'forgotpassword/');
+        }
+        $number = trim((string) $this->input->post('number'));
+        $email = trim((string) $this->input->post('email'));
+        if ($number === '' || $email === '') {
+            $data['value'] = array(
+                'number' => $number,
+                'email' => $email
             );
-            $this->db->where_in('type', $names);
-            $where_arr = array(
-                "email" => $email
-            );
-            $this->db->where($where_arr);
-            $this->db->where('number', $number);
-            $this->db->order_by('id', 'DESC');
-            $acountdata = $this->db_model->getSelect("*", "accounts", "");
+            $data['error']['number'] = "<label class='error_label'><span id='error_mail' class='text-danger'>" . gettext("Please enter your account number and e-mail address.") . "</span></label>";
+            $this->load->view('view_forgotpassword', $data);
+            return;
+        }
+        $account = $this->reset_account($number, $email);
+        if (! empty($account)) {
+            $this->reset_issue_code($account);
+        }
+        $this->reset_wait($start);
+        $this->load->view('view_reset_password', array(
+            'number' => $number,
+            'email' => $email,
+            'sent' => true
+        ));
+    }
 
-            if ($acountdata->num_rows() > 0) {
-                $user_data = $acountdata->result_array();
-                $user_data = $user_data[0];
-                if ($user_data['deleted'] == 1) {
-                    $data['error']['number'] = "<label class='error_label'><span id='error_mail' class='text-danger'>".gettext("Your account has been deleted. Please contact administrator for more information.")."</span></label>";
-                    $this->load->view('view_forgotpassword', $data);
-                    exit();
-                }
-                if (astpp_gt($user_data['status'], 0)) {
-                    $data['error']['number'] = "<label class='error_label'><span id='error_mail' class='text-danger'>".gettext("Your account is inactive. Please contact administrator for more information.")."</span></label>";
-                    $this->load->view('view_forgotpassword', $data);
-                    exit();
-                }
-            }
-            if ($acountdata->num_rows() == 0 && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                if ((! filter_var($email, FILTER_VALIDATE_EMAIL)) && (! filter_var($number, FILTER_SANITIZE_NUMBER_INT))) {
-                    $data['error']['email'] = "<label class='error_label'><span id='error_mail' class='text-danger'>".gettext("Please enter proper Email.")."</span></label>";
-
-                    $data['error']['number'] = "<label class='error_label'><span id='error_mail' class='text-danger'>".gettext("Please enter proper Username")."</span></label>";
-
-                    $this->load->view('view_forgotpassword', $data);
-                } else {
-                    $data['error']['email'] = "<label class='error_label'><span id='error_mail' class='text-danger'>".gettext("This Username or Email is not valid.")."</span></label>";
-
-                    $this->load->view('view_forgotpassword', $data);
-                }
-            } else if ($acountdata->num_rows() == 0) {
-                $data['error']['number'] = "<label class='error_label'><span id='error_mail' class='text-danger'>".gettext("Please enter proper Username .")."</span></label>";
-                $this->load->view('view_forgotpassword', $data);
-            } else {
-                $acountdata = $acountdata->result_array();
-                $user_data = $acountdata[0];
-                $numberlength = common_model::$global_config['system_config']['pinlength'];
-                $numberlength = ($numberlength < 6) ? 6 : common_model::$global_config['system_config']['pinlength'];
-                $user_data['otp'] = astpp_random_int(pow(10, astpp_n($numberlength) - 1), pow(10, $numberlength) - 1);
-                $account_unverified_array = (array) $this->db->get_where("account_unverified", array(
-                    "number" => $user_data['number']
-                ))->first_row();
-                if (empty($account_unverified_array)) {
-                    $insert_array = array(
-                        'number' => $user_data['number'],
-                        'reseller_id' => $user_data['reseller_id'],
-                        'telephone' => $user_data['telephone_1'],
-                        'password' => $user_data['password'],
-                        'email' => $user_data['email'],
-                        'first_name' => $user_data['first_name'],
-                        'last_name' => $user_data['last_name'],
-                        'company_name' => $user_data['company_name'],
-                        'country_id' => $user_data['country_id'],
-                        'currency_id' => $user_data['currency_id'],
-                        'timezone_id' => $user_data['timezone_id'],
-                        'retries' => '1',
-                        'otp' => '',
-                        'client_ip' => $_SERVER['REMOTE_ADDR'],
-                        'creation_date' => $current_date
-                    );
-                    $this->db->insert("account_unverified", $insert_array);
-                }
-
-                $where = array(
-                    "email" => $user_data['email']
-                );
-                $data = array(
-                    "pass_link_status" => 1
-                );
-                $this->db->where($where);
-                $this->db->update('accounts', $data);
-                $this->db->where("number", $email);
-                $this->db->or_where("email", $email);
-                $data = array(
-                    "otp" => $user_data['otp'],
-                    "creation_date" => $current_date
-                );
-                $this->db->update("account_unverified", $data);
-                $this->send_sms($user_data['number'], 'forgot_password_confirmation', $user_data);
-                $this->send_mail($user_data['id'], 'forgot_password_confirmation', $user_data,$number);
-                $post_data['account_id'] = $user_data['id'];
-                $post_data['creation_date'] = $current_date;
-                $this->load->view('view_otp_signup', $post_data);
-            }
+    function reset_password()
+    {
+        $start = microtime(true);
+        if ($this->input->server('REQUEST_METHOD') !== 'POST') {
+            redirect(base_url() . 'forgotpassword/');
+        }
+        $this->load->library('form_validation');
+        $number = trim((string) $this->input->post('number'));
+        $email = trim((string) $this->input->post('email'));
+        $code = preg_replace('/\s+/', '', (string) $this->input->post('code'));
+        $password = (string) $this->input->post('password');
+        $confirm = (string) $this->input->post('confirm_password');
+        // the password rules first: they say nothing about the account and cost no code attempt
+        if ($password === '' || $password !== $confirm) {
+            $error = gettext("Please enter the same new password in both fields.");
+        } elseif (! $this->form_validation->chk_password_expression($password)) {
+            $error = gettext("The new password must be at least 8 characters long and contain letters and digits.");
         } else {
-            redirect(base_url());
+            $account = ($number !== '' && $email !== '') ? $this->reset_account($number, $email) : array();
+            if (! empty($account) && $this->reset_check_code($account, $code)) {
+                $this->db->where('id', $account['id']);
+                $this->db->update('accounts', array(
+                    'password' => $this->common->encode($password)
+                ));
+                $account['password'] = ''; // the notice never carries a password
+                $this->common->mail_to_users('new_password', $account);
+                log_message('error', 'password reset: new password set for account ' . (int) $account['id']);
+                redirect(base_url() . 'signup/successpassword/');
+            }
+            $error = gettext("The code is wrong or has expired. Please check it or request a new code.");
+        }
+        $this->reset_wait($start);
+        $this->load->view('view_reset_password', array(
+            'number' => $number,
+            'email' => $email,
+            'error' => $error
+        ));
+    }
+
+    /** Active customer, reseller or provider account with this number and e-mail address. */
+    private function reset_account($number, $email)
+    {
+        $this->db->where_in('type', array(
+            '0',
+            '1',
+            '3'
+        ));
+        $this->db->where(array(
+            'number' => $number,
+            'email' => $email,
+            'deleted' => 0,
+            'status' => 0
+        ));
+        $this->db->order_by('id', 'DESC');
+        $this->db->limit(1);
+        return (array) $this->db->get('accounts')->first_row();
+    }
+
+    private function reset_hash($accountid, $code)
+    {
+        return hash_hmac('sha256', (int) $accountid . '|' . $code, (string) $this->config->item('encryption_key'));
+    }
+
+    private function reset_issue_code($account)
+    {
+        $id = (int) $account['id'];
+        $row = (array) $this->db->get_where('password_resets', array(
+            'accountid' => $id
+        ))->first_row();
+        $issued = 0;
+        $window = gmdate('Y-m-d H:i:s');
+        if (! empty($row) && strtotime($row['window_start'] . ' UTC') > time() - 3600) {
+            $issued = (int) $row['issued'];
+            $window = $row['window_start'];
+        }
+        if ($issued >= self::RESET_MAX_CODES) {
+            log_message('error', 'password reset: code limit reached for account ' . $id);
+            return;
+        }
+        $code = str_pad((string) random_int(0, (10 ** self::RESET_CODE_DIGITS) - 1), self::RESET_CODE_DIGITS, '0', STR_PAD_LEFT);
+        $this->db->query('INSERT INTO password_resets (accountid, code_hash, created_date, attempts, issued, window_start, client_ip) VALUES (?, ?, ?, 0, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE code_hash = VALUES(code_hash), created_date = VALUES(created_date), attempts = 0,
+            issued = VALUES(issued), window_start = VALUES(window_start), client_ip = VALUES(client_ip)', array(
+            $id,
+            $this->reset_hash($id, $code),
+            gmdate('Y-m-d H:i:s'),
+            $issued + 1,
+            $window,
+            substr((string) $this->input->server('REMOTE_ADDR'), 0, 45)
+        ));
+        $account['otp'] = $code;
+        $this->send_mail($id, 'forgot_password_confirmation', $account, $account['number']);
+    }
+
+    /** True once for the right code; every call counts as an attempt. */
+    private function reset_check_code($account, $code)
+    {
+        $id = (int) $account['id'];
+        $row = (array) $this->db->get_where('password_resets', array(
+            'accountid' => $id
+        ))->first_row();
+        if (empty($row) || $row['code_hash'] === '') {
+            return false;
+        }
+        $this->db->query('UPDATE password_resets SET attempts = attempts + 1 WHERE accountid = ? AND code_hash = ? AND attempts < ?', array(
+            $id,
+            $row['code_hash'],
+            self::RESET_MAX_ATTEMPTS
+        ));
+        if ($this->db->affected_rows() !== 1) {
+            return false;
+        }
+        $expire = common_model::$global_config['system_config']['otp_expire'];
+        $expire = astpp_gt($expire, 0) ? (int) $expire : 30;
+        if (strtotime($row['created_date'] . ' UTC') < time() - $expire * 60) {
+            return false;
+        }
+        if (! ctype_digit($code) || ! hash_equals($row['code_hash'], $this->reset_hash($id, $code))) {
+            return false;
+        }
+        // used up: the next reset needs a new code (the hourly limit stays)
+        $this->db->query('UPDATE password_resets SET code_hash = \'\', attempts = ? WHERE accountid = ? AND code_hash = ?', array(
+            self::RESET_MAX_ATTEMPTS,
+            $id,
+            $row['code_hash']
+        ));
+        return $this->db->affected_rows() === 1;
+    }
+
+    private function reset_wait($start)
+    {
+        $left = self::RESET_MIN_TIME - (microtime(true) - $start);
+        if ($left > 0) {
+            usleep((int) ($left * 1000000));
         }
     }
 }

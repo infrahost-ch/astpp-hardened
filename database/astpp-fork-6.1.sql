@@ -83,3 +83,18 @@ CREATE TABLE IF NOT EXISTS `paypal_payments` (
   UNIQUE KEY `txn_id` (`txn_id`),
   KEY `accountid` (`accountid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Password reset codes (audit M8, signup/confirmpassword and signup/reset_password): one row per
+-- account. code_hash = HMAC-SHA256 of "accountid|code" with the ENCRYPTION_KEY ('' = used up),
+-- attempts per code, issued = codes sent since window_start (limit per hour). Upstream kept the
+-- code in account_unverified, together with a copy of the account password.
+CREATE TABLE IF NOT EXISTS `password_resets` (
+  `accountid` int(11) NOT NULL,
+  `code_hash` char(64) NOT NULL DEFAULT '',
+  `created_date` datetime NOT NULL,
+  `attempts` tinyint(4) NOT NULL DEFAULT 0,
+  `issued` tinyint(4) NOT NULL DEFAULT 0,
+  `window_start` datetime NOT NULL,
+  `client_ip` varchar(45) NOT NULL DEFAULT '',
+  PRIMARY KEY (`accountid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
