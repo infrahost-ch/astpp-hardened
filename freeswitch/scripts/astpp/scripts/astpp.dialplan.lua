@@ -395,6 +395,13 @@ if (userinfo ~= nil) then
 		    error_xml_without_cdr(destination_number,"DESTINATION_BLOCKED",calltype,config['playback_audio_notification'],reseller_userinfo['id'])
 		    return 0
 	    end
+
+	    -- ASTPP fork: customers of an expired reseller are rejected like an expired customer
+	    -- (audit O11, operator decision 11.10.2026; upstream let their calls through)
+	    if(reseller_userinfo['ACCOUNT_ERROR'] == 'ACCOUNT_EXPIRE') then
+		    error_xml_without_cdr(destination_number,"ACCOUNT_EXPIRE",calltype,config['playback_audio_notification'],reseller_userinfo['id'])
+		    return 0
+	    end
     
     	-- @TODO: Remove number translation / localization for reseller as we will apply localization to customer directly
 		number_loop_str = number_loop(destination_number)
