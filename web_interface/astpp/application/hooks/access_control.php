@@ -92,7 +92,8 @@ class Access_control
 		'accounts/provider_selected_delete' => 'accounts',
 		'accounts/customer_blockedprefixes_delete_multiple' => 'block_patterns',
 		'accounts/customer_product_delete' => 'order_items',
-		'accounts/customer_did_delete' => array('order_items', 'product_id'),
+		// DID products; their order items include the reseller's own purchase, so check the DID itself
+		'accounts/customer_did_delete' => array('dids', 'product_id'),
 		'animap/animap_delete_multiple' => 'ani_map',
 		'did/did_delete_multiple' => array('dids', 'product_id'),
 		'email/email_delete_multiple' => 'mail_details',
