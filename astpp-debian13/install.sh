@@ -543,7 +543,7 @@ import_database() {
 	mariadb astpp -e "UPDATE \`system\` SET value='${ASTPP_LOG_DIR}/' WHERE name='log_path';" || true
 
 	step "Seed-Daten absichern (Passwoerter, Demo-Konten, ESL) und Betreiberdaten setzen"
-	OPENSSL_CONF="${OPENSSL_LEGACY_CNF}" ASTPP_ADMIN_PASSWORD="${ADMIN_PASS}" ASTPP_ESL_PASSWORD="${ESL_PASS}" \
+	OPENSSL_CONF="${OPENSSL_LEGACY_CNF}" ASTPP_ADMIN_PASSWORD="${ADMIN_PASS}" ASTPP_ESL_PASSWORD="${ESL_PASS}" ASTPP_WEB="${ASTPP_WEB}" \
 		ASTPP_COMPANY_NAME="${COMPANY_NAME}" ASTPP_COMPANY_WEBSITE="${COMPANY_WEBSITE}" \
 		ASTPP_COMPANY_EMAIL="${ADMIN_EMAIL}" ASTPP_COMPANY_COUNTRY="${COMPANY_COUNTRY}" \
 		"php${PHP_VER}" "${SCRIPT_DIR}/tools/astpp-postinstall.php"

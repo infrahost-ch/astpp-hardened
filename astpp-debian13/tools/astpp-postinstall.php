@@ -86,6 +86,18 @@ $esl_password = (string) getenv('ASTPP_ESL_PASSWORD');
 if (strlen($admin_password) < 12 || strlen($esl_password) < 12) {
     fail('ASTPP_ADMIN_PASSWORD / ASTPP_ESL_PASSWORD fehlen');
 }
+// Audit N13: the admin password must pass the portal password rule of the installed tree
+// (application/libraries/astpp/password_policy.php, plain PHP; it only checks that BASEPATH exists)
+$astpp_web = getenv('ASTPP_WEB') ?: '/opt/ASTPP/web_interface/astpp';
+define('BASEPATH', $astpp_web . '/system/');
+if (! is_file($astpp_web . '/application/libraries/astpp/password_policy.php')) {
+    fail('Passwortregel fehlt: ' . $astpp_web . '/application/libraries/astpp/password_policy.php');
+}
+require $astpp_web . '/application/libraries/astpp/password_policy.php';
+$rule = (new Password_policy())->check($admin_password, array('admin', (string) getenv('ASTPP_COMPANY_EMAIL')));
+if ($rule !== '') {
+    fail('Admin-Passwort erfuellt die Passwortregel nicht (' . $rule . ')');
+}
 
 // Self test: Blowfish must work (astpp_encode() aborts otherwise) and should match
 // the upstream implementation. On a mismatch the seed passwords cannot be
