@@ -255,7 +255,10 @@
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $add_array = $this->input->post();
             $current_date = gmdate("Y-m-d H:i:s");
-            
+            // ASTPP fork: this form creates customers (0) and providers (3) only; upstream stored any
+            // type from the hidden field (also -1 = admin)
+            $add_array['type'] = (isset($add_array['type']) && (string) $add_array['type'] === '3') ? '3' : '0';
+
             $entity_name = strtolower($this->common->get_entity_type('', '', $add_array['type']));
             $data['country_id'] = $add_array['country_id'];
             $data['timezone_id'] = $add_array['timezone_id'];
@@ -292,6 +295,9 @@
                         unset($add_array['tax_id']);
                     }
                     unset($add_array['posttoexternal'], $add_array['number'], $add_array['balance'], $add_array['expiry']);
+                    // ASTPP fork: edit_account() writes the whole POST array; account type, owner and
+                    // internal columns are not form fields (type -1 turned a customer into an admin)
+                    unset($add_array['type'], $add_array['reseller_id'], $add_array['deleted'], $add_array['creation'], $add_array['is_distributor'], $add_array['permission_id'], $add_array['last_bill_date'], $add_array['inuse']);
                     $this->db->select('validfordays');
                     $validfordays = (array) $this->db->get_where("accounts", array(
                         "id" => $add_array["id"]
@@ -319,6 +325,11 @@
                     if ($add_array['posttoexternal'] == 1) {
                         $add_array['balance'] = 0;
                     }
+                    // ASTPP fork: the admin may create the customer for a reseller - only for an existing one
+                    if (isset($add_array['reseller_id']) && astpp_gt($add_array['reseller_id'], 0) && $this->db->get_where('accounts', array('id' => (int) $add_array['reseller_id'], 'type' => 1, 'deleted' => 0))->num_rows() === 0) {
+                        $add_array['reseller_id'] = 0;
+                    }
+                    unset($add_array['deleted'], $add_array['is_distributor'], $add_array['permission_id']);
                     $last_id = $this->accounts_model->add_account($add_array);
                     $this->session->set_flashdata('astpp_errormsg', gettext(ucfirst($entity_name)).' '.gettext('Added Successfully!'));
 
@@ -1658,6 +1669,8 @@ function reseller_save()
 {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $add_array = $this->input->post();
+        // ASTPP fork: this form creates resellers only (upstream: any type from the hidden field)
+        $add_array['type'] = '1';
         $entity_name = strtolower($this->common->get_entity_type('', '', $add_array['type']));
         $data['country_id'] = $add_array['country_id'];
         $data['timezone_id'] = $add_array['timezone_id'];
@@ -1700,6 +1713,9 @@ function reseller_save()
                     "id" => $add_array['id']
                 ))->first_row();
                 unset($add_array['is_distributor']);
+                // ASTPP fork: edit_account() writes the whole POST array - not the account type, the
+                // owner, internal columns or the balance (changed through payments only)
+                unset($add_array['type'], $add_array['reseller_id'], $add_array['deleted'], $add_array['creation'], $add_array['balance'], $add_array['last_bill_date'], $add_array['inuse']);
                 $add_array['password'] = $this->common->encode($add_array['password']);
                 $this->accounts_model->edit_account($add_array, $add_array['id']);
                 $this->session->set_flashdata('astpp_errormsg', gettext('Reseller updated successfully!'));
@@ -1727,6 +1743,11 @@ function reseller_save()
             if ($this->form_validation->run() == FALSE) {
                 $data['validation_errors'] = validation_errors();
             } else {
+                // ASTPP fork: a parent chosen by the admin must be an existing reseller
+                if (isset($add_array['reseller_id']) && astpp_gt($add_array['reseller_id'], 0) && $this->db->get_where('accounts', array('id' => (int) $add_array['reseller_id'], 'type' => 1, 'deleted' => 0))->num_rows() === 0) {
+                    $add_array['reseller_id'] = 0;
+                }
+                unset($add_array['deleted']);
                 if (astpp_gt($add_array['reseller_id'], 0)) {
                     $this->db->select("is_distributor");
                     $is_distributor = (array) $this->db->get_where("accounts", array(
