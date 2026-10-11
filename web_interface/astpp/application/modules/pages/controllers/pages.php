@@ -336,7 +336,7 @@ function services($category= '') {
 	function refill_auto_form($oreder_req_result,$product_info,$accountid){ 
 		echo '<html>' . "\n";
 		echo '<head><title>Processing Payment...</title></head>' . "\n";
-		echo '<body class="col-md-12" style="text-align:center;" onLoad="document.forms[\'paypal_auto_form\'].submit();">' . "\n";
+		echo '<body class="col-md-12" style="text-align:center;">' . "\n";
 		
 		
 		echo '<div class="col-md-12 text-center order_completed no-padding " style="min-height:580px;">  
@@ -346,7 +346,8 @@ function services($category= '') {
 		echo $this->oerder_request_form($oreder_req_result,$product_info,$accountid);
 		  echo '</section>
 	    </div>';
-	       
+		// ASTPP fork (audit O4): submitted by a script with the CSP nonce (was <body onload>)
+		echo '<script' . csp_nonce_attr() . '>document.forms[\'paypal_auto_form\'].submit();</script>' . "\n";
 		echo '</body></html>';
     }
 

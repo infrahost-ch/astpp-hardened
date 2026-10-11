@@ -1,4 +1,4 @@
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
   $("#submit").click(function(){
     submit_form("acccount_charges_form");
     $('#submit').prop('disabled', true);

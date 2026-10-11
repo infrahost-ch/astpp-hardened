@@ -291,8 +291,8 @@ class Accounts_form extends common
                 array(
                     'name' => 'password',
                     'id' => 'password_show',
-                    'onmouseover' => 'seetext(password_show)',
-                    'onmouseout' => 'hidepassword(password_show)',
+                    'data-astpp-mouseover' => 'seetext(password_show)',
+                    'data-astpp-mouseout' => 'hidepassword(password_show)',
                     'placeholder' => gettext('unchanged'),
                     'autocomplete' => 'new-password',
                     'size' => '20',
@@ -461,15 +461,15 @@ class Accounts_form extends common
                     'size' => '20',
                     'class' => "text field medium",
                     'id' => 'password',
-                    'onmouseover' => 'seetext(password)',
-                    'onmouseout' => 'hidepassword(password)'
+                    'data-astpp-mouseover' => 'seetext(password)',
+                    'data-astpp-mouseout' => 'hidepassword(password)'
                 ),
                 'required|portal_password', // N13
                 'tOOL TIP',
                 '',
                 '<i style="cursor:pointer; font-size: 17px; position:absolute; right:20px; bottom: 7px;" title="Reset Password" class="change_pass align-self-end text-success fa fa-refresh" ></i>'
             );
-            $change_password = '<i style="cursor:pointer; font-size: 17px; position:absolute; right:20px; bottom: 7px;" title="Reset Password" onmouseover="seetext(password)" onmouseout="hidepassword(password)" class="change_pass align-self-end text-success fa fa-refresh" ></i>';
+            $change_password = '<i style="cursor:pointer; font-size: 17px; position:absolute; right:20px; bottom: 7px;" title="Reset Password" data-astpp-mouseover="seetext(password)" data-astpp-mouseout="hidepassword(password)" class="change_pass align-self-end text-success fa fa-refresh" ></i>';
             $change_pin = '<i style="cursor:pointer; font-size: 17px; position:absolute; right:20px; bottom: 7px;" title="Generate Pin" class="change_pin align-self-end text-success fa fa-refresh" ></i>';
 
             $sip_device_arr = array(
@@ -992,7 +992,7 @@ class Accounts_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'/accounts/customer_list/\')'
+            'data-astpp-click' => 'return redirect_page(\'/accounts/customer_list/\')'
         );
         return $form;
     }
@@ -1306,7 +1306,7 @@ class Accounts_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }
@@ -1412,7 +1412,7 @@ class Accounts_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }
@@ -1695,8 +1695,8 @@ class Accounts_form extends common
                 array(
                     'name' => 'password',
                     'id' => 'password_show',
-                    'onmouseover' => 'seetext(password_show)',
-                    'onmouseout' => 'hidepassword(password_show)',
+                    'data-astpp-mouseover' => 'seetext(password_show)',
+                    'data-astpp-mouseout' => 'hidepassword(password_show)',
                     'placeholder' => gettext('unchanged'),
                     'autocomplete' => 'new-password',
                     'size' => '20',
@@ -1841,8 +1841,8 @@ class Accounts_form extends common
                     'size' => '20',
                     'class' => "text field medium",
                     'id' => 'password',
-                    'onmouseover' => 'seetext(password)',
-                    'onmouseout' => 'hidepassword(password)'
+                    'data-astpp-mouseover' => 'seetext(password)',
+                    'data-astpp-mouseout' => 'hidepassword(password)'
                 ),
                 'required|portal_password', // N13
                 'tOOL TIP',
@@ -2307,7 +2307,7 @@ class Accounts_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'/accounts/reseller_list/\')'
+            'data-astpp-click' => 'return redirect_page(\'/accounts/reseller_list/\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -2361,8 +2361,8 @@ class Accounts_form extends common
                 array(
                     'name' => 'password',
                     'id' => 'password_show',
-                    'onmouseover' => 'seetext(password_show)',
-                    'onmouseout' => 'hidepassword(password_show)',
+                    'data-astpp-mouseover' => 'seetext(password_show)',
+                    'data-astpp-mouseout' => 'hidepassword(password_show)',
                     'placeholder' => gettext('unchanged'),
                     'autocomplete' => 'new-password',
                     'size' => '20',
@@ -2555,8 +2555,8 @@ class Accounts_form extends common
                     'size' => '20',
                     'class' => "text field medium",
                     'id' => 'password',
-                    'onmouseover' => 'seetext(password)',
-                    'onmouseout' => 'hidepassword(password)'
+                    'data-astpp-mouseover' => 'seetext(password)',
+                    'data-astpp-mouseout' => 'hidepassword(password)'
                 ),
                 'required|portal_password', // N13
                 'tOOL TIP',
@@ -2768,7 +2768,7 @@ class Accounts_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'/accounts/admin_list/\')'
+            'data-astpp-click' => 'return redirect_page(\'/accounts/admin_list/\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -5381,7 +5381,7 @@ class Accounts_form extends common
     function set_block_pattern_action_buttons($id)
     {
         $ret_url = '';
-        $ret_url .= '<a href="/did/delete/' . $id . '/" class="icon delete_image" title="Delete" onClick="return get_alert_msg();">&nbsp;</a>';
+        $ret_url .= '<a href="/did/delete/' . $id . '/" class="icon delete_image" title="Delete" data-astpp-click="return get_alert_msg();">&nbsp;</a>';
         return $ret_url;
     }
 

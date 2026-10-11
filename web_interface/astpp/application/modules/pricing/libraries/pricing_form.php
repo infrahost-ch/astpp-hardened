@@ -361,7 +361,7 @@ class pricing_form extends common
                         'id' => 'routing_type',
                         'name' => 'routing_type',
                         'class' => 'routing_type',
-                        "onchange" => "trunk_change(this.value)"
+                        "data-astpp-change" => "trunk_change(this.value)"
                     ),
                     'SELECT',
                     '',
@@ -400,7 +400,7 @@ class pricing_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -1232,7 +1232,7 @@ class pricing_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',

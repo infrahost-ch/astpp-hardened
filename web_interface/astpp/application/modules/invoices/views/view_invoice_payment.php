@@ -1,7 +1,7 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 <link href="<?= base_url() ?>assets/css/invoice.css" rel="stylesheet">
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
    $(document).ready(function() {
        $("#gross_amount").on("input", function(evt) {
    var self = $(this);
@@ -367,33 +367,33 @@
                             ?>
                      <input class="btn btn-success search_generate_bar" name="Paynow"
                         id="Paynow" value="Pay With Paypal" type="button"
-                        onclick="return payment(); "> <input id="ok"
+                        data-astpp-click="return payment(); "> <input id="ok"
                         class="btn btn-secondary ml-2" type="button" value="Cancel"
-                        onclick="window.history.back();" ; name="action">
+                        data-astpp-click="window.history.back();" ; name="action">
                      <?php } } ?>
                      <?php  if ($logintype == 1 || $logintype == 5 ) { ?>
                       <?php if( (Common_model::$global_config['system_config']['paypal_status'] == '0')){ ?>
                      <input class="btn btn-success search_generate_bar" name="Paynow"
                         id="Paynow" value="Pay With Paypal" type="button"
-                        onclick="return payment(); "> <input
+                        data-astpp-click="return payment(); "> <input
                         class="btn btn-success search_generate_bar" name="action"
                         name="save" id="save" value="Pay Now" type="button"
-                        onclick="return admin_pay(); ">
+                        data-astpp-click="return admin_pay(); ">
                         <?php } ?>
                         <input id="ok"
                         class="btn btn-secondary ml-2" type="button" value="Cancel"
-                        onclick="window.history.back();" ; name="action">
+                        data-astpp-click="window.history.back();" ; name="action">
                      <?php } ?>
                      <div class="mt-4 text-center">
                      <?php  if ($logintype == '-1' ||$logintype == 2) { ?>
                      <?php if( (Common_model::$global_config['system_config']['paypal_status'] == '0')){ ?>
                      <input class="btn btn-success search_generate_bar" name="action"
                         name="save" id="save" value="Pay Now" type="button"
-                        onclick="return admin_pay(); ">
+                        data-astpp-click="return admin_pay(); ">
                         <?php } ?>
                         <input id="ok"
                         class="btn btn-secondary ml-2" type="button" value="Cancel"
-                        onclick="window.history.back();" name="action">
+                        data-astpp-click="window.history.back();" name="action">
                      </div>
                      </div>
                      <?php }?>	
@@ -436,7 +436,7 @@
 </div>
 </section>
 </div>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
    function payment(){ 
      var text =document.getElementById('amount').value;
      var amount =document.getElementById('new_amount').value;

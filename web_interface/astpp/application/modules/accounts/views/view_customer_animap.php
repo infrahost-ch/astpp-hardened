@@ -1,9 +1,9 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function() {
     build_grid("animap_list","<?php echo base_url()."accounts/customer_animap_json/$edit_id/$accounttype/"; ?>",<? echo $grid_fields; ?>,"");
     $('.checkall').click(function () {
@@ -32,7 +32,7 @@
   });
 
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
     $('.page-wrap').addClass('addon_wrap');
     $("#number").removeClass("borderred");
@@ -45,7 +45,7 @@
    });
   });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
     $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });
@@ -114,7 +114,7 @@ label.error {
             ?>
           <div id="left_panel_delete"
 						class="pull-left margin-t-0 padding-x-4"
-						onclick="delete_multiple('/animap/animap_delete_multiple/')">
+						data-astpp-click="delete_multiple('/animap/animap_delete_multiple/')">
 						<span class="btn btn-line-danger"> <i
 							class="fa fa-times-circle fa-lg"></i>
               <?php echo gettext('Delete');?>

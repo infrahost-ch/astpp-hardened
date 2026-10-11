@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 window.addEventListener('DOMContentLoaded', function(){
          document.getElementById("payment_form").submit();
      });

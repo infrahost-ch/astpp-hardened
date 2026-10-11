@@ -1,7 +1,8 @@
 
  <link href="<?= base_url() ?>assets/css/popup.css" rel="stylesheet" type="text/css">
- <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/popup/custom.js"></script>
-<script type="text/javascript">
+ <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/popup/custom.js"<?php echo csp_nonce_attr(); ?>></script>
+ <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/astpp_csp.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 
 function validateForm(){
     var email = document.forms["form1"]["email"].value;
@@ -97,7 +98,7 @@ function validateForm(){
         <span id="template_err" style="color:red;"> </span> 
       </div>
        <font color='red'> <span id="feedback1" name="feedback1"> </span> </font>
-        <center><input type="submit" value="Send Mail"  class="btn btn-line-parrot" onclick="return validateForm();"/></center>
+        <center><input type="submit" value="Send Mail"  class="btn btn-line-parrot" data-astpp-click="return validateForm();"/></center>
     </form>
   </div>
   </html>

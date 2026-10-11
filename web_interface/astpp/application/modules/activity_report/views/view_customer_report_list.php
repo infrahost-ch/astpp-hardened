@@ -1,7 +1,7 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 <?php $current_locale = $this->session->userdata('user_language'); ?>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         $('.rm-col-md-12').addClass('float-right');
         $(".rm-col-md-12").removeClass("col-md-12");
@@ -72,7 +72,7 @@
          });
 </script>
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 	
     $(document).ready(function() {
       
@@ -88,7 +88,7 @@
     });
 
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
        $(document).ready(function() {
         var currentdate = new Date(); 
         var datetime = currentdate.getFullYear() + "-"

@@ -5,7 +5,7 @@
 <?= $page_title ?>
 <? endblock() ?>
 <?php startblock('content') ?>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 function install_addon(){
 	$(".overlay").show();
 }
@@ -52,10 +52,10 @@ function install_addon(){
                 ?>
 										<a
 													href="<?= base_url() ?>addons/addons_install/<?= $type."/".$package_name ?>/update/<?= $new_version."/".$old_version ?>"
-													class="btn btn-info btn-block" onclick='return install_addon()'><?php echo gettext("Update"); ?></a>
+													class="btn btn-info btn-block" data-astpp-click='return install_addon()'><?php echo gettext("Update"); ?></a>
 												<a
 													href="<?= base_url() ?>addons/addons_install/<?php echo $type;?>/<?= $package_name ?>/uninstall/"
-													class="btn btn-light border btn-block" onclick='return install_addon()'><?php echo gettext("Uninstall"); ?></a>
+													class="btn btn-light border btn-block" data-astpp-click='return install_addon()'><?php echo gettext("Uninstall"); ?></a>
 									<?
 
 } else {
@@ -63,7 +63,7 @@ function install_addon(){
                     ?>
 												<a
 													href="<?= base_url() ?>addons/addons_install/<?php echo $type;?>/<?= $package_name ?>/uninstall/"
-													class="btn btn-light border btn-block" onclick='return install_addon()'><?php echo gettext("Uninstall"); ?></a>
+													class="btn btn-light border btn-block" data-astpp-click='return install_addon()'><?php echo gettext("Uninstall"); ?></a>
 										<?  }else{?>
 												<?php
 												$btn_text = ($update_flag == 'true') ? "Update": "Install"; 
@@ -71,7 +71,7 @@ function install_addon(){
 												if (isset($request_uri) && $request_uri[3]=='Enterprise') {?>
 														<a href="<?= base_url() ?>addons/addons_enterprise_license/<?= $type."/".$package_name ?>/install/<?= $new_version."/".$old_version ?>" class="btn btn-info btn-block" rel="facebox" ><?php echo $btn_text; ?></a> 
 													<?php }else{?>
-															<a href="<?= base_url() ?>addons/addons_install/<?= $type."/".$package_name ?>/install/<?= $new_version."/".$old_version ?>" class="btn btn-info btn-block" onclick='return install_addon()'>Install</a> 
+															<a href="<?= base_url() ?>addons/addons_install/<?= $type."/".$package_name ?>/install/<?= $new_version."/".$old_version ?>" class="btn btn-info btn-block" data-astpp-click='return install_addon()'>Install</a> 
 												 <?php }
 									
 
@@ -128,7 +128,7 @@ function install_addon(){
 <? endblock() ?>  
 
 <? end_extend() ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
       

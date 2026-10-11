@@ -1,7 +1,7 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
 		$("input[type='hidden']").parents('li.form-group').addClass("d-none");
 	});
@@ -21,7 +21,7 @@
 			<?php
 if (isset($validation_errors) && $validation_errors != '') {
     ?>
-				<script>
+				<script<?php echo csp_nonce_attr(); ?>>
 					var ERR_STR = '<?php echo $validation_errors; ?>';
 					print_error(ERR_STR);
 				</script>

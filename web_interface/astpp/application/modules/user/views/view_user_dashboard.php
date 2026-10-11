@@ -27,7 +27,7 @@
 	word-break:break-all;
 	}	
 </style>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 	function get_current_data(){
 		 $.ajax({
 				type:'POST',

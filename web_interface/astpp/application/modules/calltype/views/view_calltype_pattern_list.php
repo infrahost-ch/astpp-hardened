@@ -1,6 +1,6 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
 		$('a[rel*=facebox]').facebox();
         build_grid("package_pattern_list","<? echo base_url()."package/package_pattern_list_json/".$edit_id."/"?>",<? echo $grid_fields ?>,"");
@@ -61,7 +61,7 @@
 
 					<div id="left_panel_delete"
 						class="pull-left margin-t-10 padding-x-4"
-						onclick="delete_multiple('/package/package_patterns_selected_delete/')">
+						data-astpp-click="delete_multiple('/package/package_patterns_selected_delete/')">
 						<span class="btn btn-line-danger"> <i
 							class="fa fa-times-circle fa-lg"></i>
                             <?php echo gettext("Delete"); ?>

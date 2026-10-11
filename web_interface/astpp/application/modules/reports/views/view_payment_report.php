@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
       
         build_grid("payment_report_grid","",<? echo $grid_fields; ?>,"");
@@ -17,7 +17,7 @@
         
     });
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         $("#customer_cdr_from_date").datetimepicker();
         $("#customer_cdr_to_date").datetimepicker();

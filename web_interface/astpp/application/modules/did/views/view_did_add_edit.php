@@ -1,5 +1,5 @@
 <?php include(FCPATH.'application/views/popup_header.php'); ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
  $(document).ready(function() {
    $(".country_id").val(<?= $country_id?>);
         });
@@ -30,7 +30,7 @@ if (isset($validation_errors)) {
         </div>
 </section>
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
     $("input[type='hidden']").parents('li.form-group').addClass("d-none");
     $("textarea").parents('li.form-group').addClass("h-auto");	

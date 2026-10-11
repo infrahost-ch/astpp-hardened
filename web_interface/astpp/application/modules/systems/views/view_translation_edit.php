@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     $("#submit").click(function(){
         submit_form("system_form");
     })
@@ -47,14 +47,14 @@
 				</div>
 
                <div class="col-12 my-4 text-center">
-                  <button name="action" type="submit" value="save" id="submit" class="btn btn-success" onclick="return validateForm();"><?php echo gettext('Save') ?></button>
-                  <button name="action" type="button" value="cancel" class="btn btn-secondary ml-2" onclick="return redirect_page('/systems/translation_list/')"><?php echo gettext('Cancel') ?></button>
+                  <button name="action" type="submit" value="save" id="submit" class="btn btn-success" data-astpp-click="return validateForm();"><?php echo gettext('Save') ?></button>
+                  <button name="action" type="button" value="cancel" class="btn btn-secondary ml-2" data-astpp-click="return redirect_page('/systems/translation_list/')"><?php echo gettext('Cancel') ?></button>
                 </div>
 			</form>
 			 <?php 
 					if (isset($validation_errors) && $validation_errors != '') { 
 						?>
-						<script>
+						<script<?php echo csp_nonce_attr(); ?>>
 							var ERR_STR = '<?php echo $validation_errors; ?>';
 							print_error(ERR_STR);
 						</script>

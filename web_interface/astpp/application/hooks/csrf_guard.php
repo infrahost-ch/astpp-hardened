@@ -361,7 +361,7 @@ class Csrf_guard
 			$conf = htmlspecialchars(json_encode(array('field' => self::FIELD, 'get' => $p, 'harmless' => self::$get_harmless)), ENT_QUOTES);
 			$js = FCPATH . 'assets/js/astpp_csrf.js';
 			$tag = '<meta name="astpp-csrf" content="' . $t . '" data-conf="' . $conf . '">'
-				. '<script src="' . base_url() . 'assets/js/astpp_csrf.js?v=' . (is_file($js) ? filemtime($js) : 0) . '"></script>';
+				. '<script src="' . base_url() . 'assets/js/astpp_csrf.js?v=' . (is_file($js) ? filemtime($js) : 0) . '"' . csp_nonce_attr() . '></script>';
 			$at = $m[0][1] + strlen($m[0][0]);
 			$s = substr($s, 0, $at) . $tag . substr($s, $at);
 		}

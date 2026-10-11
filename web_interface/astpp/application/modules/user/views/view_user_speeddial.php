@@ -1,7 +1,7 @@
     <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     function isNumberKey(evt) {
         var charCode = (evt.which) ? evt.which : event.keyCode
         if (charCode > 31 && (charCode < 48 || charCode > 57))
@@ -52,12 +52,12 @@
 	   }
     }
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
   });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });
@@ -143,8 +143,8 @@
                                                 </label>
                                             </div>
                                             <div class="col-md-2 col-4 float-left">
-                                                <a  class="btn text-danger ml-2 float-right" onclick="remove_save_speed_dial('<?php echo $i; ?>')" title="Delete" name="click0<?php echo $i; ?>" id="click0<?php echo $i; ?>"><i class="fa fa-trash"></i></a>
-												 <a  class="btn text-secondary float-right" onclick="showdiv('key<?php echo $i; ?><?php echo astpp_n($i) + 1; ?>','key<?php echo $i; ?><?php echo astpp_n($i) + 2; ?>')"  title="Edit"><i class="fa fa-pencil-square-o"></i></a>
+                                                <a  class="btn text-danger ml-2 float-right" data-astpp-click="remove_save_speed_dial('<?php echo $i; ?>')" title="Delete" name="click0<?php echo $i; ?>" id="click0<?php echo $i; ?>"><i class="fa fa-trash"></i></a>
+												 <a  class="btn text-secondary float-right" data-astpp-click="showdiv('key<?php echo $i; ?><?php echo astpp_n($i) + 1; ?>','key<?php echo $i; ?><?php echo astpp_n($i) + 2; ?>')"  title="Edit"><i class="fa fa-pencil-square-o"></i></a>
                                              </div>
                                         </div>
                                         
@@ -156,14 +156,14 @@
 													</label>
                                             </div>
                                             <div class="col-md-8 col-6 float-left">
-														<input class="form-control" name="speed_dial_<?php echo $i; ?>" id="speed_dial_<?php echo $i; ?>" size="16" type="text"  onkeypress="return isNumberKey(event)" value="<?php if (isset($speeddial[$i]) && !empty($speeddial[$i])) {
+														<input class="form-control" name="speed_dial_<?php echo $i; ?>" id="speed_dial_<?php echo $i; ?>" size="16" type="text"  data-astpp-keypress="return isNumberKey(event)" value="<?php if (isset($speeddial[$i]) && !empty($speeddial[$i])) {
 																echo $speeddial[$i];
 																} ?>">
 														<div class="tooltips error_div float-left p-0"  style="display: block;" id="error_speed_dial_<?php echo $i; ?>"></div> 												
                                             </div>
                                             <div class="col-md-2 col-4 float-left">
-                                                <a onclick="remove_save_speed_dial('<?php echo $i; ?>')" class="btn text-danger float-right mx-2" title="Delete" name="click0<?php echo $i; ?>" id="click0<?php echo $i; ?>"><i class="fa fa-trash"></i></a>
-												<a onclick="save_speed_dial('<?php echo $i; ?>')" class="btn text-info float-right" title="Save" name="click<?php echo $i; ?>" id="click<?php echo $i; ?>"><i class="fa fa-floppy-o"></i></a>
+                                                <a data-astpp-click="remove_save_speed_dial('<?php echo $i; ?>')" class="btn text-danger float-right mx-2" title="Delete" name="click0<?php echo $i; ?>" id="click0<?php echo $i; ?>"><i class="fa fa-trash"></i></a>
+												<a data-astpp-click="save_speed_dial('<?php echo $i; ?>')" class="btn text-info float-right" title="Save" name="click<?php echo $i; ?>" id="click<?php echo $i; ?>"><i class="fa fa-floppy-o"></i></a>
                                             </div>
                                         </div>
                                         <div class="col-md-12">

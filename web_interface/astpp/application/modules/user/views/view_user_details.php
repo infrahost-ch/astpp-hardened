@@ -1,6 +1,6 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
  $(document).ready(function() {
  $(".change_pass").click(function(){
             $.ajax({type:'POST',
@@ -21,7 +21,7 @@
         })
          });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });
@@ -69,7 +69,7 @@
                 <div class="slice color-three float-left content_border">
                     <?php echo $form; ?>
                     <?php if (isset($validation_errors) && $validation_errors != '') { ?>
-                        <script>
+                        <script<?php echo csp_nonce_attr(); ?>>
                             var ERR_STR = '<?php echo $validation_errors; ?>';
                             print_error(ERR_STR);
                         </script>
@@ -81,7 +81,7 @@
 </div>
 <? endblock() ?>
 <? end_extend() ?>  
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
   });

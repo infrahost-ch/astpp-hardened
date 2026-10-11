@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function() {
 	$("#add_account").validate({
 		rules: {

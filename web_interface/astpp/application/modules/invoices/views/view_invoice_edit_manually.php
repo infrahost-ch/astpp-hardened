@@ -19,7 +19,7 @@ table.datatable th {
 	text-align: center;
 }
 </style>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
    function form_confirm() {
        var confirm_string = "<?php echo gettext('Are you sure want to confirm this invoice ? once you confirm it'); ?>, <?php echo gettext('can not able to edit invoice again.'); ?>";
        var answer = confirm(confirm_string);
@@ -248,7 +248,7 @@ table.datatable th {
                                        </textarea></td>
 												<td style="text-align: right;"><input type='text'
 													id="invoice_amount_<?= $i ?>"
-													name="invoice_amount_<?= $i ?>" onkeyup="calculate()"
+													name="invoice_amount_<?= $i ?>" data-astpp-keyup="calculate()"
 													class='col-md-12 form-control form-control-lg'
 													style="text-align: right;" value="<?= $invoice_amt ?>"></td>
 											</tr>
@@ -270,7 +270,7 @@ table.datatable th {
 														class="form-control"></textarea></td>
 												<td style="text-align: right;"><input type='text'
 													id="invoice_amount_<?= $i ?>"
-													name="invoice_amount_<?= $i ?>" onkeyup="calculate()"
+													name="invoice_amount_<?= $i ?>" data-astpp-keyup="calculate()"
 													class='col-md-12 form-control form-control-lg'
 													style="text-align: right;" value=""></td>
 
@@ -337,7 +337,7 @@ table.datatable th {
 														name="save" id="save" value=<?php echo gettext("Save"); ?> type="submit"> <input
 														class="btn btn btn-warning search_generate_bar mx-2 btn-lg"
 														name="confirm" id="save" value=<?php echo gettext("Confirm"); ?> type="button"
-														onclick='form_confirm()'> <a href="../invoice_list/"> <input
+														data-astpp-click='form_confirm()'> <a href="../invoice_list/"> <input
 														id="ok" class="btn btn-secondary btn-lg" type="button"
 														value=<?php echo gettext("Cancel"); ?> name="action">
 													</a>

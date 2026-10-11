@@ -32,10 +32,10 @@
 			<div class="float-right">
 				<button class="btn btn-success" id="download_file" type="button"
 					name="action" value="Download Errors"
-					onclick="return redirect_page('<?= base_url().'ratedeck/ratedeck_error_download/'?>')"><?php echo gettext('Download Errors'); ?></button>
+					data-astpp-click="return redirect_page('<?= base_url().'ratedeck/ratedeck_error_download/'?>')"><?php echo gettext('Download Errors'); ?></button>
 				<button class="btn btn-secondary" id="back_to_list" type="button"
 					name="action" value="Back to Ratedeck List"
-					onclick="return redirect_page('/ratedeck/ratedeck_list/')"><?php echo gettext('Back to Ratedeck List'); ?></button>
+					data-astpp-click="return redirect_page('/ratedeck/ratedeck_list/')"><?php echo gettext('Back to Ratedeck List'); ?></button>
 			</div>
 		</div>
 	</div>

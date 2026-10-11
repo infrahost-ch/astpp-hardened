@@ -5,7 +5,7 @@
 <?= $page_title ?>
 <? endblock() ?>
 <?php startblock('content') ?>      
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 function install_addon(){
 	$(".overlay").show();
 }
@@ -162,7 +162,7 @@ $addon_type = substr($_SERVER['REQUEST_URI'], strrpos($_SERVER['REQUEST_URI'], '
 													<?php }
 													else { ?>
 														<a href="<?= base_url() ?>addons/addons_install/<?= $type."/".$package_name ?>/update/<?= $new_version."/".$old_version ?>"
-														class="btn btn-block btn-info" onclick='return install_addon()'><?php echo gettext("Update"); ?></a>
+														class="btn btn-block btn-info" data-astpp-click='return install_addon()'><?php echo gettext("Update"); ?></a>
 													<? } 
 												}
 												else {
@@ -179,7 +179,7 @@ $addon_type = substr($_SERVER['REQUEST_URI'], strrpos($_SERVER['REQUEST_URI'], '
 													 	 <?php }else{?>
 															<a
 															href="<?= base_url() ?>addons/addons_install/<?= $type."/".$package_name ?>/install/<?= $new_version."/".$old_version ?>"
-															class="btn btn-block btn-info" onclick='return install_addon()'>Install</a> 
+															class="btn btn-block btn-info" data-astpp-click='return install_addon()'>Install</a> 
 														 <?php }
                     									}
                									}
@@ -206,7 +206,7 @@ $addon_type = substr($_SERVER['REQUEST_URI'], strrpos($_SERVER['REQUEST_URI'], '
 <? endblock() ?>  
 
 <? end_extend() ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
 		$('.page-wrap').addClass('addon_wrap');
 

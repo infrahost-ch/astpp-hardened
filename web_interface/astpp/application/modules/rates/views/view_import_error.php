@@ -28,25 +28,25 @@
             ?>
 												<button class="btn btn-success" id="ok" type="button"
 					name="action" value="Download Errors"
-					onclick="return redirect_page('<?= base_url().'rates/termination_rate_error_download/'?>')"><?php echo gettext("Download Errors"); ?></button>
+					data-astpp-click="return redirect_page('<?= base_url().'rates/termination_rate_error_download/'?>')"><?php echo gettext("Download Errors"); ?></button>
 								 <?php }else{ ?>
 											<button class="btn btn-success" id="ok" type="button"
 					name="action" value="Download Errors"
-					onclick="return redirect_page('<?= base_url().'rates/termination_rate_mapper_error_download/'?>')"><?php echo gettext("Download Errors"); ?></button>
+					data-astpp-click="return redirect_page('<?= base_url().'rates/termination_rate_mapper_error_download/'?>')"><?php echo gettext("Download Errors"); ?></button>
 									  <?php }?>
 									<button class="btn btn-secondary" id="ok" type="button"
 					name="action" value="Back to Termination Rates List"
-					onclick="return redirect_page('/rates/termination_rates_list/')"><?php echo gettext("Back to Termination Rates List"); ?></button>
+					data-astpp-click="return redirect_page('/rates/termination_rates_list/')"><?php echo gettext("Back to Termination Rates List"); ?></button>
 			</div>
 									<?php  }?>   
 									<?php if (isset($pricelistid) && $pricelistid != "") { ?>
 										<div class="float-right">
 				<button class="btn btn-success" id="download_file" type="button"
 					name="action" value="Download Errors"
-					onclick="return redirect_page('<?= base_url().'rates/origination_rate_error_download/'?>')"><?php echo gettext("Download Errors"); ?></button>
+					data-astpp-click="return redirect_page('<?= base_url().'rates/origination_rate_error_download/'?>')"><?php echo gettext("Download Errors"); ?></button>
 				<button class="btn btn-secondary" id="back_to_list" type="button"
 					name="action" value="Back to Origination Rates List"
-					onclick="return redirect_page('/rates/origination_rates_list/')"><?php echo gettext("Back to Origination Rates List"); ?></button>
+					data-astpp-click="return redirect_page('/rates/origination_rates_list/')"><?php echo gettext("Back to Origination Rates List"); ?></button>
 			</div>
 									<?}?>
 					</div>

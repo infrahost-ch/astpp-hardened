@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     $("#submit").click(function(){
         submit_form("user_did_form");
     })

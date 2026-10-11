@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         $(this).css('background-color', 'Green');
         build_grid("customersummary_grid","",<? echo $grid_fields; ?>,<? echo $grid_buttons; ?>);
@@ -20,11 +20,11 @@
         });
     });
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
     var reseller_id="<?php echo isset($session_info['reseller_id']) ? $session_info['reseller_id'] : ''; ?>";
     var accountid="<?php echo isset($session_info['accountid']) ? $session_info['accountid'] : ''; ?>";
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         if(reseller_id == 0)
         {

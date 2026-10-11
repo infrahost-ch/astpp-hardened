@@ -115,7 +115,7 @@ class Invoices extends MX_Controller
                             $payment = '<a href="' . base_url() . 'invoices/invoice_automatically_edit/' . $value['id'] . '" class="btn btn-royelblue btn-sm"  title="Edit"><i class="fa fa-pencil-square-o fa-fw"></i></a>';
                         }
                         $id = $value['id'];
-                        $delete_button = "<a onclick='invoice_delete($id)' class='btn btn-royelblue btn-sm'  title='Delete' ><i class='fa fa-trash fa-fw'></i></a>&nbsp";
+                        $delete_button = "<a data-astpp-click='invoice_delete($id)' class='btn btn-royelblue btn-sm'  title='Delete' ><i class='fa fa-trash fa-fw'></i></a>&nbsp";
                     } else {
 
                         if ($value['is_paid'] == 1 && astpp_gt($outstanding, 0)) {

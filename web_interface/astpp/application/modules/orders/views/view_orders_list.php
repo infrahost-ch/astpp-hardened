@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         var resellerid ="<?php echo isset($reseller_id) ? $reseller_id : ''; ?>";
         $('.reseller_id_search_drp').val(resellerid);

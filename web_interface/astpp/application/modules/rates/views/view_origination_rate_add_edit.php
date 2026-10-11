@@ -13,7 +13,7 @@ if (isset($percentage) and ! empty($percentage)) {
     $percentage_json = json_encode((array) $percentage);
 }
 ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
     $("input[type='hidden']").parents('li.form-group').addClass("d-none");
     var trunk_count='<?= $trunk_count ?>';
@@ -23,7 +23,7 @@ $(document).ready(function() {
 });
 </script>
 
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
 	
 	

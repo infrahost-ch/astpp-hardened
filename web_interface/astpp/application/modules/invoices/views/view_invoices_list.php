@@ -1,7 +1,7 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 	function invoice_delete(inv_id){
 				$.ajax({
 			type: "POST",
@@ -241,7 +241,7 @@ if ((isset($permissioninfo['invoices']['invoice_list']['generate'])) && (astpp_e
 								<div class="col-md-12 text-right">
 									<input type="button" class="btn btn-success" name="invoice"
 										value=<?php echo gettext("Generate Invoice"); ?> id="invoice"
-										onClick="validateForm();">
+										data-astpp-click="validateForm();">
 								</div>
 
 							</form>

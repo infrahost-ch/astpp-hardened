@@ -158,7 +158,7 @@
  </form>
 				<?php
 						if (isset($validation_errors) && $validation_errors != '') { ?>
-						<script>
+						<script<?php echo csp_nonce_attr(); ?>>
 							var ERR_STR = '<?php echo $validation_errors; ?>';
 							print_error(ERR_STR);
 						</script>
@@ -169,9 +169,9 @@
                     </div>
 		   <div class="col-md-6 float-left">
                       <?if(isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER'] == "".base_url()."did/did_list/") { ?>
-                      		<button class="btn btn-secondary mx-2 btn-block" name="cancel" onclick="return redirect_page('/did/did_list/')" value="Cancel" type="button"><?php echo gettext('Cancel') ?> </button>
+                      		<button class="btn btn-secondary mx-2 btn-block" name="cancel" data-astpp-click="return redirect_page('/did/did_list/')" value="Cancel" type="button"><?php echo gettext('Cancel') ?> </button>
 			<?} else{ ?>
-				<button class="btn btn-secondary mx-2 btn-block" name="cancel" onclick="return redirect_page('/products/products_list/')" value="Cancel" type="button"> <?php echo gettext('Cancel') ?> </button>
+				<button class="btn btn-secondary mx-2 btn-block" name="cancel" data-astpp-click="return redirect_page('/products/products_list/')" value="Cancel" type="button"> <?php echo gettext('Cancel') ?> </button>
 
 			<?php } ?>
                     </div>    
@@ -179,7 +179,7 @@
     </div>
   </div>
 </section>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 jQuery(document).ready(function() { 
 	$("#product_category").change(function(){ 
 		$('#product_add_form').attr('action', "<?php echo base_url();?>products/products_add/");

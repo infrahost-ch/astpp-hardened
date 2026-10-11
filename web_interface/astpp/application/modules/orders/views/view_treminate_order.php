@@ -1,5 +1,5 @@
 <?php include(FCPATH.'application/views/popup_header.php'); ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 	 var date=new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()); 
 	var next_billing_date='<?php echo $next_billing_date;?>';
 	var next_billing_date_value=new Date(next_billing_date); 
@@ -23,7 +23,7 @@
 }
 </style>
 
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     $("#submit").click(function(){
         submit_form("terminate_form");
     });
@@ -91,7 +91,7 @@ if (astpp_eq0($accountinfo['type']) || $accountinfo['type'] == 3) {
 // echo "<pre>"; print_r($validation_errors); exit;
 if (isset($validation_errors) && $validation_errors != '') {
     ?>
-						<script>
+						<script<?php echo csp_nonce_attr(); ?>>
 							var ERR_STR = '<?php echo $validation_errors; ?>';
 							print_error(ERR_STR);
 						</script>

@@ -1,7 +1,7 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 
 
 
@@ -17,7 +17,7 @@
 	
 });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });
@@ -82,7 +82,7 @@ $currnet_url = current_url();
                     ?>
                 <div id="left_panel_delete"
 						class="pull-left margin-t-0 padding-x-4"
-						onclick="delete_multiple('/freeswitch/customer_fssipdevices_delete_multiple/')">
+						data-astpp-click="delete_multiple('/freeswitch/customer_fssipdevices_delete_multiple/')">
 						<span class="btn btn-line-danger"> <i
 							class="fa fa-times-circle fa-lg"></i>
                         <?php echo gettext('Delete');?>
@@ -119,7 +119,7 @@ $currnet_url = current_url();
 
 <? end_extend() ?>
 
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
   });

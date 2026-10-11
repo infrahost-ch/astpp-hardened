@@ -1,15 +1,15 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/tinymce-8.9.3/tinymce.min.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/astpp_editor.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
-<script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/tinymce-8.9.3/tinymce.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/astpp_editor.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script<?php echo csp_nonce_attr(); ?>>
 $ (document).ready(function(){
 	$('[data-toggle="tooltip"]').tooltip();
     astppEditor('textarea[name="template"], textarea[name="alert_template"]');
 });
 </script>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
     $("input[type='hidden']").parents('li.form-group').addClass("d-none");
     $('.Emailtemplate').parents('li').wrap('<div class="col-md-12 form-group h-auto pt-3">').contents().unwrap();
@@ -30,7 +30,7 @@ $(document).ready(function() {
 			<?php echo $form; ?>
 		  <?php
 			if (isset($validation_errors) && $validation_errors != '') { ?>
-			<script>
+			<script<?php echo csp_nonce_attr(); ?>>
 			  var ERR_STR = '<?php echo $validation_errors; ?>';
 			  print_error(ERR_STR);
 			</script>

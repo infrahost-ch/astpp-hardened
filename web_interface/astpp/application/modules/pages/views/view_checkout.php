@@ -124,7 +124,7 @@
 				<input type = "hidden" value="1" id= "product_quantity" class="product_quantity" name = "product_quantity" />
                             </div>
                             <?php //if( (Common_model::$global_config['system_config']['paypal_status'] == '0')){ ?>
-                            <button class="btn btn-success btn-block" type="button" onclick="validate_form()"> <i class="fa fa-money"></i> <?php echo gettext("Pay Now"); ?></button>
+                            <button class="btn btn-success btn-block" type="button" data-astpp-click="validate_form()"> <i class="fa fa-money"></i> <?php echo gettext("Pay Now"); ?></button>
                             <?php //} ?>
                          </div>
 
@@ -170,7 +170,7 @@
 </div>
 </div>
 </section>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 function validate_form(){
 	var form_submit=false;
 	var payment_method = document.getElementsByName("payment_method");

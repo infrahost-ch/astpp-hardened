@@ -1,9 +1,9 @@
 <?php include(FCPATH.'application/views/popup_header.php'); ?>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 var login_type='<?php echo $login_type; ?>';
 var accountid='<?php echo $accountid; ?>';
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 
 $('#submit').click(function(e){
     
@@ -151,7 +151,7 @@ $("#subsmit").click(function (e) {
           
           <div class="col-12 mt-4 text-center">
             <button name="" type="submit" value="add" class="btn btn-success" id="submit" ><?php echo gettext("Add"); ?></button>
-            <a onclick="return redirect_page('NULL')" type="button" value="cancel" class="btn btn-secondary mx-2 text-light" style="font-size: 14px;"><?php echo gettext("Close"); ?></a>
+            <a data-astpp-click="return redirect_page('NULL')" type="button" value="cancel" class="btn btn-secondary mx-2 text-light" style="font-size: 14px;"><?php echo gettext("Close"); ?></a>
           </div>
           </form>
     </div>

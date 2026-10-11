@@ -1,6 +1,6 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
 	$('a[rel*=facebox]').facebox();
         build_grid("user_sipdevices_grid","",<? echo $grid_fields; ?>,"");
@@ -15,7 +15,7 @@
         });
     });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });
@@ -69,7 +69,7 @@
                             </span>
                         </a>
                     </div>
-                    <div id="left_panel_delete" class="float-left mt-0 px-2" onclick="delete_multiple('/user/user_sipdevices_delete_multiple/')">
+                    <div id="left_panel_delete" class="float-left mt-0 px-2" data-astpp-click="delete_multiple('/user/user_sipdevices_delete_multiple/')">
                         <span class="btn btn-line-danger">
                             <i class="fa fa-times-circle fa-lg"></i>
                             <?php echo gettext('Delete');?>
@@ -96,7 +96,7 @@
   
 <? endblock() ?>	
 <? end_extend() ?>  
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
   });

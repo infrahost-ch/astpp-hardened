@@ -4,7 +4,7 @@
 	type="text/css">
 <link href="<?php echo base_url(); ?>assets/css/facebox.css"
 	rel="stylesheet" media="all" />
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     $("#submit").click(function(){
         submit_form("sipdevices_form");
     });
@@ -81,7 +81,7 @@
 	});
 }
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 function account_change(val){
 		var reseller_id=val;
 		$.ajax({
@@ -94,7 +94,7 @@ function account_change(val){
 		});
 }
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });
@@ -130,12 +130,12 @@ if (isset($validation_errors)) {
 	</div>
 </div>
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
     $("input[type='hidden']").parents('li.form-group').addClass("d-none");
 });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
   });

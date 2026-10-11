@@ -125,7 +125,7 @@ class Email_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -238,7 +238,7 @@ class Email_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -367,7 +367,7 @@ class Email_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }
@@ -485,7 +485,7 @@ class Email_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }
@@ -589,7 +589,7 @@ class Email_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',

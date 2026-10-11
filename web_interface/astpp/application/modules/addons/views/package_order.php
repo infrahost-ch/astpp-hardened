@@ -102,7 +102,7 @@
 <? endblock() ?>  
 
 <? end_extend() ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
 

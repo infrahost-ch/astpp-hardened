@@ -1,6 +1,6 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         build_grid("cdrs_grid","<?php echo base_url()."accounts/customer_details_json/cdrs/$edit_id/"; ?>",<? echo $grid_fields ?>,"");
         $("#left_panel_quick_search").keyup(function(){
@@ -9,12 +9,12 @@
     });
 
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
   });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });

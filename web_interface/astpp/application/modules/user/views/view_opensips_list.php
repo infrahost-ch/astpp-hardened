@@ -1,7 +1,7 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
       
         build_grid("opensipsdevice_grid","",<? echo $grid_fields; ?>,<? echo $fs_grid_buttons; ?>);

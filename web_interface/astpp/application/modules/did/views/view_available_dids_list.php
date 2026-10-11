@@ -1,8 +1,8 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
-<script type="text/javascript" language="javascript">
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
  $(document).ready(function() {
 	
     // jQuery 3: $(window).load() inside a ready handler would never fire (ready runs after "load")
@@ -111,7 +111,7 @@ if ($this->session->userdata('logintype') == 1 || $this->session->userdata('logi
      			<?php if(($logintype==1) &&  (isset($permissioninfo['did']['did_list']['available_did'])  and astpp_eq0($permissioninfo['did']['did_list']['available_did']))) { ?>
 				<div>
 				<input type="button" class="btn btn-line-warning"
-					onclick="return redirect_page('/did/did_list/')"
+					data-astpp-click="return redirect_page('/did/did_list/')"
 					name="purchase_did" value="Purchased DID" id="purchase_did">
 			</div>    
 			<?php } ?>

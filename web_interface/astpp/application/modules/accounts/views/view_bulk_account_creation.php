@@ -1,5 +1,5 @@
 <?php include(FCPATH.'application/views/popup_header.php'); ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
 		$("#submit").click(function(){
 			submit_form("customer_bulk_form","<?php echo base_url(); ?>accounts/customer_bulk_save/");
@@ -39,7 +39,7 @@ if (isset($validation_errors)) {
 	</div>
 </section>
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
 		$("input[type='hidden']").parents('li.form-group').addClass("d-none");
 	});

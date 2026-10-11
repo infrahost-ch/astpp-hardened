@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     function account_change_search(val){
         $.ajax({
           type: "POST",
@@ -44,7 +44,7 @@
       alert("File not found");
   }
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
  $(document).ready(function() {
 
     var currentdate = new Date(); 

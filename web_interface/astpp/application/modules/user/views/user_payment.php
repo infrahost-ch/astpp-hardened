@@ -6,7 +6,7 @@ body{
 	background-color: #B7C1CF !important;
 }
 </style>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
       
         $("#gross_amount").change(function(e){
@@ -103,7 +103,7 @@ return false;
 											
 											
 											<?php /* ASTPP fork (O10): the form goes to this server, which stores the payment and then sends the browser to PayPal */ ?>
-											<form name="payment_form" id="payment_form" action="<?= base_url()?>user/user_payment/CHECKOUT/" method="POST" onSubmit="return form_submit();">
+											<form name="payment_form" id="payment_form" action="<?= base_url()?>user/user_payment/CHECKOUT/" method="POST" data-astpp-submit="return form_submit();">
 												  
 												  <div class="col-md-12 form-group">
 														<label class="p-0 control-label"><?php echo gettext('Net Payable Amount in')?> <?= $to_currency?>:</label>

@@ -22,7 +22,7 @@ table.datatable th {
 	text-align: center;
 }
 </style>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 function form_confirm() {
 	var confirm_string = "<?php echo gettext('Are you sure want to confirm this invoice ? once you confirm it'); ?>, <?php echo gettext('can not able to edit invoice again.'); ?>";
 	var answer = confirm(confirm_string);
@@ -261,7 +261,7 @@ foreach ($invoice_details as $value) {
 										style='height: 35px;' class="form-control form-control-lg"><?php echo $value['description']; ?>  <?php echo $paypalid; ?></textarea>
 								</td>
 								<td><input type='text' id="auto_invoice_amount_<?= $j ?>"
-									name="auto_invoice_amount[<?= $id ?>]" onkeyup="calculate()"
+									name="auto_invoice_amount[<?= $id ?>]" data-astpp-keyup="calculate()"
 									class='form-control form-control-lg' style="text-align: right;"
 									value="<?php echo $this->common->currency_decimal($this->common_model->calculate_currency($debit)); ?>">
 								</td>
@@ -292,7 +292,7 @@ for ($i = 1; $i <= $row_count; $i ++) {
 								</td>
 								<td style="text-align: right;"><input type="text" step="any"
 									id="invoice_amount_<?= $i ?>" name="invoice_amount_<?= $i ?>"
-									onkeyup="calculate()" class='form-control form-control-lg'
+									data-astpp-keyup="calculate()" class='form-control form-control-lg'
 									style="text-align: right;" value="<?= $invoice_amt ?>"></td>
 
 							</tr>
@@ -361,7 +361,7 @@ if (isset($taxes_to_accounts) && ! empty($taxes_to_accounts)) {
 										id="save" value=<?php echo gettext("Submit"); ?> type="submit"> <input
 										class="btn btn btn-warning search_generate_bar margin-x-10"
 										name="confirm" id="save" value="Confirm" type="button"
-										onclick='form_confirm()'> <a href="../invoice_list/"> <input
+										data-astpp-click='form_confirm()'> <a href="../invoice_list/"> <input
 										id="ok" class="btn btn-secondary" type="button" value=<?php echo gettext("Cancel"); ?>
 										name="action">
 									</a>
@@ -372,7 +372,7 @@ if (isset($taxes_to_accounts) && ! empty($taxes_to_accounts)) {
 					</form>
 				</div>
 			</section>
-			<script>
+			<script<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function(){
 	$(".page-wrap.p-4").removeClass("p-4");
 });

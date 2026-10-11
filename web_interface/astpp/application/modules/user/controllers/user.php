@@ -1545,7 +1545,7 @@ function user_sipdevices_json()
         $this->load->module ( "freeswitch" );
         $json_data['rows'][] = array(
             'cell' => array(
-                '<input type="checkbox" name="chkAll" id="' . $value['id'] . '" class="ace chkRefNos" onclick="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>',
+                '<input type="checkbox" name="chkAll" id="' . $value['id'] . '" class="ace chkRefNos" data-astpp-click="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>',
                 '<a href="' . base_url() . 'user/user_sipdevices_edit/' . $value['id'] . '/" style="cursor:pointer;color:#347CCB" rel="facebox" title="Edit">' . $value['username'] . '</a>',
                 $value['password'],
                 $value['effective_caller_id_name'],

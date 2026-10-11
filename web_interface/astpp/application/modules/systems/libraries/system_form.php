@@ -132,7 +132,7 @@ class System_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'systems/template/\')'
+            'data-astpp-click' => 'return redirect_page(\'systems/template/\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -624,7 +624,7 @@ class System_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }
@@ -694,7 +694,7 @@ class System_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -1434,7 +1434,7 @@ class System_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }
@@ -1699,7 +1699,7 @@ class System_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }
@@ -1796,7 +1796,7 @@ class System_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary  ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -2036,7 +2036,7 @@ class System_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }
@@ -2280,7 +2280,7 @@ class System_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }
@@ -2364,7 +2364,7 @@ class System_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }
@@ -2653,7 +2653,7 @@ class System_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'/systems/translation_list/\')'
+            'data-astpp-click' => 'return redirect_page(\'/systems/translation_list/\')'
         );
         return $form;
     }

@@ -80,7 +80,7 @@ if (isset($error) && ! empty($error)) {
 							name="action" value="Import"><?php echo gettext('Import'); ?></button>
 						<button class="btn btn-secondary mx-2" id="ok" type="button"
 							name="action" value="Cancel"
-							onclick="return redirect_page('/ratedeck/ratedeck_list/')" /><?php echo gettext('Cancel'); ?></button>
+							data-astpp-click="return redirect_page('/ratedeck/ratedeck_list/')" /><?php echo gettext('Cancel'); ?></button>
 					</div>
 				</div>
 			</div>
@@ -164,7 +164,7 @@ $cnt = 0;
         ?>
 										<button type="button"
 								class="btn btn-secondary ml-2 float-right" value="Back"
-								onclick="return redirect_page('ratedeck/ratedeck_import/')"><?php echo gettext('Back'); ?></button>
+								data-astpp-click="return redirect_page('ratedeck/ratedeck_import/')"><?php echo gettext('Back'); ?></button>
 							<button type="submit" class="btn btn-success float-right"
 								id="Process" ><?php echo gettext('Process'); ?></button>
 
@@ -178,7 +178,7 @@ $cnt = 0;
 </section>
 <?php } ?>
     <?php } ?>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
  $('input[type="file"]').change(function(e){
         var fileName = e.target.files[0].name;
         $('.custom-file-label').html(fileName);

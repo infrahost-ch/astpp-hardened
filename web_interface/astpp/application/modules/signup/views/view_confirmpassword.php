@@ -55,7 +55,8 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 						<!-- -->
 
 						<script type="text/javascript"
-							src="<?php echo base_url(); ?>/assets/js/module_js/generate_grid.js"></script>
+							src="<?php echo base_url(); ?>/assets/js/module_js/generate_grid.js"<?php echo csp_nonce_attr(); ?>></script>
+	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/astpp_csp.js"<?php echo csp_nonce_attr(); ?>></script>
 						<noscript>
 							<div id="noscript-warning"><?php echo gettext("ASTPP work best with JavaScript enabled"); ?></div>
 						</noscript>
@@ -152,7 +153,7 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 										class="col-md-12 margin-t-20 margin-b-20 padding-r-32 padding-l-32">
 										<button name="action" type="submit" value="Submit"
 											class="btn btn-line-parrot col-md-12"
-											onclick="return check_function();"><?php echo gettext('Submit')?></button>
+											data-astpp-click="return check_function();"><?php echo gettext('Submit')?></button>
 
 
 
@@ -172,7 +173,7 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 </body>
 
 </html>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
  $(document).ready(function(){
 	$('#password').change(function(){
        $('#une').innerHTML('');
@@ -184,7 +185,7 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
   });
 });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 $("#country_id").val(<?=$country_id?>);
 $("#timezone_id").val(<?=$timezone_id?>);
 $("#currency_id").val(<?=$currency_id?>);

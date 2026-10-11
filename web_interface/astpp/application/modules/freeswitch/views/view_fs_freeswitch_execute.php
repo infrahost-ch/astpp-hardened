@@ -7,7 +7,7 @@
 <? endblock() ?>
 <? startblock('content') ?>
 <?php 	$command_show = str_replace("api ", "", $command); ?>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function(){
   $("#freeswitch_command").change(function(){
     $('#error_field_command').text('');
@@ -15,7 +15,7 @@ $(document).ready(function(){
   });
 });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 function validateForm(){
       if(document.getElementById('freeswitch_command').value == "")
       {
@@ -60,7 +60,7 @@ function validateForm(){
 										name="freeswitch_command" placeholder="freeswitch command"
 										style="height: 40px;">
 								</div>
-								<button type="button" onclick="validateForm();"
+								<button type="button" data-astpp-click="validateForm();"
 									class="btn btn-line-parrot pull"><?php echo gettext('Execute')?></button>
 							</div>
 						</div>

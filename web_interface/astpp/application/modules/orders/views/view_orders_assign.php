@@ -296,7 +296,7 @@ if ($categoryinfo->num_rows > 0) {
 							</div>
 							<div class="col-md-6 float-left">
 								<button class="btn btn-secondary mx-2 btn-block" name="cancel"
-									onclick="return redirect_page('/orders/orders_list/')"
+									data-astpp-click="return redirect_page('/orders/orders_list/')"
 									value="Cancel" type="button"> <?php echo gettext("Cancel"); ?> </button>
 							</div>
 						</div>
@@ -312,7 +312,7 @@ if ($categoryinfo->num_rows > 0) {
 					<?php
     if (isset($validation_errors) && $validation_errors != '') {
         ?>
-						<script>
+						<script<?php echo csp_nonce_attr(); ?>>
 							var ERR_STR = '<?php echo $validation_errors; ?>';
 							print_error(ERR_STR);
 						</script>
@@ -322,7 +322,7 @@ if ($categoryinfo->num_rows > 0) {
 
 </section>
 
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 function build_customer_dropdown(resellerid,accountid){
 	 url = "<?= base_url().'orders/orders_reseller_accounts_dependency_dropdown/'?>";
 	 $.ajax({

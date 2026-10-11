@@ -24,11 +24,11 @@
 						<?php if (isset($provider_id) && $provider_id != "") { ?>
 							<button class="btn btn-success" id="dwnld_err" type="button"
 					name="action" value="Download Errors"
-					onclick="return redirect_page('<?= base_url().'did/did_error_download/'?>')"><?php echo gettext("Download Errors"); ?></button>
+					data-astpp-click="return redirect_page('<?= base_url().'did/did_error_download/'?>')"><?php echo gettext("Download Errors"); ?></button>
 						<?}?>
 						<button class="btn btn-secondary mr-2" id="did_list" type="button"
 					name="action" value="Back to DID List"
-					onclick="return redirect_page('/did/did_list/')"><?php echo gettext("Back to DID List"); ?></button>
+					data-astpp-click="return redirect_page('/did/did_list/')"><?php echo gettext("Back to DID List"); ?></button>
 			</div>
 		</div>
 	</div>

@@ -5,7 +5,7 @@
 
 <? endblock() ?>
 <?php startblock('content') ?>      
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
   
     $(document).ready(function(){
  $("#country_id").change(function () {	
@@ -17,7 +17,7 @@
 <section class="slice color-three pb-4">
   <div class="w-section inverse p-0">
             
-          <form method="post" action="<?= base_url() ?>pages/services/" id="product_submit" onchange="this.form.submit()">
+          <form method="post" action="<?= base_url() ?>pages/services/" id="product_submit" data-astpp-change="this.form.submit()">
             <div class="col-md-12 main_wrapper_title color-three border_box d-flex"> 
                 <div class="col-md-9 p-0 float-left align-self-center lh19">
                     <h2 class="m-0 text-light"><?php echo gettext("Products"); ?></h2>
@@ -94,7 +94,7 @@
 <? endblock() ?>  
 
 <? end_extend() ?>  
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
 

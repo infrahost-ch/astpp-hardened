@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     $("#submit").click(function(){
       submit_form("commission_form");
     })
@@ -41,7 +41,7 @@ if (isset($maildata) && $maildata != '') {
         }
         ?>          
 </section>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
     $("input[type='hidden']").parents('li.form-group').addClass("d-none");
     $("textarea").parents('li.form-group').addClass("h-auto");

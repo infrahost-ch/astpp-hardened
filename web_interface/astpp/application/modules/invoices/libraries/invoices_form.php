@@ -798,7 +798,7 @@ class invoices_form extends common
                     'value' => '',
                     'style' => 'margin-top:0px;',
                     'name' => 'button',
-                    'onclick' => 'return image_delete(' . $accountid . ')',
+                    'data-astpp-click' => 'return image_delete(' . $accountid . ')',
                     'size' => '20',
                     'maxlength' => '100',
                     'class' => "btn btn-line-parrot"
@@ -828,7 +828,7 @@ class invoices_form extends common
                     'value' => '',
                     'style' => 'margin-top:0px;',
                     'name' => 'button',
-                    'onclick' => 'return image_delete(' . $accountid . ')',
+                    'data-astpp-click' => 'return image_delete(' . $accountid . ')',
                     'size' => '20',
                     'maxlength' => '100',
                     'class' => "btn btn-line-parrot"
@@ -1304,7 +1304,7 @@ class invoices_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'/invoices/invoice_conf_list/\')'
+            'data-astpp-click' => 'return redirect_page(\'/invoices/invoice_conf_list/\')'
         );
 
         return $form;

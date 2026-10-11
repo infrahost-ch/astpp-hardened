@@ -78,7 +78,7 @@
                       <button class="btn btn-info btn-block" name="order_now" id="order_now" value="Order Now"  type="submit"> <i class="fa fa-plus-square-o"></i> <?php echo gettext("Order Now");?> </button>
 			</div>
 			 <div class="col-md-6 float-left">
-                    		  <button class="btn btn-line-sky btn-block" name="cancel" onclick="return redirect_page('/products/products_list/')" value="Cancel" type="button"> <i class="fa fa-ban"></i> <?php echo gettext("Cancel");?> </button>
+                    		  <button class="btn btn-line-sky btn-block" name="cancel" data-astpp-click="return redirect_page('/products/products_list/')" value="Cancel" type="button"> <i class="fa fa-ban"></i> <?php echo gettext("Cancel");?> </button>
                    	 </div>  
                     </div>
 

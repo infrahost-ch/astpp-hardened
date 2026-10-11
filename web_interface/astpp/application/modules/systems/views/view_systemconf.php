@@ -1,11 +1,11 @@
 <? extend('master.php') ?>
 <? extend('left_panel_setting_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/tinymce-8.9.3/tinymce.min.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/astpp_editor.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/tinymce-8.9.3/tinymce.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/astpp_editor.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
 
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 $ (document).ready(function(){
 	$('a[rel*=facebox]').facebox();
 	$('[data-toggle="tooltip"]').tooltip();
@@ -55,7 +55,7 @@ div.show_custom_error
    display:inline;
 }
 </style>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 	$(document).on('change','#calling_cards_welcome_file',function(){
 	// alert('Change Happened');
 	var fileExtension = ['wav']; 
@@ -68,7 +68,7 @@ div.show_custom_error
 				}
 	});
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 function validateform()
 {
   var elem = document.getElementById('system_conf_form').elements;
@@ -210,7 +210,7 @@ function check_validation()
 		}
 		//sanket 1791 end
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
   });
@@ -229,7 +229,7 @@ function check_validation()
       </div>
       <div class="p-4 col-md-12">
         <div class="slice color-three float-left content_border col-12">
-           <form action="<?=base_url()?>/systems/configuration/<?=$group_title?>" accept-charset="utf-8" id="system_conf_form" method="POST" name="invoice_conf_form"  onsubmit="return check_validation()" enctype="multipart/form-data">
+           <form action="<?=base_url()?>/systems/configuration/<?=$group_title?>" accept-charset="utf-8" id="system_conf_form" method="POST" name="invoice_conf_form"  data-astpp-submit="return check_validation()" enctype="multipart/form-data">
               <div class="setting_tooltip col-md-12 col-sm-12 float-left p-0">
 							  <?php foreach($details as $key1=>$val1){
 									echo "<div class='col-12 px-2'>";
@@ -281,7 +281,7 @@ function check_validation()
 																					  
 																			}else if($val['name']=='text'){ ?>
 																			<div>
-																			<textarea name="<?php echo $val['name'] ?>" value='' rows="1" size="20" maxlength="256" class="Emailtemplate" id="term_condition" onkeypress="myFunction()"><?php echo isset($val['value'])?$val['value']:''; ?></textarea>
+																			<textarea name="<?php echo $val['name'] ?>" value='' rows="1" size="20" maxlength="256" class="Emailtemplate" id="term_condition" data-astpp-keypress="myFunction()"><?php echo isset($val['value'])?$val['value']:''; ?></textarea>
 																			</div>
 																			<?php  }
 																			else if(method_exists($this->common,$val['field_type'])){
@@ -349,7 +349,7 @@ function check_validation()
 <? startblock('sidebar') ?>
 <? endblock() ?>
 <? end_extend() ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 
 $(document).ready(function() {
 
@@ -376,14 +376,14 @@ function myFunction() {
   //end 
 
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 	$('input[type="file"]').change(function(e){
         var fileName = e.target.files[0].name;
         $('.custom-file-label').html(fileName);
         $("#welcomeDiv").removeClass('d-none');
     });
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
   $('select').on('shown.bs.select', function (e) {
     $(this).tooltip('show');
   });

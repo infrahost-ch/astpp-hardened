@@ -50,17 +50,18 @@
 <link href="<?php echo base_url(); ?>assets/vendor/fonts/fonts.css" rel="stylesheet"> 
 
 
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"></script>
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>/assets/js/module_js/generate_grid.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/fileinput.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/tabcontent.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"<?php echo csp_nonce_attr(); ?>></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>/assets/js/module_js/generate_grid.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/astpp_csp.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/fileinput.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/tabcontent.js"<?php echo csp_nonce_attr(); ?>></script>
 <!-- IE -->
 <!-- -->    
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/custome_index.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/custome_index.js"<?php echo csp_nonce_attr(); ?>></script>
 <noscript>	
 <div id="noscript-warning">
 <?php echo gettext("ASTPP work best with JavaScript enabled"); ?>
@@ -86,7 +87,7 @@
 	}
 </style>
 
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
      function FocusOnInput() {
         document.getElementById("otp_number").focus();
        }
@@ -139,7 +140,7 @@
   
 </script>
 
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function(){
    $(".resend_otp").click(function(){
 				$(".resend_otpdiv").hide();
@@ -182,7 +183,7 @@ $(document).ready(function(){
     }
    
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
     $("#submit_otp").click(function(){
 	$('#submit_otp').prop('disabled', true);
@@ -218,7 +219,7 @@ $(document).ready(function() {
         </div>
   </div>
 </div>
-<body style="background: linear-gradient(135deg, #0E2638 0%, #1B4F87 60%, #347CCB 100%) fixed;" onload="FocusOnInput()">
+<body style="background: linear-gradient(135deg, #0E2638 0%, #1B4F87 60%, #347CCB 100%) fixed;" data-astpp-load="FocusOnInput()">
             <div class="col-md-12 m-auto form_card">
 				<form class="card p-4 col-12"  method="post" accept-charset="utf-8" id="otp_form" name="otp_form" style="background:rgba(255,255,255,0.8);">
 						<h2 class="text-center">	
@@ -252,7 +253,7 @@ $(document).ready(function() {
 							</div>
 							
 							<div class="form-group">
-								<input type="text" name="otp_number" value="" id="otp_number" size="15" maxlength="20" class="form-control m-0" onkeypress="return isNumberKey(event)"/>
+								<input type="text" name="otp_number" value="" id="otp_number" size="15" maxlength="20" class="form-control m-0" data-astpp-keypress="return isNumberKey(event)"/>
 								<label class="error_label">
 									<span id="otp_number_error" class="text-danger"></span>
 								</label>
@@ -260,7 +261,7 @@ $(document).ready(function() {
 							</div>
 							
 							<div class="col-md-12 p-0">
-								<button name="action" type="button" id="submit_otp" value="Signup" class="btn btn-block text-uppercase border_box" onclick="validateForm();" ><?php echo gettext('Submit')?></button>
+								<button name="action" type="button" id="submit_otp" value="Signup" class="btn btn-block text-uppercase border_box" data-astpp-click="validateForm();" ><?php echo gettext('Submit')?></button>
 							</div>
 							
 									<div class="col-md-12 text-center">

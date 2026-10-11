@@ -1,4 +1,4 @@
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     function get_destination(id)
     {
 

@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
   build_grid("sip_profile_grid","<?php echo base_url(); ?>freeswitch/fssipprofile_params_json/<?=$edited_id?>",<? echo $grid_fields ?>,'');
   jQuery('#sip_port').removeClass('borderred');
@@ -166,9 +166,9 @@ function reload_port(h){
 					</div>
 					<div class="col-12 mt-4 text-center">
 						<button class="btn btn-success" name="action" value="Save"
-							type="button" onclick="validateForm();"><?php echo gettext('Save')?></button>
+							type="button" data-astpp-click="validateForm();"><?php echo gettext('Save')?></button>
 						<button class="btn btn-secondary ml-2"
-							onclick="javascript:window.location ='<?= base_url() ?>freeswitch/fssipprofile/'"
+							data-astpp-click="return redirect_page('freeswitch/fssipprofile/')"
 							name="action" value="Cancel" type="button"><?php echo gettext('Cancel')?></button>
 					</div>
 			
@@ -211,9 +211,9 @@ function reload_port(h){
 						value='<?=$type?>' />
 					<div class='col-12 mt-2 text-center'>
 						<button class="btn btn-success" name="action" type="button"
-							onclick="validate_setting();"><?php echo gettext($button_name);?></button>
+							data-astpp-click="validate_setting();"><?php echo gettext($button_name);?></button>
 						<button class="btn btn-secondary" name="action" value="Reset"
-							type="button" onclick="cancel();"><?php echo gettext('Reset')?></button>
+							type="button" data-astpp-click="cancel();"><?php echo gettext('Reset')?></button>
 					</div>
 				</form>
 			</div>
@@ -232,7 +232,7 @@ function reload_port(h){
 					$url = "/freeswitch/fssipprofile_action/reload/".$id;
 					$link = base_url () . $url;
 				?>
-			&nbsp;<a onclick="reload_port('<?=$link?>')"
+			&nbsp;<a data-astpp-click="reload_port('<?=$link?>')"
 				class="" title="reload"
 				style="text-decoration: none; color: #428BCA; cursor:pointer;"><b><?php echo gettext('Reload')." |"; ?></b></a>
 			&nbsp;<a

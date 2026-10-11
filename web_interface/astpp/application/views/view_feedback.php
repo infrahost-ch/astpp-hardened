@@ -1,7 +1,8 @@
 
 <link href="<?= base_url() ?>assets/css/popup.css" rel="stylesheet" type="text/css">
- <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/popup/custom.js"></script>
-<script type="text/javascript">
+ <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/popup/custom.js"<?php echo csp_nonce_attr(); ?>></script>
+ <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/astpp_csp.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 function validateForm(){
       if((document.form1.name.value==""))
        {
@@ -77,7 +78,7 @@ function validateForm(){
         <textarea name="feedback" name="feedback" id="feedback" class="validate[required,length[6,300]] feedback-input" id="comment" placeholder="Feedback"></textarea>
       </div>
        <font color='red'> <span id="feedback1" name="feedback1"> </span> </font>
-        <center><input type="submit" value="Feedback"  class="btn btn-line-parrot" onclick="return validateForm();"/></center>
+        <center><input type="submit" value="Feedback"  class="btn btn-line-parrot" data-astpp-click="return validateForm();"/></center>
        <input name="account_info" type="hidden" value="<?php  print_r($account_info); ?>">
        
     </form>

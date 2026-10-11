@@ -1,7 +1,7 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/chartjs-4.5.1/chart.umd.min.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/astpp_charts.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/chartjs-4.5.1/chart.umd.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/astpp_charts.js"<?php echo csp_nonce_attr(); ?>></script>
 <style>
     .second{
         color: black;
@@ -55,7 +55,7 @@ display:inline-block;
 to{-webkit-transform:rotate(1turn);transform:rotate(1turn)}
 }
 </style>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     
     function build_recharge_graph(drop_val){
             var month_year=$("#month_year_dropdown").val();
@@ -1110,7 +1110,7 @@ function create_formatted_date($startdate,$enddate,$timezone,$timevisibly)
             </div>
             <?php } ?>
 </section>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function(){
         $('#today_dropdown').on('change', function() {
           if ( this.value == 't_month')

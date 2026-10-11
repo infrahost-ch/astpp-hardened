@@ -1,7 +1,7 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
 
 		build_grid("did_grid","",<? echo $grid_fields; ?>,"");
@@ -189,7 +189,7 @@
 										
 									</div>
 									<div class="col-md-12 text-right">
-										<input class="btn btn-success btn-lg" onclick="validateForm();" name="action" value=<?php echo gettext("Purchase DID");?> type="submit">
+										<input class="btn btn-success btn-lg" data-astpp-click="validateForm();" name="action" value=<?php echo gettext("Purchase DID");?> type="submit">
 									</div>
 								</div>
 							</div>

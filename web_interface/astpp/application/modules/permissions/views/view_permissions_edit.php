@@ -6,7 +6,7 @@
 <?= gettext($page_title); ?>
 <? endblock() ?>
 <?= startblock('content') ?>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 function open_menu(module){	
 	var div_id= module+"_menu";
 	$('#'+div_id).toggle();
@@ -178,9 +178,9 @@ table {
 									<div class="col-md-12 text-right">
 										<input id="save_button" class="save_button btn btn-success"
 											name="save_button" value="<?php echo gettext('Save');  ?>" type="button"
-											onclick="form_submit()"> <input name="action" type="button"
+											data-astpp-click="form_submit()"> <input name="action" type="button"
 											value="<?php echo gettext('Cancel');  ?>" class="btn btn-secondary ml-2"
-											onclick="return redirect_page('/permissions/permissions_list/')">
+											data-astpp-click="return redirect_page('/permissions/permissions_list/')">
 									</div>
 								</div>
 							</div>
@@ -194,7 +194,7 @@ foreach ($permission_main_array as $module_key => $module_value) {
 <div class="col-md-12 alert-primary heading">
 
 									<a class="btn"
-										onclick="open_menu('<?php echo $module_key; ?>');"><h3
+										data-astpp-click="open_menu('<?php echo $module_key; ?>');"><h3
 											class="text-left m-0"><?php echo gettext(ucwords(str_replace("_"," ",$module_key))); ?></h3></a>
 
 									<div id="<?php echo $div_function_name; ?>"
@@ -219,7 +219,7 @@ foreach ($permission_main_array as $module_key => $module_value) {
 												<?php echo (isset($permission_result[$first_sub_module_key][$sub_module_key]['main']) &&astpp_eq0($permission_result[$first_sub_module_key][$sub_module_key]['main'])) ? 'checked' : '';?>>
 												<div class="float-left">
 													<a
-														onclick="open_sub_menu('<?php echo $link_id; ?>','<?php echo $sub_module_key; ?>','<?php echo $i?>');"
+														data-astpp-click="open_sub_menu('<?php echo $link_id; ?>','<?php echo $sub_module_key; ?>','<?php echo $i?>');"
 														class="btn btn-link"> <span
 														class="collaps-<?php echo $i; ?>"><i class='fa fa-plus'></i></span>
 				<?php

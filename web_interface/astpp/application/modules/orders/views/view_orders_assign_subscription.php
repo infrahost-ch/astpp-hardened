@@ -136,7 +136,7 @@
 
 	</div>
 </section>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 
 
 jQuery(document).ready(function() {  

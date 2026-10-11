@@ -190,7 +190,7 @@
                         <button class="btn btn-success btn-block btn-block" name="action" id ="action" value="Save" type="submit"><?php echo gettext('Save'); ?> </button>
                     </div>
 		   <div class="col-md-6 float-left">
-                      <button class="btn btn-secondary mx-2 btn-block" name="cancel" onclick="return redirect_page('/products/products_list/')" value="Cancel" type="button"> <?php echo gettext('Cancel'); ?> </button>
+                      <button class="btn btn-secondary mx-2 btn-block" name="cancel" data-astpp-click="return redirect_page('/products/products_list/')" value="Cancel" type="button"> <?php echo gettext('Cancel'); ?> </button>
                     </div>    
                   </div>
 		
@@ -202,7 +202,7 @@
 	 </form>
 		 <?php
 						if (isset($validation_errors) && $validation_errors != '') { ?>
-						<script>
+						<script<?php echo csp_nonce_attr(); ?>>
 							var ERR_STR = '<?php echo $validation_errors; ?>';
 							print_error(ERR_STR);
 						</script>
@@ -210,7 +210,7 @@
          </div>
 	</section>  
     
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 jQuery(document).ready(function() {  
 	$("#product_category").change(function(){ ;
 		$('#product_add_form').attr('action', "<?php echo base_url();?>products/products_add/");

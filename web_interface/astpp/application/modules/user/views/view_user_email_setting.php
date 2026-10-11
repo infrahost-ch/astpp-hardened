@@ -1,6 +1,6 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
 var country_id = "<?php echo $account_data[0]['country_id']; ?>"
 var timezone_id = "<?php echo $account_data[0]['timezone_id']; ?>"
@@ -54,7 +54,7 @@ function form_submit(){
 					<a href="<?= base_url(); ?>user/user_myprofile/"><?php echo gettext('My Profile');?></a>
 					<a href="<?= base_url(); ?>user/user_myprofile/"><?php echo gettext('Email Setting');?></a>
 				</div>
-	  	  	   <form method='POST' id="reseller_form" name="reseller_form" action="<?= base_url()?>user/user_email_setting/" onSubmit="return form_submit();">
+	  	  	   <form method='POST' id="reseller_form" name="reseller_form" action="<?= base_url()?>user/user_email_setting/" data-astpp-submit="return form_submit();">
 
 			    <div class='col-md-12 no-padding'>
 				<input type="hidden" name='id' id='id' value="<?= $account_data[0]['id'] ?>">
@@ -102,7 +102,7 @@ function form_submit(){
 			   <center>
 			    <div class="col-md-12 margin-t-20 margin-b-20">
 				<input type="submit" name='submit' value="save" class="btn btn-line-parrot">
-				<button name="action" type="button" value="cancel" class="btn btn-line-sky margin-x-10" onclick="return redirect_page('/dashboard/')"><?php echo gettext('Cancel')?></button>
+				<button name="action" type="button" value="cancel" class="btn btn-line-sky margin-x-10" data-astpp-click="return redirect_page('/dashboard/')"><?php echo gettext('Cancel')?></button>
 			    </div>
 			   </center>
 			   </form>

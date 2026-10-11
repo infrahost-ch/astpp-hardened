@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
   var showOrHide=false;
   $("#search_bar").toggle(showOrHide);
@@ -74,8 +74,8 @@ function reload_button()
 }
 </script>
 
-<script type="text/javascript">
-setInterval( "refreshAjax();", 10000 ); 
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
+setInterval( function () { refreshAjax(); }, 10000 ); // ASTPP fork (audit O4): function instead of a string (eval); refreshAjax is set later
 
 $(function() {
   refreshAjax = function(){$("#flex1").flexReload();

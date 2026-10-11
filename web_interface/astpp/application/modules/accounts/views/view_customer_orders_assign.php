@@ -174,7 +174,7 @@
 							</div>
 							<div class="col-md-6 float-left">
 								<button class="btn btn-secondary mx-2 btn-block" name="cancel"
-									onclick="return redirect_page('/accounts/customer_product/<?php echo  $account_arr['id'] ?>')"
+									data-astpp-click="return redirect_page('/accounts/customer_product/<?php echo  $account_arr['id'] ?>')"
 									value="Cancel" type="button"> <?php echo gettext('Cancel');?> </button>
 							</div>
 						</div>
@@ -185,7 +185,7 @@
      <?php
     if (isset($validation_errors) && $validation_errors != '') {
         ?>
-     	<script>
+     	<script<?php echo csp_nonce_attr(); ?>>
      		var ERR_STR = '<?php echo $validation_errors; ?>';
      		print_error(ERR_STR);
      	</script>
@@ -193,7 +193,7 @@
 
  </div>
 </section>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 
 
 

@@ -6,7 +6,7 @@
 		</div>
   </div>    
 </section> -->
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 /*function validateForm(){
 	var formflag = true;
 	
@@ -218,7 +218,7 @@
 				</div>
 				<div class="col-md-6 float-left">
 					<button class="btn btn-secondary mx-2 btn-block" name="cancel"
-						onclick="return redirect_page('/did/did_available_list/')"
+						data-astpp-click="return redirect_page('/did/did_available_list/')"
 						value="Cancel" type="button">  <?php echo gettext("Cancel"); ?> </button>
 				</div>
 			</div>

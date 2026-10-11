@@ -1,12 +1,12 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     $("#submit").click(function(){
         submit_form("fssipprofile_form");
     })
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function(){
   jQuery('#sip_port').removeClass('borderred');
   jQuery('#sip_ip').removeClass('borderred');
@@ -27,7 +27,7 @@ $(document).ready(function(){
   });
 });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 function validateForm(){
 	var formflag = true;
       var ipaddress = document.getElementById("sip_ip").value;
@@ -164,9 +164,9 @@ function validateForm(){
 						</div>
 						<div class="col-12 my-4 text-center">
 							<button class="btn btn-success" name="action" value="Save"
-								type="button" onclick="validateForm();"><?php echo gettext('Save')?></button>
+								type="button" data-astpp-click="validateForm();"><?php echo gettext('Save')?></button>
 							<button class="btn btn-secondary mx-2"
-								onclick="javascript:window.location ='<?= base_url() ?>freeswitch/fssipprofile/'"
+								data-astpp-click="return redirect_page('freeswitch/fssipprofile/')"
 								name="action" value="Cancel" type="button"><?php echo gettext('Cancel')?></button>
 						</div>
 					</div>
@@ -175,7 +175,7 @@ function validateForm(){
 					<?php
     if (isset($validation_errors) && $validation_errors != '') {
         ?>
-							<script>
+							<script<?php echo csp_nonce_attr(); ?>>
 								var ERR_STR = '<?php echo $validation_errors; ?>';
 								print_error(ERR_STR);
 							</script>

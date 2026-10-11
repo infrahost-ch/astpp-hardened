@@ -36,7 +36,7 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 						<!-- -->
 
 						<script type="text/javascript"
-							src="<?php echo base_url(); ?>/assets/js/module_js/generate_grid.js"></script>
+							src="<?php echo base_url(); ?>/assets/js/module_js/generate_grid.js"<?php echo csp_nonce_attr(); ?>></script>
 						<noscript>
 							<div id="noscript-warning"><?php echo gettext("ASTPP work best with JavaScript enabled"); ?></div>
 						</noscript>
@@ -130,7 +130,7 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 
 </body>
 </html>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 $("#country_id").val(<?=$country_id?>);
 $("#timezone_id").val(<?=$timezone_id?>);
 $("#currency_id").val(<?=$currency_id?>);

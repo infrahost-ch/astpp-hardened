@@ -1,6 +1,6 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
 var country_id = "<?php echo $account_data[0]['country_id']; ?>"
 var timezone_id = "<?php echo $account_data[0]['timezone_id']; ?>"
@@ -60,7 +60,7 @@ function form_submit(){
                 <div class="slice color-three pull-left content_border">
                     <?php echo $form; ?>
                     <?php if (isset($validation_errors) && $validation_errors != '') { ?>
-                        <script>
+                        <script<?php echo csp_nonce_attr(); ?>>
                             var ERR_STR = '<?php echo $validation_errors; ?>';
                             print_error(ERR_STR);
                         </script>

@@ -2,9 +2,9 @@
 <?php error_reporting(E_ERROR); ?>
 <? startblock('extra_head') ?>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
 
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     $("#submit").click(function(){
         submit_form("callerid_form");
     })
@@ -40,7 +40,7 @@
 echo $form;
         if (isset($validation_errors) && $validation_errors != '') {
             ?>
-           <script>
+           <script<?php echo csp_nonce_attr(); ?>>
             var ERR_STR = '<?php echo $validation_errors; ?>';
             print_error(ERR_STR);
         </script>

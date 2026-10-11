@@ -38,17 +38,17 @@
 <link href="<?php echo base_url(); ?>assets/css/com-style.css"
 rel="stylesheet" type="text/css">	
 
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"></script>
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"<?php echo csp_nonce_attr(); ?>></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"<?php echo csp_nonce_attr(); ?>></script>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"></script>
+	src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"<?php echo csp_nonce_attr(); ?>></script>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"></script>
+	src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"<?php echo csp_nonce_attr(); ?>></script>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
 <!-- IE -->
 
-<script src="<?php echo base_url(); ?>assets/js/custome_index.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/custome_index.js"<?php echo csp_nonce_attr(); ?>></script>
 
 <link
 	href="<?php echo base_url(); ?>assets/vendor/fonts/fonts.css"

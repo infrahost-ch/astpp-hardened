@@ -530,9 +530,11 @@ if ( ! function_exists('form_dropdown_all'))
 				}
 			}
 		}
+		// ASTPP fork (audit O4): no inline handler - data-astpp-change is run by assets/js/astpp_csp.js
+		// (upstream: unquoted onchange = <handler>)
 		$onchange = "";
-		if(isset($name['onchange']) && $name['onchange'] != ''){
-			$onchange = "onchange = ".$name['onchange'];
+		if(is_array($name) && isset($name['data-astpp-change']) && $name['data-astpp-change'] != ''){
+			$onchange = 'data-astpp-change="'.htmlspecialchars($name['data-astpp-change'], ENT_QUOTES).'"';
 		}
 		if ($extra != '') $extra = ' '.$extra;
 				$class= isset($name['class']) && !empty($name['class']) ? "col-md-12 form-control form-control-lg selectpicker $name[class]" :"col-md-12 form-control form-control-lg selectpicker";
@@ -940,7 +942,7 @@ if ( ! function_exists('form_label'))
 			}
 		}
 		$label .= ">";
-		$label_text =str_replace('#Enterprise#', '<span id = "Enterprise" class="badge badge-warning Enterprise" onclick="myFunction()"> Enterprise</span> ', $label_text );
+		$label_text =str_replace('#Enterprise#', '<span id = "Enterprise" class="badge badge-warning Enterprise" data-astpp-click="myFunction()"> Enterprise</span> ', $label_text );
 		$label .= "$label_text</label>";
 
 		return $label;

@@ -1,6 +1,6 @@
 <?php extend('master.php') ?>
 <?php startblock('extra_head') ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function () {
 		$('#apikey_copy').click(function () {
 			var field = document.getElementById('apikey_new');
@@ -85,7 +85,7 @@
 								<td><?php echo empty($k['last_used_date']) ? '&ndash;' : $e($this->common->convert_GMT_to('', '', $k['last_used_date'])) . '<br><small>' . $e($k['last_used_ip']) . '</small>'; ?></td>
 								<td class="text-nowrap">
 									<a class="btn btn-royelblue btn-sm" href="<?php echo base_url(); ?>apikeys/apikeys_edit/<?php echo (int) $k['id']; ?>/" title="<?php echo $e(gettext('Edit')); ?>"><i class="fa fa-pencil-square-o fa-fw"></i></a>
-									<form method="post" action="<?php echo base_url(); ?>apikeys/apikeys_delete/<?php echo (int) $k['id']; ?>/" class="d-inline" onsubmit="return confirm('<?php echo addslashes(gettext('Delete this API key? Systems using it lose access immediately.')); ?>');">
+									<form method="post" action="<?php echo base_url(); ?>apikeys/apikeys_delete/<?php echo (int) $k['id']; ?>/" class="d-inline" data-astpp-submit="return confirm('<?php echo addslashes(gettext('Delete this API key? Systems using it lose access immediately.')); ?>');">
 										<input type="hidden" name="csrf_token" value="<?php echo $e($csrf); ?>">
 										<button type="submit" class="btn btn-royelblue btn-sm" title="<?php echo $e(gettext('Delete')); ?>"><i class="fa fa-trash fa-fw"></i></button>
 									</form>

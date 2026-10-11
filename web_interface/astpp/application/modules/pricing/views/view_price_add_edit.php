@@ -16,12 +16,12 @@ if (isset($percentage) and ! empty($percentage)) {
 }
 
 ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     $("#submit").click(function(){
         submit_form("pricing_form");
     })
 </script>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
 		$(".reseller_id").change(function(){
                 var reseller_id=$("#reseller").val();
@@ -59,7 +59,7 @@ if (isset($validation_errors)) {
 		</section>
 	</div>
 </div>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
     $("input[type='hidden']").parents('li.form-group').addClass("d-none");
 });

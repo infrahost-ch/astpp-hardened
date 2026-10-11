@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
       
         build_grid("commission_report_grid","",<? echo $grid_fields; ?>,"");
@@ -13,7 +13,7 @@
         });
     });
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         $("#commission_from_date").datetimepicker({ dateFormat: 'yy-mm-dd' });		
         $("#commission_to_date").datetimepicker({ dateFormat: 'yy-mm-dd' });			

@@ -65,26 +65,27 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 									href="<?php echo base_url(); ?>assets/vendor/fonts/fonts.css"
 									rel="stylesheet">
 
-									<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"></script>
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"></script>
+									<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"<?php echo csp_nonce_attr(); ?>></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"></script>
+										src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"></script>
+										src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/js/facebox.js"></script>
+										src="<?php echo base_url(); ?>assets/js/facebox.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/js/module_js/generate_grid.js"></script>
+										src="<?php echo base_url(); ?>assets/js/module_js/generate_grid.js"<?php echo csp_nonce_attr(); ?>></script>
+	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/astpp_csp.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
+										src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/js/fileinput.js"></script>
+										src="<?php echo base_url(); ?>assets/js/fileinput.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/js/tabcontent.js"></script>
+										src="<?php echo base_url(); ?>assets/js/tabcontent.js"<?php echo csp_nonce_attr(); ?>></script>
 									<!-- IE -->
 									<!-- -->
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/js/custome_index.js"></script>
+										src="<?php echo base_url(); ?>assets/js/custome_index.js"<?php echo csp_nonce_attr(); ?>></script>
 									<style>
 html, body {
 	height: 100%;
@@ -112,7 +113,7 @@ label.error_label{
 }
 /* end*/
 </style>
-									<script>
+									<script<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
     
 	$('input[type="text"]').keyup(function() {
@@ -125,7 +126,7 @@ $(document).ready(function() {
 		});
  });
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
       $(document).ready(function () {
 		$("#countrycode").attr('disabled',true);
 		$("#country_id").change(function () {		
@@ -136,7 +137,7 @@ $(document).ready(function() {
 	});
 </script>
 
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
          $('document').ready(function() {
 			$("#signup_submit").click(function(){
 	 			$('#signup_submit').prop('disabled', true);
@@ -294,7 +295,7 @@ foreach ($countrycode_array as $key => $countrycode_info) :
 						name="telephone"
 						value="<?php if (isset($telephone)) {echo $telephone;} else {'';}?>"
 						size="15" maxlength="20" class="col-9 float-left form-control"
-						onkeypress="return isNumberKey(event)" />
+						data-astpp-keypress="return isNumberKey(event)" />
 		<?php
 if (isset($error['account_number']) && $error['account_number']) {
     ?>
@@ -433,7 +434,7 @@ if (isset($error['captcha_err']) && $error['captcha_err']) {
 						<div id="term_and_condition1">
 						<input type="checkbox"  id="term_and_condition" name="term_and_condition" 
 						value="<?php if (isset($term_and_condition)) {echo $term_and_condition;} 
-						else {'';}?>" onkeypress="return isNumberKey(event)">
+						else {'';}?>" data-astpp-keypress="return isNumberKey(event)">
 						<!-- end-->
 					<a class="ml-2" href="<?php  echo $term_and_condition_url;  ?>" data-toggle="modal" id="myModal1" data-target="#myModal1" value=""><?php echo gettext('Terms & Condition')?> </a>
 					</div>
@@ -444,7 +445,7 @@ if (isset($error['captcha_err']) && $error['captcha_err']) {
 				<div id="term_and_condition1">
 				<input type="checkbox" class="term_and_condition mt-1" id="term_and_condition" name="term_and_condition"
 						value="<?php if (isset($term_and_condition)) {echo $term_and_condition;} 
-						else {'';}?>" onkeypress="return isNumberKey(event)">
+						else {'';}?>" data-astpp-keypress="return isNumberKey(event)">
 				<!-- end-->
 					<a class="ml-2" href="" data-toggle="modal" id="text" data-target="#text"> <?php echo gettext('Terms & Condition')?></a>
 					</div>
@@ -475,20 +476,20 @@ if (isset($error['captcha_err']) && $error['captcha_err']) {
 						<?php
     if (isset($validation_errors) && $validation_errors != '') {
         ?>
-						<script>
+						<script<?php echo csp_nonce_attr(); ?>>
 							var ERR_STR = '<?php echo $validation_errors; ?>';
 							print_error(ERR_STR);
 						</script>
 					<? } ?>	
 				</div>
 
-	<script type="text/javascript">
+	<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 		$("#country_id").val(<?= $country_id ?>);
 		$("#timezone_id").val(<?= $timezone_id ?>);
 		$("#currency_id").val(<?= $currency_id ?>);
 </script>
 
-	<script type="text/javascript">
+	<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 	var country = $("#country_id").val();
 	var timezone = $("#timezone_id").val();
 	var currency = $("#currency_id").val();
@@ -509,7 +510,7 @@ if (isset($error['captcha_err']) && $error['captcha_err']) {
 		$("#telephone_1_error").hide("");
 	});
 </script>
-	<script>
+	<script<?php echo csp_nonce_attr(); ?>>
       $(document).ready(function () {
 		$("select").closest('.form-group').addClass('control-select');
 	});

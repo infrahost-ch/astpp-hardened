@@ -584,7 +584,7 @@ class User_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'/user/user_myprofile/\')'
+            'data-astpp-click' => 'return redirect_page(\'/user/user_myprofile/\')'
         );
         return $form;
     }
@@ -604,8 +604,8 @@ class User_form extends common
                 'class' => "text field medium",
                 'id' => 'new_password_show',
                 'autocomplete' => 'new-password',
-                'onmouseover' => 'seetext(new_password_show)',
-                'onmouseout' => 'hidepassword(new_password_show)'
+                'data-astpp-mouseover' => 'seetext(new_password_show)',
+                'data-astpp-mouseout' => 'hidepassword(new_password_show)'
             ),
             'required|portal_password[session]|password_check_old[accounts]',
             'tOOL TIP',
@@ -640,8 +640,8 @@ class User_form extends common
                     'size' => '20',
                     'class' => "text field medium",
                     'id' => 'old_password_show',
-                    'onmouseover' => 'seetext(old_password_show)',
-                    'onmouseout' => 'hidepassword(old_password_show)'
+                    'data-astpp-mouseover' => 'seetext(old_password_show)',
+                    'data-astpp-mouseout' => 'hidepassword(old_password_show)'
                 ),
                 'required|password_check[accounts]',
                 'tOOL TIP',
@@ -661,8 +661,8 @@ class User_form extends common
                     'size' => '20',
                     'class' => "text field medium",
                     'id' => 'password_show',
-                    'onmouseover' => 'seetext(password_show)',
-                    'onmouseout' => 'hidepassword(password_show)'
+                    'data-astpp-mouseover' => 'seetext(password_show)',
+                    'data-astpp-mouseout' => 'hidepassword(password_show)'
                 ),
                 "required|matches[new_password]",
                 'tOOL TIP',
@@ -683,7 +683,7 @@ class User_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'/user/user_myprofile/\')'
+            'data-astpp-click' => 'return redirect_page(\'/user/user_myprofile/\')'
         );
         return $form;
     }
@@ -2054,7 +2054,7 @@ class User_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -2497,7 +2497,7 @@ class User_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'/user/user_myprofile/\')'
+            'data-astpp-click' => 'return redirect_page(\'/user/user_myprofile/\')'
         );
         return $form;
     }
@@ -3376,7 +3376,7 @@ class User_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-line-sky margin-x-10',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }

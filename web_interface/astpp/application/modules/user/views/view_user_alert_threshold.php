@@ -1,7 +1,7 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
-<script type="text/javascript">
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 function form_submit(){
     var email = document.forms["reseller_form"]["notify_email"].value;
     if (email == null || email == "") {
@@ -19,7 +19,7 @@ function form_submit(){
     }
 }
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $(".breadcrumb li a").removeAttr("data-ripple","");
       
@@ -68,7 +68,7 @@ function form_submit(){
 						echo $form;
 					}	 ?>
                     <?php if (isset($validation_errors) && $validation_errors != '') { ?>
-                        <script>
+                        <script<?php echo csp_nonce_attr(); ?>>
                             var ERR_STR = '<?php echo $validation_errors; ?>';
                             print_error(ERR_STR);
                         </script>
@@ -82,7 +82,7 @@ function form_submit(){
 <? startblock('sidebar') ?>
 <? endblock() ?>
 <? end_extend() ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
   });

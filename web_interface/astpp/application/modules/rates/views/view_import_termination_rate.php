@@ -92,7 +92,7 @@ $trunklist = form_dropdown('trunk_id', $this->db_model->build_dropdown("id,name"
 								type="submit" name="action" value="import"><?php echo gettext("Import"); ?></button>
 							<button class="btn btn-secondary mx-2" id="ok" type="button"
 								name="action" value="cancel"
-								onclick="return redirect_page('/rates/termination_rates_list/')"><?php echo gettext("Cancel");?></button>
+								data-astpp-click="return redirect_page('/rates/termination_rates_list/')"><?php echo gettext("Cancel");?></button>
 						</div>
 					</div>
 				</div>
@@ -140,7 +140,7 @@ if (isset($csv_tmp_data) && ! empty($csv_tmp_data)) {
     ?>
                         <button type="button"
 								class="btn btn-secondary ml-2 float-right"
-								onclick="return redirect_page('/rates/termination_rate_import/')"><?php echo gettext("Back"); ?></button>
+								data-astpp-click="return redirect_page('/rates/termination_rate_import/')"><?php echo gettext("Back"); ?></button>
 							<button type="submit" class="btn btn-success float-right"
 								id="Process" value="Process"><?php echo gettext("Process"); ?></button>
                         
@@ -156,7 +156,7 @@ echo "</td></tr>";
 </section>
 
 <?} ?>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
  $('input[type="file"]').change(function(e){
         var fileName = e.target.files[0].name;
         $('.custom-file-label').html(fileName);

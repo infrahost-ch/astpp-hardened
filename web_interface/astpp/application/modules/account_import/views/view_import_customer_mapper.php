@@ -168,7 +168,7 @@ if (! isset($csv_tmp_data)) {
 	</div>
 	</div>
 </section>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
 		
 		$(".sweep_id").change(function(){
@@ -332,7 +332,7 @@ if (!empty($csv_tmp_data)) { ?>
 <?php
 } ?>
 
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 	$('input[type="file"]').change(function(e){
 		var fileName = e.target.files[0].name;
 		$('.custom-file-label').html(fileName);

@@ -32,7 +32,7 @@
 				</div>
 				<div class="col-md-6 float-left">
 					<button class="btn btn-secondary mx-2 btn-block" name="cancel"
-						onclick="return redirect_page('/did/did_list/')" value="Cancel"
+						data-astpp-click="return redirect_page('/did/did_list/')" value="Cancel"
 						type="button"> <?php echo gettext("Cancel"); ?> </button>
 				</div>
 			</div>

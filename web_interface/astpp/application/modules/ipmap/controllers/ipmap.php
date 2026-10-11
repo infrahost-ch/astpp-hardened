@@ -243,9 +243,9 @@ class IPMAP extends MX_Controller
                 }
              }
             $number = $this->common->get_field_name("number", "accounts", $value['accountid']);
-            $ipmap_checkbox = '<input type="checkbox" name="chkAll" id="' . $value['id'] . '" class="ace chkRefNos" onclick="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>';
+            $ipmap_checkbox = '<input type="checkbox" name="chkAll" id="' . $value['id'] . '" class="ace chkRefNos" data-astpp-click="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>';
             if ($account_data['type'] == '0') {
-                $ret_url = '<a href="' . base_url() . 'user/user_ipmap_edit/' . $value['id'] . '" class="btn btn-royelblue btn-sm"  rel="facebox" title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;<a href="' . base_url() . 'user/user_ipmap_delete/' . $value['id'] . '" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
+                $ret_url = '<a href="' . base_url() . 'user/user_ipmap_edit/' . $value['id'] . '" class="btn btn-royelblue btn-sm"  rel="facebox" title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;<a href="' . base_url() . 'user/user_ipmap_delete/' . $value['id'] . '" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
                 $account_name = '';
                 $json_data['rows'][] = array(
                     'cell' => array(
@@ -262,7 +262,7 @@ class IPMAP extends MX_Controller
                     )
                 );
             } else if ($account_data['type'] == '1') {
-                $ret_url = '<a href="' . base_url() . 'ipmap/ipmap_edit/' . $value['id'] . '" class="btn btn-royelblue btn-sm"  rel="facebox" title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;<a href="' . base_url() . 'ipmap/ipmap_delete/' . $value['id'] . '" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
+                $ret_url = '<a href="' . base_url() . 'ipmap/ipmap_edit/' . $value['id'] . '" class="btn btn-royelblue btn-sm"  rel="facebox" title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;<a href="' . base_url() . 'ipmap/ipmap_delete/' . $value['id'] . '" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
                 $account_name = $this->common->build_concat_string("first_name,last_name,number,company_name", "accounts", $value['accountid']);
 
                 $json_data['rows'][] = array(
@@ -280,7 +280,7 @@ class IPMAP extends MX_Controller
                 );
             } else {
 
-                $ret_url = '<a href="' . base_url() . 'ipmap/ipmap_edit/' . $value['id'] . '" class="btn btn-royelblue btn-sm"  rel="facebox" title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;<a href="' . base_url() . 'ipmap/ipmap_delete/' . $value['id'] . '" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
+                $ret_url = '<a href="' . base_url() . 'ipmap/ipmap_edit/' . $value['id'] . '" class="btn btn-royelblue btn-sm"  rel="facebox" title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;<a href="' . base_url() . 'ipmap/ipmap_delete/' . $value['id'] . '" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
                 $account_name = $this->common->build_concat_string("first_name,last_name,number,company_name", "accounts", $value['accountid']);
 
                 $reseller_id = $this->common->get_field_name("id", "accounts", $value['reseller_id']);

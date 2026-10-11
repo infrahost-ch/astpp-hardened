@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         $('.rm-col-md-12').addClass('float-right');
         $(".rm-col-md-12").removeClass("col-md-12");
@@ -32,7 +32,7 @@
         });
     });
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 var lastClicked = '';
 function playAudio(val,time_pause) { 
 	if(lastClicked != '' && lastClicked != val){

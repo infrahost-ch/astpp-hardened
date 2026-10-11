@@ -82,7 +82,7 @@ function get_search_low_balance_form()
             array(
                 'name' => 'reseller_id',
                 'class' => 'reseller',
-                'onchange' => 'account_change_add(this.value)'
+                'data-astpp-change' => 'account_change_add(this.value)'
             ),
             'SELECT',
             '',

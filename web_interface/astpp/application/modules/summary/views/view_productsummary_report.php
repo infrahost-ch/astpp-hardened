@@ -1,7 +1,7 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 <?php $product_summary_search = $this->session->userdata('productsummary_reports_search'); ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
    $(document).ready(function() {
        $(this).css('background-color', 'Green');
        build_grid("productsummary_grid","",<? echo $grid_fields; ?>,<? echo $grid_buttons; ?>);

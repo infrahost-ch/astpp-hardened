@@ -1,13 +1,13 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
-<script type="text/javascript">
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
   });
 </script>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         build_grid("dids_list","<?php echo base_url()."accounts/customer_details_json/did/$edit_id/"; ?>",<? echo $grid_fields; ?>,"");
         
@@ -183,7 +183,7 @@ label.error {
         <?php  if((isset($permissioninfo['did']['did_list']['delete'])) && (astpp_eq0($permissioninfo['did']['did_list']['delete']))  || ($permissioninfo['login_type'] == '2' or $permissioninfo['login_type'] == '-1' or $permissioninfo['login_type'] == '0' or $permissioninfo['login_type'] == '3' or $permissioninfo['login_type'] == '1') or ($permissioninfo['login_type'] == '-1')){ ?>   
             <div class="pull-left margin-t-0 padding-x-4"
 						id="left_panel_add"
-						onclick="delete_multiple('/accounts/customer_did_delete/<?php echo $edit_id; ?>')")>
+						data-astpp-click="delete_multiple('/accounts/customer_did_delete/<?php echo $edit_id; ?>')")>
 						<span class="btn btn-line-danger"> <i
 							class="fa fa-times-circle fa-lg"></i><?php echo gettext('Delete');?></span>
 					</div>
@@ -271,7 +271,7 @@ label.error {
 <? endblock() ?>	
 
 <? end_extend() ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });

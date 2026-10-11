@@ -1,8 +1,8 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 <link href="<?= base_url() ?>assets/css/shop_popup.css" rel="stylesheet" type="text/css"/>
-<script src="<?= base_url() ?>assets/vendor/jquery-ui-1.14.2/jquery-ui.min.js"></script>
-<script type="text/javascript" language="javascript">
+<script src="<?= base_url() ?>assets/vendor/jquery-ui-1.14.2/jquery-ui.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
         build_grid("refill_coupon_grid","",<? echo $grid_fields; ?>,"");
 	$("#refill_coupon_recharge").click(function () {
@@ -109,7 +109,7 @@ $(document).ready(function() {
 										
 									<div class="col-md-12">
 										<div class="text-center">
-										<input type= "button" class="btn btn-success" id= "submit_refill_coupon"  value = "Continue" onclick="test()"/>
+										<input type= "button" class="btn btn-success" id= "submit_refill_coupon"  value = "Continue" data-astpp-click="test()"/>
 										</div>
 									</div>	
 							</ul>

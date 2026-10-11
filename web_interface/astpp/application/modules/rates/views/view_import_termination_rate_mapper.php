@@ -4,16 +4,16 @@ extend('master.php')?>
 startblock('extra_head')?>
    <?
 if (isset($csv_tmp_data) && ! empty($csv_tmp_data)) {
-    echo '<script>';
+    echo '<script' . csp_nonce_attr() . '>'; // ASTPP fork (audit O4)
     echo 'var csv_tmp_data = ' . json_encode($csv_tmp_data) . ';';
     echo '</script>';
 }
 ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
    $(document).ready(function() {
    });
 </script>
-<script type="text/javascript" language="javascript"><?
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>><?
 if (isset($mapto_fields) && ! empty($mapto_fields)) {
     foreach ($mapto_fields as $csv_key => $csv_value) {
         echo '$("#' . $csv_value . '-prefix").live("change", function () {';
@@ -119,7 +119,7 @@ if (! isset($csv_tmp_data)) {
 							type="submit" name="action" value="Import"><?php echo gettext("Import"); ?></button>
 						<button class="btn btn-secondary ml-2 mt-4" id="ok" type="button"
 							name="action" value="Cancel"
-							onclick="return redirect_page('/rates/termination_rates_list/')"><?php echo gettext("Cancel"); ?></button>
+							data-astpp-click="return redirect_page('/rates/termination_rates_list/')"><?php echo gettext("Cancel"); ?></button>
 					</div>
 				</div>
 			</div>
@@ -227,7 +227,7 @@ if (isset($csv_tmp_data) && ! empty($csv_tmp_data)) {
 <?php
 }
 ?>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
    $('input[type="file"]').change(function(e){
     var fileName = e.target.files[0].name;
     $('.custom-file-label').html(fileName);

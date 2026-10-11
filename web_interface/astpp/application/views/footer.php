@@ -3,7 +3,7 @@
 <div class="overlay">
     <div id="loading-img"></div>
 </div>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.dlmenu.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.dlmenu.js"<?php echo csp_nonce_attr(); ?>></script>
 <script<?php echo csp_nonce_attr(); ?> type="text/javascript">
     $(document).ready(function(){
         var jqueryarray = <?php echo json_encode($this->tooltip_data); ?>;

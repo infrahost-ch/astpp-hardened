@@ -114,9 +114,9 @@ class Reports extends MX_Controller
 					<source src="' . $url . '" type="audio/mpeg">
 					Your browser does not support the audio element.
 					</audio>';
-                    $action .= "<button onclick='playAudio(\"$uid\",\"$billseconds\")' type='button' class='btnplay'  id='play_" . $uid . "'  style='display:block;margin:0px 0 0 25px;border:0px !important; float:left; padding:0px'><img src=" . $play_img_url . " height='25px' width='25px' style='cursor: pointer;'/></button>";
+                    $action .= "<button data-astpp-click='playAudio(\"$uid\",\"$billseconds\")' type='button' class='btnplay'  id='play_" . $uid . "'  style='display:block;margin:0px 0 0 25px;border:0px !important; float:left; padding:0px'><img src=" . $play_img_url . " height='25px' width='25px' style='cursor: pointer;'/></button>";
 
-                    $action .= "<button onclick='pauseAudio(\"$uid\")' type='button'  class='btnplay' id='pause_" . $uid . "' style='display: none;margin:0px 0 0 25px;border:0px !important; float:left;padding:0px'><img src=" . $pause_img_url . " height='25px' width='25px' style='cursor: pointer;'/></button>";
+                    $action .= "<button data-astpp-click='pauseAudio(\"$uid\")' type='button'  class='btnplay' id='pause_" . $uid . "' style='display: none;margin:0px 0 0 25px;border:0px !important; float:left;padding:0px'><img src=" . $pause_img_url . " height='25px' width='25px' style='cursor: pointer;'/></button>";
                     $recording = (astpp_eq0($is_recording)) ? '<a title="Recording file" href="' . $url . '"><img src="' . base_url() . 'assets/images/download.png" height="20px" width="20px"/></a>' : '<img src="' . base_url() . 'assets/images/false.png" height="20px" alt="file not found" width="20px"/>';
                 } else {
                     $recording = '<img src="' . base_url() . 'assets/images/false.png" height="20px" title="Record file is not available" width="20px"/>';

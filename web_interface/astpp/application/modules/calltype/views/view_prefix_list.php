@@ -1,13 +1,13 @@
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/js/flexigrid.js"></script>
+	src="<?php echo base_url(); ?>assets/js/flexigrid.js"<?php echo csp_nonce_attr(); ?>></script>
 <link rel="stylesheet"
 	href="<?php echo base_url(); ?>assets/css/flexigrid.css"
 	type="text/css">
 <link href="<?php echo base_url(); ?>assets/css/facebox.css"
 	rel="stylesheet" media="all" />
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/js/module_js/generate_grid.js"></script>
-<script type="text/javascript" language="javascript">
+	src="<?php echo base_url(); ?>assets/js/module_js/generate_grid.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         build_grid("prefixes_grid","<?php echo base_url(); ?>package/package_patterns_add_json/<?= $packageid; ?>",<? echo $patters_grid_fields ?>,"");
         $('.checking').click(function () {
@@ -70,7 +70,7 @@
 				enctype="multipart/form-data" style="display: block">
 				<input type="hidden" id="add_patterns" name="add_patterns" readonly /><br />
 				<button id="add_patterns_btn" class="btn btn-line-warning btn"
-					name="add_patterns_btn" onclick="add_package_pattern();">
+					name="add_patterns_btn" data-astpp-click="add_package_pattern();">
 					<i class="fa fa-plus-circle fa-lg"></i><?php echo gettext("Add To List"); ?></button>
 			</form>
 		</div>

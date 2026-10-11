@@ -217,7 +217,7 @@ class rates_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -399,7 +399,7 @@ class rates_form extends common
                     'id' => 'routing_type',
                     'name' => 'routing_type',
                     'class' => 'routing_type',
-                    "onchange" => "trunk_change(this.value)"
+                    "data-astpp-change" => "trunk_change(this.value)"
                 ),
                 'SELECT',
                 '',
@@ -579,7 +579,7 @@ class rates_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -812,7 +812,7 @@ class rates_form extends common
         $form['button_search_delete'] = array(
             'name' => 'action',
             'id' => "termination_rate_batch_dlt",
-            'onclick' => "check_btn();",
+            'data-astpp-click' => "check_btn();",
             'content' => gettext('Delete Search Record'),
             'style' => 'display:none;',
             'value' => 'submit',
@@ -823,7 +823,7 @@ class rates_form extends common
         $form['button_search'] = array(
             'name' => 'action',
             'id' => "termination_rate_search_btn",
-            'onclick' => 'search_btn();',
+            'data-astpp-click' => 'search_btn();',
             'content' => gettext('Search'),
             'value' => 'save',
             'type' => 'button',
@@ -1886,7 +1886,7 @@ class rates_form extends common
         $form['button_search_delete'] = array(
             'name' => 'action',
             'id' => "origination_rate_batch_dlt",
-            'onclick' => "check_btn();",
+            'data-astpp-click' => "check_btn();",
             'content' => gettext('Delete Search Record'),
             'style' => 'display:none;',
             'value' => 'save',
@@ -1896,7 +1896,7 @@ class rates_form extends common
         $form['button_search'] = array(
             'name' => 'action',
             'id' => "origination_rate_list_search_btn",
-            'onclick' => 'search_btn();',
+            'data-astpp-click' => 'search_btn();',
             'content' => gettext('Search'),
             'value' => 'save',
             'type' => 'button',

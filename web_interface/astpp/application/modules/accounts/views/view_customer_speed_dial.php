@@ -1,8 +1,8 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
-<script type="text/javascript" language="javascript">
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     function showdiv(key1,key2) {
         document.getElementById(key1).style.display = "none";
         document.getElementById(key2).style.display = "block";
@@ -44,7 +44,7 @@ function remove_save_speed_dial(speed_num){
 
 
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
   });
@@ -138,11 +138,11 @@ label.error {
 								</div>
 								<div class="col-md-2 col-4 float-left">
 									<a class="btn text-danger ml-2 float-right"
-										onclick="remove_save_speed_dial('<?php echo $i; ?>')"
+										data-astpp-click="remove_save_speed_dial('<?php echo $i; ?>')"
 										title="Delete" name="click0<?php echo $i; ?>"
 										id="click0<?php echo $i; ?>"><i class="fa fa-trash"></i></a> <a
 										class="btn text-secondary float-right"
-										onclick="showdiv('key<?php echo $i; ?><?php echo astpp_n($i) + 1; ?>','key<?php echo $i; ?><?php echo astpp_n($i) + 2; ?>')"
+										data-astpp-click="showdiv('key<?php echo $i; ?><?php echo astpp_n($i) + 1; ?>','key<?php echo $i; ?><?php echo astpp_n($i) + 2; ?>')"
 										title="Edit"><i class="fa fa-pencil-square-o"></i></a>
 								</div>
 							</div>
@@ -164,11 +164,11 @@ label.error {
 								</div>
 								<div class="col-md-2 col-4 float-left">
 
-									<a onclick="remove_save_speed_dial('<?php echo $i; ?>')"
+									<a data-astpp-click="remove_save_speed_dial('<?php echo $i; ?>')"
 										class="btn text-danger float-right mx-2" title="Delete"
 										name="click0<?php echo $i; ?>" id="click0<?php echo $i; ?>"><i
 										class="fa fa-trash"></i></a> <a
-										onclick="save_speed_dial('<?php echo $i; ?>')"
+										data-astpp-click="save_speed_dial('<?php echo $i; ?>')"
 										class="btn text-info float-right" title="Save"
 										name="click<?php echo $i; ?>" id="click<?php echo $i; ?>"><i
 										class="fa fa-floppy-o"></i></a>
@@ -198,7 +198,7 @@ label.error {
 Filter by
 <? endblock() ?>
 <? end_extend() ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });

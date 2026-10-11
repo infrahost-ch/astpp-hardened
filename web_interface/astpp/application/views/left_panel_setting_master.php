@@ -49,7 +49,7 @@
    }
    if ($astpp_msg) {
 ?>
-<script> 
+<script<?php echo csp_nonce_attr(); ?>> 
     var validate_ERR = '<?= $astpp_msg; ?>';
     var ERR_type = '<?= $msg_type; ?>';
     display_astpp_message(validate_ERR,ERR_type);

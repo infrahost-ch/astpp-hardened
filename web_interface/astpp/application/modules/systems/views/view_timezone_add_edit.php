@@ -1,11 +1,11 @@
 <!--Manish Changes IMP - 70(Tooltip Implementation)-->
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('[data-toggle="tooltip"]').tooltip();
   });
 </script>
 <!--END-->
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     $("#submit").click(function(){
         submit_form("system_form");
     })
@@ -37,7 +37,7 @@
     </section>
   </div>
 </div>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
     $("input[type='hidden']").parents('li.form-group').addClass("d-none");
   

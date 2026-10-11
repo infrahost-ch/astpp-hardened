@@ -1,11 +1,11 @@
 <!-- Manish IMP 672 (Tooltip implementation) -->
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function(){
 		$('[data-toggle="tooltip"]').tooltip();
 	});
 </script>
 <!-- End -->
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     $("#submit").click(function(){
         submit_form("refill_coupon_form");
     })

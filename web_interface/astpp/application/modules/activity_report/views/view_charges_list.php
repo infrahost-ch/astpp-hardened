@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     function account_change(val){
         $.ajax({
           type: "POST",
@@ -38,7 +38,7 @@
         
     });
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
  $(document).ready(function() {
      jQuery("#charge_from_date").datetimepicker({format:'Y-m-d h:s:i'});		
      jQuery("#charge_to_date").datetimepicker({format:'Y-m-d h:s:i'});

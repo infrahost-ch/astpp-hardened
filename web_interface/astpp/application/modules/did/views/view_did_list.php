@@ -1,8 +1,8 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
-<script type="text/javascript" language="javascript">
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
  $(document).ready(function() {
     // jQuery 3: $(window).load() inside a ready handler would never fire (ready runs after "load")
     var did_dropdown_cols = function () { $(".did_dropdown").removeClass("col-md-5").addClass("col-md-3"); };

@@ -178,14 +178,14 @@
                  
 		<div class="col-md-12 my-4">
                     <div class="col-md-4 float-left">
-                      <button class="btn btn-outline-info btn-block" name="action" data-toggle="modal" data-target="#addDestination"  value="Add Destination" onclick="edit_package_destination();" type="button"> <i class="fa fa-plus-square-o"></i> <?php echo gettext('Add Destination'); ?> </button>
+                      <button class="btn btn-outline-info btn-block" name="action" data-toggle="modal" data-target="#addDestination"  value="Add Destination" data-astpp-click="edit_package_destination();" type="button"> <i class="fa fa-plus-square-o"></i> <?php echo gettext('Add Destination'); ?> </button>
 			
                     </div>
                     <div class="col-md-4 float-left">
                        <button class="btn btn-success btn-block" name="action" value="Save" type="submit"><?php echo gettext('Save'); ?> </button>
                     </div>
                     <div class="col-md-4 float-left">
-                      <button class="btn btn-secondary mx-2 btn-block" name="cancel" onclick="return redirect_page('/products/products_list/')" value="Cancel" type="button">  <?php echo gettext('Cancel'); ?> </button>
+                      <button class="btn btn-secondary mx-2 btn-block" name="cancel" data-astpp-click="return redirect_page('/products/products_list/')" value="Cancel" type="button">  <?php echo gettext('Cancel'); ?> </button>
                     </div>                        
                   </div>
 		</div>
@@ -260,7 +260,7 @@
    <div class="row mt-4">
     <div class="col-md-12">
        <div class="col-md-6 float-left">
-           <button class="btn btn-success btn-block" id ="Search" name="Search" value="Search" onclick="load_product_prefixes();" type="button"><?php echo gettext('Search'); ?> </button>
+           <button class="btn btn-success btn-block" id ="Search" name="Search" value="Search" data-astpp-click="load_product_prefixes();" type="button"><?php echo gettext('Search'); ?> </button>
        </div>
        <div class="col-md-6 float-left">
            <button type="button" class="btn btn-secondary btn-block" data-dismiss="modal"><?php echo gettext('Close');?></button>
@@ -270,7 +270,7 @@
    </div>
       <div id="search_grid" class="col-md-12 p-0" style="display:none;">
      <div class="col-md-6 mx-auto">
-         <button class="btn btn-line-warning btn-block mt-4" id ="add" name="add" value="Add" onclick="add_package_pattern();" type="button"><i class="fa fa-plus-circle fa-lg"></i><?php echo gettext('Add');?> </button>
+         <button class="btn btn-line-warning btn-block mt-4" id ="add" name="add" value="Add" data-astpp-click="add_package_pattern();" type="button"><i class="fa fa-plus-circle fa-lg"></i><?php echo gettext('Add');?> </button>
      </div>
 
             <div class="col-md-12 p-0">
@@ -290,7 +290,7 @@
 		</form> 
 		<?php
 						if (isset($validation_errors) && $validation_errors != '') { ?>
-						<script>
+						<script<?php echo csp_nonce_attr(); ?>>
 							var ERR_STR = '<?php echo $validation_errors; ?>';
 							print_error(ERR_STR);
 						</script>
@@ -302,7 +302,7 @@
               <div class="col-12">
                 <div class="row">
                   <div class="float-left col">
-                    <span id="left_panel_delete" class="btn btn-line-danger" onclick="delete_multiple('/products/products_patterns_selected_delete/')">
+                    <span id="left_panel_delete" class="btn btn-line-danger" data-astpp-click="delete_multiple('/products/products_patterns_selected_delete/')">
                       <i class="fa fa-times-circle fa-lg"></i>
                       <?php echo gettext('Delete');?>
                     </span>
@@ -325,7 +325,7 @@
 
 	
 </section>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 
 jQuery(document).ready(function() {  
 var grid_list = "<?php echo base_url(); ?>products/products_pattern_list_json/<?php echo $edit_id; ?>";

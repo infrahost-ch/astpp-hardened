@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         build_grid("ipmap_grid","<?=  base_url()?>user/user_ipmap_json",<? echo $ipmap_grid_field; ?>,"");
               	jQuery.validator.addMethod("lettersonly", function(value, element) {

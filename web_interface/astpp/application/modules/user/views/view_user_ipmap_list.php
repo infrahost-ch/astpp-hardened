@@ -1,8 +1,8 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
 <link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/style.css" type="text/css"/>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
-<script type="text/javascript">
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
   });
@@ -19,7 +19,7 @@
         width:100% !important;
     }
 </style>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         build_grid("ipsettings_grid","",<? echo $grid_fields; ?>,"");
         $("#user_ipmap_search_btn").click(function(){
@@ -99,7 +99,7 @@
 
     });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });
@@ -147,7 +147,7 @@
                     </div>
 
 
-                    <div id="left_panel_delete" class="pull-left margin-t-0 padding-x-4" onclick="delete_multiple('/user/user_ipmap_delete_multiple/')">
+                    <div id="left_panel_delete" class="pull-left margin-t-0 padding-x-4" data-astpp-click="delete_multiple('/user/user_ipmap_delete_multiple/')">
                             <span class="btn btn-line-danger">
                                 <i class="fa fa-times-circle fa-lg"></i>
                                 <?php echo gettext('Delete');?>
@@ -206,7 +206,7 @@
 </div>
 <? endblock() ?>	
 <? end_extend() ?>  
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
       $('.checkall').click(function () {

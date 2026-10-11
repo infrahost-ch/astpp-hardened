@@ -2,7 +2,7 @@
 
 <?php startblock('extra_head') ?>
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 function get_alert_msg(id)
 {
     confirm_string = '<?php echo gettext("are you sure to delete?"); ?>';

@@ -196,7 +196,7 @@ class Taxes_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary mx-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         return $form;
     }

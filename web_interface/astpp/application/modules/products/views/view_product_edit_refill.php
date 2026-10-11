@@ -87,7 +87,7 @@
                         <button class="btn btn-success btn-block" name="action" value="Save" type="submit"><?php echo gettext('Save'); ?> </button>
                     </div>
 		   <div class="col-md-6 float-left">
-                        <button class="btn btn-secondary mx-2 btn-block" onclick="return redirect_page('/products/products_list/')" name="action" value="Cancel" type="button"><?php echo gettext('Cancel'); ?> </button>
+                        <button class="btn btn-secondary mx-2 btn-block" data-astpp-click="return redirect_page('/products/products_list/')" name="action" value="Cancel" type="button"><?php echo gettext('Cancel'); ?> </button>
                     </div>
                   </div>
 		</div>
@@ -95,7 +95,7 @@
 
 <?php
 						if (isset($validation_errors) && $validation_errors != '') { ?>
-						<script>
+						<script<?php echo csp_nonce_attr(); ?>>
 							var ERR_STR = '<?php echo $validation_errors; ?>';
 							print_error(ERR_STR);
 						</script>
@@ -103,7 +103,7 @@
 
   </div>
 </section>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 
 jQuery(document).ready(function() {  
 

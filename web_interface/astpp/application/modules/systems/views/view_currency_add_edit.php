@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
     
     //astppcom-940 start
     $('[data-toggle="tooltip"]').tooltip(
@@ -37,7 +37,7 @@
     </section>
   </div>
 </div>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
 $(document).ready(function() {
     $("input[type='hidden']").parents('li.form-group').addClass("d-none");
   

@@ -5,7 +5,7 @@
 <?= $page_title; ?>
 <? endblock() ?>
 <? startblock('content') ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
 		 $("#import_database").submit(function(e) {
 				err='';
@@ -117,7 +117,7 @@
 							type="submit" name="action" value="Import"><?php echo gettext("Import"); ?></button>
 						<button class="btn btn-secondary mx-2" id="ok" type="button"
 							name="action" value="Cancel"
-							onclick="return redirect_page('/systems/database_restore/')" /><?php echo gettext("Cancel"); ?></button>
+							data-astpp-click="return redirect_page('/systems/database_restore/')" /><?php echo gettext("Cancel"); ?></button>
 					</div>
 				</div>
 			</div>

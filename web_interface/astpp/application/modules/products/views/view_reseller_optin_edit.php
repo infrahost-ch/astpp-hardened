@@ -106,9 +106,9 @@
                     </div>
                     <div class="col-md-6 float-left">
 			  <?php if($product_info['product_category'] == 4){ ?>
-                      <button class="btn btn-secondary mx-2 btn-block" name="cancel" onclick="return redirect_page('/did/did_list/')" value="Cancel" type="button">  <?php echo gettext("Cancel");?> </button>
+                      <button class="btn btn-secondary mx-2 btn-block" name="cancel" data-astpp-click="return redirect_page('/did/did_list/')" value="Cancel" type="button">  <?php echo gettext("Cancel");?> </button>
 			<?php } else{ ?>
-			 <button class="btn btn-secondary mx-2 btn-block" name="cancel" onclick="return redirect_page('/products/products_list/')" value="Cancel" type="button">  <?php echo gettext("Cancel");?> </button>
+			 <button class="btn btn-secondary mx-2 btn-block" name="cancel" data-astpp-click="return redirect_page('/products/products_list/')" value="Cancel" type="button">  <?php echo gettext("Cancel");?> </button>
 			<?php } ?>
                     </div>                        
                   </div>

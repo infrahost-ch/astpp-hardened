@@ -24,10 +24,10 @@
 			<div class="float-right">
 				<button class="btn btn-success" id="dwnld_err" type="button"
 					name="action" value="Download Errors"
-					onclick="return redirect_page('<?= base_url().'accessnumber/accessnumber_error_download/'?>')"><?php echo gettext( "Download Errors"); ?></button>
+					data-astpp-click="return redirect_page('<?= base_url().'accessnumber/accessnumber_error_download/'?>')"><?php echo gettext( "Download Errors"); ?></button>
 				<button class="btn btn-secondary mr-2" id="accessnumber_list"
 					type="button" name="action" value="Back to AccessNumber List"
-					onclick="return redirect_page('<?= base_url().'accessnumber/accessnumber_list/'?>')"><?php echo gettext( "Back to AccessNumber List"); ?> </button>
+					data-astpp-click="return redirect_page('<?= base_url().'accessnumber/accessnumber_list/'?>')"><?php echo gettext( "Back to AccessNumber List"); ?> </button>
 			</div>
 		</div>
 	</div>

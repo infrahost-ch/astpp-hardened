@@ -30,7 +30,7 @@
                     "id" => "call_type_code",
                     "name" => "call_type",
                     "class" => "call_type",
-                    "onChange"=>"calltype_change(this.value)"
+                    "data-astpp-change"=>"calltype_change(this.value)"
                  );
                   $calltype = form_dropdown($calltype, $this->db_model->build_dropdown("call_type_code,call_type", "did_call_types", "", ""), $call_type);
                   echo $calltype;
@@ -55,7 +55,7 @@
             </div>
             <div class="col-md-6 float-left">
                <button class="btn btn-secondary btn-block mx-2" name="cancel"
-               onclick="return redirect_page('NULL')" value="Cancel"
+               data-astpp-click="return redirect_page('NULL')" value="Cancel"
                type="button"> <?php echo gettext(" Cancel"); ?> </button>
             </div>
          </div>
@@ -68,7 +68,7 @@
 // BUGFIX: customers/providers cannot use the did module; they load the list from the portal
 $local_change_url = (astpp_eq0($this->session->userdata('logintype')) || $this->session->userdata('logintype') == 3) ? 'user/user_did_local_change/' : 'did/did_local_change/';
 ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 
    $( document ).ready(function() {
      var call_type = $("#call_type_code").val();

@@ -40,24 +40,24 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 									href="<?php echo base_url(); ?>assets/vendor/fonts/fonts.css"
 									rel="stylesheet">
 
-									<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"></script>
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"></script>
+									<script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"<?php echo csp_nonce_attr(); ?>></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"></script>
+										src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"></script>
+										src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/js/module_js/generate_grid.js"></script>
+										src="<?php echo base_url(); ?>assets/js/module_js/generate_grid.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
+										src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/js/fileinput.js"></script>
+										src="<?php echo base_url(); ?>assets/js/fileinput.js"<?php echo csp_nonce_attr(); ?>></script>
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/js/tabcontent.js"></script>
+										src="<?php echo base_url(); ?>assets/js/tabcontent.js"<?php echo csp_nonce_attr(); ?>></script>
 
 
 									<script type="text/javascript"
-										src="<?php echo base_url(); ?>assets/js/custome_index.js"></script>
+										src="<?php echo base_url(); ?>assets/js/custome_index.js"<?php echo csp_nonce_attr(); ?>></script>
 
 									<noscript>
 										<div id="noscript-warning"><?php echo gettext("ASTPP work best with JavaScript enabled"); ?></div>
@@ -120,7 +120,7 @@ if (isset($invoiceconf['website_title']) && $invoiceconf['website_title'] != '')
 	</div>
 </body>
 </html>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 $("#country_id").val(<?=$country_id?>);
 $("#timezone_id").val(<?=$timezone_id?>);
 $("#currency_id").val(<?=$currency_id?>);

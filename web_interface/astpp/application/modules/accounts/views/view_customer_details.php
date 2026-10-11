@@ -1,6 +1,6 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
         $(".sweep_id").change(function(){
             var sweep_id =$('.sweep_id option:selected').val();
@@ -40,7 +40,7 @@
        });
     });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
       $('.page-wrap').addClass('addon_wrap');
       $("span.input-group-append").addClass('align-self-end').removeClass('input-group-append');
@@ -91,7 +91,7 @@ label.error {
 				<div class="slice color-three float-left content_border">
         <?php echo $form; ?>
         <?php if (isset($validation_errors) && $validation_errors != '') { ?>
-            <script>
+            <script<?php echo csp_nonce_attr(); ?>>
                 var ERR_STR = '<?php echo $validation_errors; ?>';
                 print_error(ERR_STR);
             </script>

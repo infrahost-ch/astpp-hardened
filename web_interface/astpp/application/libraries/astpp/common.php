@@ -395,19 +395,19 @@ class common {
 			if (isset ( $field_name [0] ) && $accountinfo ['type'] != 1) { 
 				if ((!astpp_eq0($field_name [0]->accountid)) && astpp_eq0($field_name [0]->parent_id)) { 
 					if(astpp_eq0($accountinfo['type']) || $accountinfo['type'] == 3 ){
-					$flag_status = "<a href='../user_list_release/" . $field_name [0]->id . "' title='Release' onClick='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(C)<span></a>";
+					$flag_status = "<a href='../user_list_release/" . $field_name [0]->id . "' title='Release' data-astpp-click='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(C)<span></a>";
 					}else{
-					$flag_status = "<a href='../did_list_release/" . $field_name [0]->id . "' title='Release' onClick='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(C)<span></a>";
+					$flag_status = "<a href='../did_list_release/" . $field_name [0]->id . "' title='Release' data-astpp-click='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(C)<span></a>";
 					}
 				}else if ((!astpp_eq0($field_name [0]->parent_id)) && (!astpp_eq0($field_name [0]->accountid)) ) {
 					if(astpp_eq0($accountinfo['type']) || $accountinfo['type'] == 3){
-						$flag_status = "<a href='../user_list_release/" . $field_name [0]->id . "' title='Release' onClick='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(C)<span></a>";
+						$flag_status = "<a href='../user_list_release/" . $field_name [0]->id . "' title='Release' data-astpp-click='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(C)<span></a>";
 
 					}else{
-						$flag_status = "<a href='../did_list_release/" . $field_name [0]->id . "' title='Release' onClick='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(C)<span></a>";
+						$flag_status = "<a href='../did_list_release/" . $field_name [0]->id . "' title='Release' data-astpp-click='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(C)<span></a>";
 					}
 				} else if ((!astpp_eq0($field_name [0]->parent_id))) { 
-					$flag_status = "<a href='../did_list_release/" . $field_name [0]->id . "' title='Release' onClick='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(R)</span></a>";
+					$flag_status = "<a href='../did_list_release/" . $field_name [0]->id . "' title='Release' data-astpp-click='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(R)</span></a>";
 				}else {
 					$flag_status = "<a href='../did_assgin_reseller/" . $field_name [0]->id . "' title='Assign Number' rel='facebox'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Assign Number</span></a>";
 				}
@@ -420,7 +420,7 @@ class common {
 				$field_name_re = $this->CI->db_model->getSelect ( "*", 'dids', $where );
 				$field_name_re = $field_name_re->result ();
 				if ($field_name_re[0]->accountid !='0' ) {
-					$flag_status = "<a href='../did_list_release/" . $field_name [0]->id . "' title='Release' onClick='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(c)</span></a>";
+					$flag_status = "<a href='../did_list_release/" . $field_name [0]->id . "' title='Release' data-astpp-click='return get_reliase_msg();'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Release(c)</span></a>";
 				} else {
 					$flag_status = "<a href='../did_assgin_reseller/" . $field_name [0]->id . "' title='Assign Number' rel='facebox'><span class=' label label-sm label-inverse_blue arrowed_blue-in' title='release'>Assign Number</span></a>";
 				}
@@ -784,13 +784,13 @@ class common {
 			$status ['table'] = "'" . $status_tab . "'";
 			if (astpp_eq0($status ['status'])) {
 				$status_array = '<label class="switch">
-				  <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id=switch' . $status ['id'] . ' value=' . $status ['status'] . ' onclick="javascript:processForm(' . $status ['id'] . ',' . $status ['table'] . ')" checked>
+				  <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id=switch' . $status ['id'] . ' value=' . $status ['status'] . ' data-astpp-click="processForm(' . $status ['id'] . ',' . $status ['table'] . ')" checked>
 				  <span class="slider round"></span>
 				</label>';
 
 			} else {
 				$status_array = '<label class="switch">
-				  <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id=switch' . $status ['id'] . ' value=' . $status ['status'] . ' onclick="javascript:processForm(' . $status ['id'] . ',' . $status ['table'] . ')">
+				  <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id=switch' . $status ['id'] . ' value=' . $status ['status'] . ' data-astpp-click="processForm(' . $status ['id'] . ',' . $status ['table'] . ')">
 				  <span class="slider round"></span>
 				</label>';
 			}
@@ -807,12 +807,12 @@ class common {
 			$email_status ['table'] = "'" . $status_tab . "'";
 			if (astpp_eq0($email_status ['is_email_enable'])) {
 				$email_status_array = '<label class="switch">
-										  <input type="checkbox" name="onoffswitch_email" class="onoffswitch-checkbox" id=switch_email' . $email_status ['id'] . ' value=' . $email_status ['is_email_enable'] . ' onclick="javascript:process_email(' . $email_status ['id'] . ',' . $email_status ['table'] . ')" checked>
+										  <input type="checkbox" name="onoffswitch_email" class="onoffswitch-checkbox" id=switch_email' . $email_status ['id'] . ' value=' . $email_status ['is_email_enable'] . ' data-astpp-click="process_email(' . $email_status ['id'] . ',' . $email_status ['table'] . ')" checked>
 										  <span class="slider round"></span>
 										</label>';
 			} else {
 				$email_status_array = '<label class="switch">
-										  <input type="checkbox" name="onoffswitch_email" class="onoffswitch-checkbox" id=switch_email' . $email_status ['id'] . ' value=' . $email_status ['is_email_enable'] . ' onclick="javascript:process_email(' . $email_status ['id'] . ',' . $email_status ['table'] . ')">
+										  <input type="checkbox" name="onoffswitch_email" class="onoffswitch-checkbox" id=switch_email' . $email_status ['id'] . ' value=' . $email_status ['is_email_enable'] . ' data-astpp-click="process_email(' . $email_status ['id'] . ',' . $email_status ['table'] . ')">
 										  <span class="slider round"></span>
 										</label>';
 			}
@@ -828,12 +828,12 @@ class common {
 			$sms_status ['table'] = "'" . $status_tab . "'";
 			if (astpp_eq0($sms_status ['is_sms_enable'])) {
 				$sms_status_array = '<label class="switch">
-									  <input type="checkbox" name="onoffswitch_sms" class="onoffswitch-checkbox" id=switch_sms' . $sms_status ['id'] . ' value=' . $sms_status ['is_sms_enable'] . ' onclick="javascript:process_sms(' . $sms_status ['id'] . ',' . $sms_status ['table'] . ')" checked>
+									  <input type="checkbox" name="onoffswitch_sms" class="onoffswitch-checkbox" id=switch_sms' . $sms_status ['id'] . ' value=' . $sms_status ['is_sms_enable'] . ' data-astpp-click="process_sms(' . $sms_status ['id'] . ',' . $sms_status ['table'] . ')" checked>
 									  <span class="slider round"></span>
 									</label>';
 			} else {
 				$sms_status_array = '<label class="switch">
-									  <input type="checkbox" name="onoffswitch_sms" class="onoffswitch-checkbox" id=switch_sms' . $sms_status ['id'] . ' value=' . $sms_status ['is_sms_enable'] . ' onclick="javascript:process_sms(' . $sms_status ['id'] . ',' . $sms_status ['table'] . ')">
+									  <input type="checkbox" name="onoffswitch_sms" class="onoffswitch-checkbox" id=switch_sms' . $sms_status ['id'] . ' value=' . $sms_status ['is_sms_enable'] . ' data-astpp-click="process_sms(' . $sms_status ['id'] . ',' . $sms_status ['table'] . ')">
 									  <span class="slider round"></span>
 									</label>';
 			}
@@ -849,12 +849,12 @@ class common {
 			$alert_status ['table'] = "'" . $status_tab . "'";
 			if (astpp_eq0($alert_status ['is_alert_enable'])) {
 				$alert_status_array = '<label class="switch">
-										  <input type="checkbox" name="onoffswitch_alert" class="onoffswitch-checkbox" id=switch_alert' . $alert_status ['id'] . ' value=' . $alert_status ['is_alert_enable'] . ' onclick="javascript:process_alert(' . $alert_status ['id'] . ',' . $alert_status ['table'] . ')" checked>
+										  <input type="checkbox" name="onoffswitch_alert" class="onoffswitch-checkbox" id=switch_alert' . $alert_status ['id'] . ' value=' . $alert_status ['is_alert_enable'] . ' data-astpp-click="process_alert(' . $alert_status ['id'] . ',' . $alert_status ['table'] . ')" checked>
 										  <span class="slider round"></span>
 										</label>';
 			} else {
 				$alert_status_array = '<label class="switch">
-										  <input type="checkbox" name="onoffswitch_alert" class="onoffswitch-checkbox" id=switch_alert' . $alert_status ['id'] . ' value=' . $alert_status ['is_alert_enable'] . ' onclick="javascript:process_alert(' . $alert_status ['id'] . ',' . $alert_status ['table'] . ')">
+										  <input type="checkbox" name="onoffswitch_alert" class="onoffswitch-checkbox" id=switch_alert' . $alert_status ['id'] . ' value=' . $alert_status ['is_alert_enable'] . ' data-astpp-click="process_alert(' . $alert_status ['id'] . ',' . $alert_status ['table'] . ')">
 										  <span class="slider round"></span>
 										</label>';
 			}
@@ -1269,11 +1269,11 @@ class common {
 	}
 	function build_delete_button_animap($url, $linkid) {
 		$link = base_url () . $url . "" . $linkid;
-		return '<a href="javascript:void(0)" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg_destination(' . $linkid . ');"><i class="fa fa-trash fa-fw"></i></a>';
+		return '<a href="#" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg_destination(' . $linkid . ');"><i class="fa fa-trash fa-fw"></i></a>';
 	}
 	function build_edit_button_animap($button_params, $linkid) {
 		$link = base_url () . $button_params->url . "" . $linkid;
-		return '<a href="javascript:void(0);" id="destination_new" class="btn btn-royelblue btn-sm" onclick="return get_destination(' . $linkid . ');" title="Update"><i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;';
+		return '<a href="#" id="destination_new" class="btn btn-royelblue btn-sm" data-astpp-click="return get_destination(' . $linkid . ');" title="Update"><i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;';
 	}
 	function build_animap_button($button_params, $linkid) {
 		$link = base_url () . $button_params->url . "" . $linkid;
@@ -1312,9 +1312,9 @@ class common {
 	function build_edit_button_restore($button_params, $linkid) {
 		$link = base_url () . $button_params->url . "" . $linkid;
 		if ($button_params->mode == 'popup') {
-			return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" rel="facebox" title="Restore" onClick="return get_alert_msg();"><i class="fa fa-reorder fa-fw"></i></a>&nbsp;';
+			return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" rel="facebox" title="Restore" data-astpp-click="return get_alert_msg();"><i class="fa fa-reorder fa-fw"></i></a>&nbsp;';
 		} else {
-			return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Restore" onClick="return get_alert_msg_restore();"><i class="fa fa-reorder fa-fw"></i></a>&nbsp;';
+			return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Restore" data-astpp-click="return get_alert_msg_restore();"><i class="fa fa-reorder fa-fw"></i></a>&nbsp;';
 		}
 	}
 	function build_delete_button($url, $linkid) {
@@ -1343,9 +1343,9 @@ class common {
 			$rategroup_cnt = $this->get_field_count ( 'id', 'routes', $where );
 			if (astpp_gt($rategroup_cnt, 0) || astpp_gt($customer_cnt, 0)) {
 
-				return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_message(' . $rategroup_cnt . ',' . $customer_cnt . ',' . $linkid . ',1);"><i class="fa fa-trash fa-fw"></i></a>';
+				return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_message(' . $rategroup_cnt . ',' . $customer_cnt . ',' . $linkid . ',1);"><i class="fa fa-trash fa-fw"></i></a>';
 			} else {
-				return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg();"><i class="fa fa-trash fa-fw"></i></a>';
+				return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg();"><i class="fa fa-trash fa-fw"></i></a>';
 			}
 		}
 		if ($flag == '2') {
@@ -1354,21 +1354,21 @@ class common {
 			);
 			$trunk_cnt = $this->get_field_count ( 'id', 'outbound_routes', $where );
 			if (astpp_gt($trunk_cnt, 0)) {
-				return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_message(' . $trunk_cnt . ',null,' . $linkid . ',2);"><i class="fa fa-trash fa-fw"></i></a>';
+				return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_message(' . $trunk_cnt . ',null,' . $linkid . ',2);"><i class="fa fa-trash fa-fw"></i></a>';
 			} else {
-				return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg();"><i class="fa fa-trash fa-fw"></i></a>';
+				return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg();"><i class="fa fa-trash fa-fw"></i></a>';
 			}
 		}
 		if ($flag == '3') {
-			return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_message(0,null,' . $linkid . ',3);">
+			return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_message(0,null,' . $linkid . ',3);">
 		<i class="fa fa-trash fa-fw"></i></a>';
 		}
 		if ($flag == '4') {
-			return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_message(0,null,' . $linkid . ',4);">
+			return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_message(0,null,' . $linkid . ',4);">
 		<i class="fa fa-trash fa-fw"></i></a>';
 		}
 		if ($flag == '0' && $url . $linkid != 'accounts/admin_delete/1') {
-			return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg();"><i class="fa fa-trash fa-fw"></i></a>';
+			return '<a href="' . $link . '" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg();"><i class="fa fa-trash fa-fw"></i></a>';
 		}
 	}
 	function build_view_button($button_params, $linkid) {
@@ -1412,7 +1412,7 @@ class common {
 	function build_reload_button($url, $linkid) {
 		$link = base_url () . $url . "" . $linkid;
 		// return '<a href="' . $link . '" class=""  title="reload" style="text-decoration:none;color: #428BCA;"><b>Reload |</b></a>&nbsp;';
-		return "<a onclick=reload_port('$link')  class=''  title='reload' style='text-decoration:none;color: #428BCA;cursor:pointer'><b>".gettext('Reload')." |</b></a>&nbsp;";
+		return "<a data-astpp-click=\"reload_port('$link')\"  class=''  title='reload' style='text-decoration:none;color: #428BCA;cursor:pointer'><b>".gettext('Reload')." |</b></a>&nbsp;";
 	}
 	function build_rescan_button($url, $linkid) {
 		$link = base_url () . $url . "" . $linkid;
@@ -3446,7 +3446,9 @@ class common {
 	}
 	function optin_status($select, $table, $status) {
 		$link =  base_url () ."products/products_edit_reseller_optinproduct/" . $status;
-		return  '<a href="'.$link.'" class="btn btn-royelblue btn-sm animap_image" rel="facebox" title="Optin" onclick="return javascript:optinproduct(' . $status  . ')"><i class="fa fa-reorder fa-fw"></i></a>';
+		// ASTPP fork (audit O4): upstream had a click handler "return javascript:optinproduct(...)" here - a
+		// syntax error, the handler never ran; the link opens the opt-in popup (facebox)
+		return  '<a href="'.$link.'" class="btn btn-royelblue btn-sm animap_image" rel="facebox" title="Optin"><i class="fa fa-reorder fa-fw"></i></a>';
 				
 	}
 	
@@ -3727,9 +3729,9 @@ class common {
 			<source src="'.$url.'" type="audio/mpeg">
 			Your browser does not support the audio element.
 			</audio>';
-			$action .= "<button onclick='playAudio(\"$uid\",\"$billseconds\")' type='button' class='btnplay'  id='play_".$uid."'  style='display:block;margin:0px 0 0 25px;border:0px !important; float:left; padding:0px'><img src=".$play_img_url." height='25px' width='25px' style='cursor: pointer;'/></button>";
+			$action .= "<button data-astpp-click='playAudio(\"$uid\",\"$billseconds\")' type='button' class='btnplay'  id='play_".$uid."'  style='display:block;margin:0px 0 0 25px;border:0px !important; float:left; padding:0px'><img src=".$play_img_url." height='25px' width='25px' style='cursor: pointer;'/></button>";
 
-			$action .= "<button onclick='pauseAudio(\"$uid\")' type='button'  class='btnplay' id='pause_".$uid."' style='display: none;margin:0px 0 0 25px;border:0px !important; float:left;padding:0px'><img src=".$pause_img_url." height='25px' width='25px' style='cursor: pointer;'/></button>";
+			$action .= "<button data-astpp-click='pauseAudio(\"$uid\")' type='button'  class='btnplay' id='pause_".$uid."' style='display: none;margin:0px 0 0 25px;border:0px !important; float:left;padding:0px'><img src=".$pause_img_url." height='25px' width='25px' style='cursor: pointer;'/></button>";
 
 			$recording = (astpp_eq0($accountinfo['is_recording'])) ? '<a title="Recording file" href="'.$url.'"><img src="' . base_url() . 'assets/images/download.png" height="20px" width="20px"/></a>' : '<img src="' . base_url() . 'assets/images/false.png" height="20px" alt="file not found" width="20px"/>';
 					

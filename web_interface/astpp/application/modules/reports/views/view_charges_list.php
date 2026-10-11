@@ -2,7 +2,7 @@
 <? startblock('extra_head') ?>
 
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
       
         build_grid("charges_grid","",<? echo $grid_fields; ?>,"");
@@ -21,7 +21,7 @@
         
     });
 </script>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
        $(document).ready(function() {
         var currentdate = new Date(); 
         var datetime = currentdate.getFullYear() + "-"

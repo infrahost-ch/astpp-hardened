@@ -335,7 +335,7 @@ class Freeswitch extends MX_Controller
         // ASTPPCOM-943 Kinjal END
         foreach ($query as $key => $value) {
             $checkbox = array(
-                '<input type="checkbox" name="chkAll" id=' . $value['id'] . ' class="ace chkRefNos" onclick="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>'
+                '<input type="checkbox" name="chkAll" id=' . $value['id'] . ' class="ace chkRefNos" data-astpp-click="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>'
             );
             $path_true = base_url() . '/assets/images/true.png';
             $path_false = base_url() . '/assets/images/false.png';
@@ -457,7 +457,7 @@ class Freeswitch extends MX_Controller
             $json_data['rows'][] = array(
                 'cell' => array(
 
-                    '<input type="checkbox" name="chkAll" id="' . $value['id'] . '" class="ace chkRefNos" onclick="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>',
+                    '<input type="checkbox" name="chkAll" id="' . $value['id'] . '" class="ace chkRefNos" data-astpp-click="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>',
                     '<a href="' . base_url() . 'accounts/' . $entity_type . '_fssipdevices_action/edit/' . $value['id'] . '/' . $accountid . '/" rel="facebox_medium" style="cursor:pointer;color:#347CCB" title="Edit"><span title="Edit">' . $value['username'] . '</span></a>',
                     $value['password'],
                     $this->common->get_field_name('name', '`sip_profiles', array(
@@ -495,13 +495,13 @@ class Freeswitch extends MX_Controller
         $ret_url = '';
         if ($this->session->userdata("logintype") == '0' || $this->session->userdata("logintype") == '3') {
             $ret_url = '<a href="' . base_url() . 'user/user_fssipdevices_action/edit/' . $id . '/' . $accountid . '/" class="btn btn-royelblue btn-sm"  rel="facebox_medium" title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;';
-            $ret_url .= '<a href="' . base_url() . 'user/user_fssipdevices_action/delete/' . $id . '/' . $accountid . '/" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
+            $ret_url .= '<a href="' . base_url() . 'user/user_fssipdevices_action/delete/' . $id . '/' . $accountid . '/" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
         } else {
             if (isset($permissioninfo['freeswitch']['fssipdevices']['EDIT']) and astpp_eq0($permissioninfo['freeswitch']['fssipdevices']['EDIT']) and ($permissioninfo['login_type'] == '1' or $permissioninfo['login_type'] == '2' or $permissioninfo['login_type'] == '4') or $permissioninfo['login_type'] == '-1') {
                 $ret_url = '<a href="' . base_url() . 'accounts/' . $entity_type . '_fssipdevices_action/edit/' . $id . '/' . $accountid . '/" class="btn btn-royelblue btn-sm"  rel="facebox_medium" title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;';
             }
             if (isset($permissioninfo['freeswitch']['fssipdevices']['DELETE']) and astpp_eq0($permissioninfo['freeswitch']['fssipdevices']['DELETE']) and ($permissioninfo['login_type'] == '1' or $permissioninfo['login_type'] == '2' or $permissioninfo['login_type'] == '4') or $permissioninfo['login_type'] == '-1') {
-                $ret_url .= '<a href="' . base_url() . 'accounts/' . $entity_type . '_fssipdevices_action/delete/' . $id . '/' . $accountid . '/" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
+                $ret_url .= '<a href="' . base_url() . 'accounts/' . $entity_type . '_fssipdevices_action/delete/' . $id . '/' . $accountid . '/" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
             }
         }
         return $ret_url;
@@ -524,7 +524,7 @@ class Freeswitch extends MX_Controller
             $ret_url = '<a href="' . base_url() . 'freeswitch/fssipdevices_edit/' . $id . '/" class="btn btn-royelblue btn-sm"  rel="facebox_medium" title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;';
         }
         if (isset($permissioninfo['freeswitch']['fssipdevices']['DELETE']) and astpp_eq0($permissioninfo['freeswitch']['fssipdevices']['DELETE']) and ($permissioninfo['login_type'] == '1' or $permissioninfo['login_type'] == '2' or $permissioninfo['login_type'] == '4') or $permissioninfo['login_type'] == '-1') {
-            $ret_url .= '<a href="' . base_url() . 'freeswitch/fssipdevices_delete/' . $id . '/" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
+            $ret_url .= '<a href="' . base_url() . 'freeswitch/fssipdevices_delete/' . $id . '/" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
         }
         return $ret_url;
     }
@@ -1044,7 +1044,7 @@ class Freeswitch extends MX_Controller
                     $key,
                     $value,
                     array(
-                        '<a href="/freeswitch/fssipprofile_edit/' . $edited_id . '/edit/' . $key . '/" class="btn btn-royelblue btn-sm"  title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;<a href="/freeswitch/fssipprofile_delete_params/' . $edited_id . '/' . $key . '/" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>'
+                        '<a href="/freeswitch/fssipprofile_edit/' . $edited_id . '/edit/' . $key . '/" class="btn btn-royelblue btn-sm"  title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;<a href="/freeswitch/fssipprofile_delete_params/' . $edited_id . '/' . $key . '/" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>'
                     )
                 )
             );

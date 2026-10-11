@@ -148,24 +148,25 @@
   <link href="<?php echo base_url(); ?>assets/vendor/fonts/fonts.css" rel="stylesheet"> 
 
 
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"></script>
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"></script>
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"></script>
-	 <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"></script>  
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.datetimepicker.min.js"></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-3.7.1.min.js"<?php echo csp_nonce_attr(); ?>></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery/jquery-migrate-3.6.0.min.js"<?php echo csp_nonce_attr(); ?>></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.6.2/bootstrap.bundle.min.js"<?php echo csp_nonce_attr(); ?>></script>
+	 <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/bootstrap-select-1.13.18/bootstrap-select.js"<?php echo csp_nonce_attr(); ?>></script>  
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.datetimepicker.min.js"<?php echo csp_nonce_attr(); ?>></script>
 
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/modernizr.custom.js"></script>
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/fileinput.js"></script>
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/tabcontent.js"></script>
-
-
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/modernizr.custom.js"<?php echo csp_nonce_attr(); ?>></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/fileinput.js"<?php echo csp_nonce_attr(); ?>></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/tabcontent.js"<?php echo csp_nonce_attr(); ?>></script>
 
 
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery.browser/jquery.browser.min.js"></script>
 
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/facebox.js"></script>
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/flexigrid.js"></script>
-     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/generate_grid.js"></script>
+
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/vendor/jquery.browser/jquery.browser.min.js"<?php echo csp_nonce_attr(); ?>></script>
+
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/facebox.js"<?php echo csp_nonce_attr(); ?>></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/flexigrid.js"<?php echo csp_nonce_attr(); ?>></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/module_js/generate_grid.js"<?php echo csp_nonce_attr(); ?>></script>
+     <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/astpp_csp.js"<?php echo csp_nonce_attr(); ?>></script>
         
     <noscript>
       <div id="noscript-warning">

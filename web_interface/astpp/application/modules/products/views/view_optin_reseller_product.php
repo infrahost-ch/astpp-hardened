@@ -141,7 +141,7 @@
      <button class="btn btn-success btn-block" name="action" value="Save" type="submit"><?php echo gettext('Save') ?></button>
    </div>
    <div class="col-md-6 float-left">
-    <button class="btn btn-secondary btn-block mx-2" name="cancel" onclick="return redirect_page('/products/products_listing/')" value="Cancel" type="button">  <?php echo gettext('Cancel') ?> </button>
+    <button class="btn btn-secondary btn-block mx-2" name="cancel" data-astpp-click="return redirect_page('/products/products_listing/')" value="Cancel" type="button">  <?php echo gettext('Cancel') ?> </button>
   </div>                        
 </div>
 

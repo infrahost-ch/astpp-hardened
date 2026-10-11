@@ -1,4 +1,4 @@
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
     submit_form("account_taxes_form");
     $("#account_num").change(function(){

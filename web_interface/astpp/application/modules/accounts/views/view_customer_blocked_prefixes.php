@@ -1,6 +1,6 @@
 <? extend('left_panel_master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function() {
    $('a[rel*=facebox]').facebox();
    build_grid("pattern_grid","<?php echo base_url()."accounts/customer_details_json/pattern/$edit_id/"; ?>",<? echo $grid_fields ?>,"");
@@ -12,7 +12,7 @@
   });
  });
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
     $('.page-wrap').addClass('addon_wrap');
   });
@@ -58,7 +58,7 @@
 						</a>
 					</div>
 					<div id="left_panel_delete" class="float-left mt-0 px-1"
-						onclick="delete_multiple('/accounts/customer_blockedprefixes_delete_multiple/')">
+						data-astpp-click="delete_multiple('/accounts/customer_blockedprefixes_delete_multiple/')">
 						<span class="btn btn-line-danger"> <i
 							class="fa fa-times-circle fa-lg"></i>
             <?php echo gettext('Delete');?>
@@ -86,7 +86,7 @@
 <? endblock() ?>	
 
 <? end_extend() ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
     $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });

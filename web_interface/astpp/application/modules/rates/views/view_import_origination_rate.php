@@ -5,7 +5,7 @@
 <?= $page_title; ?>
 <? endblock() ?>
 <? startblock('content') ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
 		 $(".pricelist_id").change(function(){
                 var id=this.value;
@@ -141,7 +141,7 @@ $trunklist = form_dropdown_all(array(
 							type="submit" name="action" value="Import"><?php echo gettext("Import"); ?></button>
 						<button class="btn btn-secondary mx-2" id="ok" type="button"
 							name="action" value="Cancel"
-							onclick="return redirect_page('/rates/origination_rates_list/')" /><?php echo gettext("Cancel"); ?></button>
+							data-astpp-click="return redirect_page('/rates/origination_rates_list/')" /><?php echo gettext("Cancel"); ?></button>
 					</div>
 				</div>
 			</div>
@@ -186,7 +186,7 @@ $cnt = 7;
     ?>
 							<button type="button" class="btn btn-secondary ml-2 float-right"
 								value="Back"
-								onclick="return redirect_page('/rates/origination_rate_import/')"><?php echo gettext("Back"); ?></button>
+								data-astpp-click="return redirect_page('/rates/origination_rate_import/')"><?php echo gettext("Back"); ?></button>
 							<button type="submit" class="btn btn-success float-right"
 								id="Process" value="Process"><?php echo gettext("Process"); ?></button>
 					<?php echo "</td></tr>";?> 
@@ -199,7 +199,7 @@ $cnt = 7;
 	</div>
 </section>
 <?} ?>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
  $('input[type="file"]').change(function(e){
         var fileName = e.target.files[0].name;
         $('.custom-file-label').html(fileName);

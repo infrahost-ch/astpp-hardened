@@ -3,8 +3,8 @@
 <link rel="stylesheet"
 	href="<?php echo base_url(); ?>assets/css/style.css" type="text/css" />
 <script type="text/javascript"
-	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"></script>
-<script type="text/javascript" language="javascript">
+	src="<?php echo base_url(); ?>assets/vendor/jquery-validation-1.22.1/jquery.validate.min.js"<?php echo csp_nonce_attr(); ?>></script>
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function() {
     build_grid("ipsettings_list","<?php echo base_url()."accounts/customer_ipmap_json/$edit_id/$accounttype/"; ?>",<? echo $grid_fields; ?>,"");
     $('.checkall').click(function () {
@@ -64,7 +64,7 @@
         });
 
       </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
         $(document).ready(function(){
           $('.page-wrap').addClass('addon_wrap');
         });
@@ -134,7 +134,7 @@ label.error {
                 ?>
               <div id="left_panel_delete"
 						class="pull-left margin-t-0 padding-x-4"
-						onclick="delete_multiple('/ipmap/ipmap_delete_multiple/')">
+						data-astpp-click="delete_multiple('/ipmap/ipmap_delete_multiple/')">
 						<span class="btn btn-line-danger"> <i
 							class="fa fa-times-circle fa-lg"></i>
                   <?php echo gettext('Delete');?>
@@ -215,7 +215,7 @@ label.error {
 <? endblock() ?>	
 
 <? end_extend() ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function(){
     $(".breadcrumb li a").removeAttr("data-ripple",""); 
   });

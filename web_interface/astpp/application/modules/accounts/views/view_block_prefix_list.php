@@ -3,7 +3,7 @@
 
 
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
        $('a[rel*=facebox]').facebox();
        build_grid("prefixes_grid","<?php echo base_url(); ?>accounts/customer_add_blockpatterns_json/<?= $accountid; ?>",<? echo $patters_grid_fields ?>,"");
@@ -70,7 +70,7 @@
 				enctype="multipart/form-data" style="display: block">
 				<input type="hidden" id="add_patterns" name="add_patterns" readonly />
 				<button id="add_patterns_btn" class="btn btn-line-warning btn"
-					name="add_patterns_btn" onclick="add_package_pattern();">
+					name="add_patterns_btn" data-astpp-click="add_package_pattern();">
 					<i class="fa fa-plus-circle fa-lg"></i><?php echo gettext("Add To List");?></button>
 			</form>
 		</div>

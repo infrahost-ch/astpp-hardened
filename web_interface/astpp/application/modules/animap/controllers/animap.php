@@ -183,9 +183,9 @@ class Animap extends MX_Controller
                 }
              }
 
-            $ipmap_checkbox = '<input type="checkbox" name="chkAll" id="' . $value['id'] . '" class="ace chkRefNos" onclick="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>';
+            $ipmap_checkbox = '<input type="checkbox" name="chkAll" id="' . $value['id'] . '" class="ace chkRefNos" data-astpp-click="clickchkbox(' . $value['id'] . ')" value=' . $value['id'] . '><lable class="lbl"></lable>';
 
-            $ret_url = '<a href="' . base_url() . 'animap/animap_edit/' . $value['id'] . '" class="btn btn-royelblue btn-sm"  rel="facebox" title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;<a href="' . base_url() . 'animap/animap_delete/' . $value['id'] . '" class="btn btn-royelblue btn-sm" title="Delete" onClick="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
+            $ret_url = '<a href="' . base_url() . 'animap/animap_edit/' . $value['id'] . '" class="btn btn-royelblue btn-sm"  rel="facebox" title="Edit">&nbsp;<i class="fa fa-pencil-square-o fa-fw"></i></a>&nbsp;<a href="' . base_url() . 'animap/animap_delete/' . $value['id'] . '" class="btn btn-royelblue btn-sm" title="Delete" data-astpp-click="return get_alert_msg();">&nbsp;<i class="fa fa-trash fa-fw"></i></a>';
             $account_name = $this->common->build_concat_string("first_name,last_name,number,company_name", "accounts", $value['accountid']);
             if (astpp_eq0($value['reseller_id'])) {
                 $reseller_name = 'Admin';

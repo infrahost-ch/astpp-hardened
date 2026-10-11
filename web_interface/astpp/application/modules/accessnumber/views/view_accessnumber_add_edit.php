@@ -1,5 +1,5 @@
 <?php include(FCPATH.'application/views/popup_header.php'); ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
   $("#submit").click(function(){
     submit_form("accessnumber_form");
   })
@@ -28,7 +28,7 @@ if (isset($validation_errors)) {
   <?php echo $form; ?>
 </div>
 </section>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
   $(document).ready(function() {
     $("input[type='hidden']").parents('li.form-group').addClass("d-none");
   });

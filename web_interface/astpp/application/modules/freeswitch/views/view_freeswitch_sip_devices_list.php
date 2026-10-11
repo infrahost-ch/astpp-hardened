@@ -1,6 +1,6 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
       
         build_grid("fs_sip_devices_grid","",<? echo $grid_fields; ?>);
@@ -82,7 +82,7 @@ if ((isset($permissioninfo['freeswitch']['fssipdevices']['delete'])) && (astpp_e
     ?>
                     <div id="left_panel_delete"
 						class="pull-left margin-t-0 padding-x-4"
-						onclick="delete_multiple('/freeswitch/fssipdevices_delete_multiple/')">
+						data-astpp-click="delete_multiple('/freeswitch/fssipdevices_delete_multiple/')">
 						<span class="btn btn-line-danger"> <i
 							class="fa fa-times-circle fa-lg"></i>
                             <?php echo gettext('Delete')?>

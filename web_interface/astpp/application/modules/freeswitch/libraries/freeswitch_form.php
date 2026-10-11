@@ -80,7 +80,7 @@ class Freeswitch_form extends common
                         'name' => 'accounttype',
                         'id' => 'accounttype',
                         'class' => '',
-                        'onchange' => 'account_change_add(this.value)'
+                        'data-astpp-change' => 'account_change_add(this.value)'
                     ),
                     'SELECT',
                     '',
@@ -355,7 +355,7 @@ class Freeswitch_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -1734,7 +1734,7 @@ class Freeswitch_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',
@@ -2352,7 +2352,7 @@ class Freeswitch_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'content' => gettext('Save'),
@@ -2954,7 +2954,7 @@ class Freeswitch_form extends common
                             'name' => 'reseller_id',
                             'class' => 'reseller_drp',
                             'id' => 'reseller_id',
-                            'onchange' => 'account_change_add(this.value)'
+                            'data-astpp-change' => 'account_change_add(this.value)'
                         ),
                         'SELECT',
                         '',
@@ -3193,7 +3193,7 @@ class Freeswitch_form extends common
             'value' => 'cancel',
             'type' => 'button',
             'class' => 'btn btn-secondary ml-2',
-            'onclick' => 'return redirect_page(\'NULL\')'
+            'data-astpp-click' => 'return redirect_page(\'NULL\')'
         );
         $form['button_save'] = array(
             'name' => 'action',

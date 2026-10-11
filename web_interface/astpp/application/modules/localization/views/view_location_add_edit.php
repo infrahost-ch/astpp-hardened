@@ -1,13 +1,13 @@
 <? extend('master.php') ?>
 <? startblock('extra_head') ?>
 
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 	var number_originate;
 	var number_originate=<?php echo json_encode($details['number_originate']); ?>;
 	var number_originate_value="";
 	if(number_originate){
 			for(var i=1;i<number_originate.length;i++){
-				number_originate_value+="<div class='number_translation' id='number_translation_"+i+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='number_originate["+i+"][0]' id='strip_number_translation_"+i+"' value='"+number_originate[i][0]+"' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='number_originate["+i+"][1]' id='prepend_number_translation_"+i+"' value='"+number_originate[i][1]+"' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-left col' onclick='removeRows("+i+");' ><i class='fa fa-minus'></i></button></div></div>";
+				number_originate_value+="<div class='number_translation' id='number_translation_"+i+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='number_originate["+i+"][0]' id='strip_number_translation_"+i+"' value='"+number_originate[i][0]+"' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='number_originate["+i+"][1]' id='prepend_number_translation_"+i+"' value='"+number_originate[i][1]+"' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-left col' data-astpp-click='removeRows("+i+");' ><i class='fa fa-minus'></i></button></div></div>";
 			}
 	}
 	
@@ -15,7 +15,7 @@
 	var in_caller_id_originate_value='';
 	if(in_caller_id_originate){
 		for(var i=1;i<in_caller_id_originate.length;i++){
-			in_caller_id_originate_value+="<div class='incaller_translation' id='incaller_translation_"+i+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='in_caller_id_originate["+i+"][0]' id='strip_incaller_translation_"+i+"' value='"+in_caller_id_originate[i][0]+"' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='in_caller_id_originate["+i+"][1]' id=prepend_incaller_translation_"+i+"' value='"+in_caller_id_originate[i][1]+"' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-left col' onclick='removeincaller("+i+");'><i class='fa fa-minus'></i></button></div></div>";
+			in_caller_id_originate_value+="<div class='incaller_translation' id='incaller_translation_"+i+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='in_caller_id_originate["+i+"][0]' id='strip_incaller_translation_"+i+"' value='"+in_caller_id_originate[i][0]+"' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='in_caller_id_originate["+i+"][1]' id=prepend_incaller_translation_"+i+"' value='"+in_caller_id_originate[i][1]+"' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-left col' data-astpp-click='removeincaller("+i+");'><i class='fa fa-minus'></i></button></div></div>";
 		}	
 	}
 	
@@ -23,7 +23,7 @@
 	var out_caller_id_originate_value='';
 	if(out_caller_id_originate){
 		for(var i=1;i<out_caller_id_originate.length;i++){
-			out_caller_id_originate_value+="<div class='outcaller_translation' id='outcaller_translation_"+i+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='out_caller_id_originate["+i+"][0]' id='strip_outcaller_translation_"+i+"' value='"+out_caller_id_originate[i][0]+"' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='out_caller_id_originate["+i+"][1]' id='prepend_outcaller_translation_"+i+"' value='"+out_caller_id_originate[i][1]+"' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' onclick='removeoutcaller("+i+");'><i class='fa fa-minus'></i></button></div></div>";
+			out_caller_id_originate_value+="<div class='outcaller_translation' id='outcaller_translation_"+i+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='out_caller_id_originate["+i+"][0]' id='strip_outcaller_translation_"+i+"' value='"+out_caller_id_originate[i][0]+"' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='out_caller_id_originate["+i+"][1]' id='prepend_outcaller_translation_"+i+"' value='"+out_caller_id_originate[i][1]+"' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' data-astpp-click='removeoutcaller("+i+");'><i class='fa fa-minus'></i></button></div></div>";
 		}	
 	}
 	
@@ -31,7 +31,7 @@
 	var number_terminate_terminate_value='';
 	if(number_terminate_terminate){
 		for(var i=1;i<number_terminate_terminate.length;i++){
-			number_terminate_terminate_value+="<div class='terminatenumber_translation' id='terminate_number_translation_"+i+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='number_terminate["+i+"][0]  id='strip_terminate_number_translation_"+i+"' value='"+number_terminate_terminate[i][0]+"' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='number_terminate["+i+"][1]' id='prepend_terminate_number_translation_"+i+"' value='"+number_terminate_terminate[i][1]+"' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' onclick='removeterminatetranslation("+i+");'><i class='fa fa-minus'></i></button></div></div>";
+			number_terminate_terminate_value+="<div class='terminatenumber_translation' id='terminate_number_translation_"+i+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='number_terminate["+i+"][0]  id='strip_terminate_number_translation_"+i+"' value='"+number_terminate_terminate[i][0]+"' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='number_terminate["+i+"][1]' id='prepend_terminate_number_translation_"+i+"' value='"+number_terminate_terminate[i][1]+"' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' data-astpp-click='removeterminatetranslation("+i+");'><i class='fa fa-minus'></i></button></div></div>";
 		}
 	}
 	
@@ -41,7 +41,7 @@
 	var out_caller_id_terminate_value='';
 	if(out_caller_id_terminate){
 		for(var i=1;i<out_caller_id_terminate.length;i++){
-			out_caller_id_terminate_value+="<div class='terminateoutcaller_translation' id='terminate_outcaller_translation_"+i+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='out_caller_id_terminate["+i+"][0]' id='strip_terminate_outcaller_translation_"+i+"' value='"+out_caller_id_terminate[i][0]+"' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='out_caller_id_terminate["+i+"][1]' id='prepend_terminate_outcaller_translation_"+i+"' value='"+out_caller_id_terminate[i][1]+"' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' onclick='removeterminateoutcallertranslation("+i+");'><i class='fa fa-minus'></i></button></div></div>";
+			out_caller_id_terminate_value+="<div class='terminateoutcaller_translation' id='terminate_outcaller_translation_"+i+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='out_caller_id_terminate["+i+"][0]' id='strip_terminate_outcaller_translation_"+i+"' value='"+out_caller_id_terminate[i][0]+"' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='out_caller_id_terminate["+i+"][1]' id='prepend_terminate_outcaller_translation_"+i+"' value='"+out_caller_id_terminate[i][1]+"' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' data-astpp-click='removeterminateoutcallertranslation("+i+");'><i class='fa fa-minus'></i></button></div></div>";
 		}
 	}			
 			
@@ -54,10 +54,10 @@
 	});			
 	
 </script>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
    function addMoreRows() {
         var numItems=$('#numbertranslation .number_translation').length;
-        var alt="<div class='number_translation' id='number_translation_"+numItems+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='number_originate["+numItems+"][0]' id='strip_number_translation_"+numItems+"' value='' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='number_originate["+numItems+"][1]' id='prepend_number_translation_"+numItems+"' value='' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-left col' onclick='removeRows("+numItems+");' ><i class='fa fa-minus'></i></button></div></div>";
+        var alt="<div class='number_translation' id='number_translation_"+numItems+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='number_originate["+numItems+"][0]' id='strip_number_translation_"+numItems+"' value='' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='number_originate["+numItems+"][1]' id='prepend_number_translation_"+numItems+"' value='' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-left col' data-astpp-click='removeRows("+numItems+");' ><i class='fa fa-minus'></i></button></div></div>";
         jQuery('#numbertranslation').append(alt);
    }
    function removeRows(cnt) {
@@ -66,7 +66,7 @@
    
    function addincallerRows(){
 	  var incallerrows=$('#incallertranslation .incaller_translation').length;
-	  var alt="<div class='incaller_translation' id='incaller_translation_"+incallerrows+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='in_caller_id_originate["+incallerrows+"][0]' id='strip_incaller_translation_"+incallerrows+"' value='' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='in_caller_id_originate["+incallerrows+"][1]' id=prepend_incaller_translation_"+incallerrows+"' value='' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-left col' onclick='removeincaller("+incallerrows+");'><i class='fa fa-minus'></i></button></div></div>";
+	  var alt="<div class='incaller_translation' id='incaller_translation_"+incallerrows+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='in_caller_id_originate["+incallerrows+"][0]' id='strip_incaller_translation_"+incallerrows+"' value='' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='in_caller_id_originate["+incallerrows+"][1]' id=prepend_incaller_translation_"+incallerrows+"' value='' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-left col' data-astpp-click='removeincaller("+incallerrows+");'><i class='fa fa-minus'></i></button></div></div>";
         jQuery('#incallertranslation').append(alt);   
    }
    function removeincaller(cnt) {
@@ -75,7 +75,7 @@
    
    function addoutcallerRows(){
 	  var outcallerrows=$('#outcallertranslation .outcaller_translation').length;
-	  var alt="<div class='outcaller_translation' id='outcaller_translation_"+outcallerrows+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='out_caller_id_originate["+outcallerrows+"][0]' id='strip_outcaller_translation_"+outcallerrows+"' value='' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='out_caller_id_originate["+outcallerrows+"][1]' id='prepend_outcaller_translation_"+outcallerrows+"' value='' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' onclick='removeoutcaller("+outcallerrows+");'><i class='fa fa-minus'></i></button></div></div>";
+	  var alt="<div class='outcaller_translation' id='outcaller_translation_"+outcallerrows+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='out_caller_id_originate["+outcallerrows+"][0]' id='strip_outcaller_translation_"+outcallerrows+"' value='' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='out_caller_id_originate["+outcallerrows+"][1]' id='prepend_outcaller_translation_"+outcallerrows+"' value='' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' data-astpp-click='removeoutcaller("+outcallerrows+");'><i class='fa fa-minus'></i></button></div></div>";
       jQuery('#outcallertranslation').append(alt);   
    }
    function removeoutcaller(cnt) {
@@ -84,7 +84,7 @@
    
    function addterminatetranslation(){
 	  var terminate_translation_rows=$('#terminate_number_ranslation .terminatenumber_translation').length;
-	  var alt="<div class='terminatenumber_translation' id='terminate_number_translation_"+terminate_translation_rows+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='number_terminate["+terminate_translation_rows+"][0]  id='strip_terminate_number_translation_"+terminate_translation_rows+"' value='' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='number_terminate["+terminate_translation_rows+"][1]' id='prepend_terminate_number_translation_"+terminate_translation_rows+"' value='' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' onclick='removeterminatetranslation("+terminate_translation_rows+");'><i class='fa fa-minus'></i></button></div></div>";
+	  var alt="<div class='terminatenumber_translation' id='terminate_number_translation_"+terminate_translation_rows+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='number_terminate["+terminate_translation_rows+"][0]  id='strip_terminate_number_translation_"+terminate_translation_rows+"' value='' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='number_terminate["+terminate_translation_rows+"][1]' id='prepend_terminate_number_translation_"+terminate_translation_rows+"' value='' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' data-astpp-click='removeterminatetranslation("+terminate_translation_rows+");'><i class='fa fa-minus'></i></button></div></div>";
       jQuery('#terminate_number_ranslation').append(alt);   
    }
    function removeterminatetranslation(cnt) {
@@ -95,7 +95,7 @@
    }
    function addterminateoutcallertranslation(){
 	  var terminate_outcaller_rows=$('#terminate_outcaller_translation .terminateoutcaller_translation').length;
-	  var alt="<div class='terminateoutcaller_translation' id='terminate_outcaller_translation_"+terminate_outcaller_rows+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='out_caller_id_terminate["+terminate_outcaller_rows+"][0]' id='strip_terminate_outcaller_translation_"+terminate_outcaller_rows+"' value='' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='out_caller_id_terminate["+terminate_outcaller_rows+"][1]' id='prepend_terminate_outcaller_translation_"+terminate_outcaller_rows+"' value='' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' onclick='removeterminateoutcallertranslation("+terminate_outcaller_rows+");'><i class='fa fa-minus'></i></button></div></div>";
+	  var alt="<div class='terminateoutcaller_translation' id='terminate_outcaller_translation_"+terminate_outcaller_rows+"'><div class='col-md-12 form-group'><label class='no-padding control-label'></label><input name='out_caller_id_terminate["+terminate_outcaller_rows+"][0]' id='strip_terminate_outcaller_translation_"+terminate_outcaller_rows+"' value='' size='20' class='col-md-5 form-control float-left mr-4 form-control-lg' type='text'><input name='out_caller_id_terminate["+terminate_outcaller_rows+"][1]' id='prepend_terminate_outcaller_translation_"+terminate_outcaller_rows+"' value='' size='20' class='col-md-5 form-control float-left form-control-lg' type='text'><button type='button' class='btn btn-danger ml-4 float-right col' data-astpp-click='removeterminateoutcallertranslation("+terminate_outcaller_rows+");'><i class='fa fa-minus'></i></button></div></div>";
       jQuery('#terminate_outcaller_translation').append(alt);   
    }
    function removeterminateoutcallertranslation(cnt) {
@@ -218,7 +218,7 @@
 
 													<button type="button"
 														class="btn btn-success ml-4 float-left col"
-														onclick="addMoreRows();">
+														data-astpp-click="addMoreRows();">
 														<i class="fa fa-plus"></i>
 													</button>
 												</div>
@@ -241,7 +241,7 @@
 														type="text">
 													<button type="button"
 														class="btn btn-success ml-4 float-left col"
-														onclick="addincallerRows();">
+														data-astpp-click="addincallerRows();">
 														<i class="fa fa-plus"></i>
 													</button>
 												</div>
@@ -265,7 +265,7 @@
 														type="text">
 													<button type="button"
 														class="btn btn-success ml-4 float-left col"
-														onclick="addoutcallerRows();">
+														data-astpp-click="addoutcallerRows();">
 														<i class="fa fa-plus"></i>
 													</button>
 												</div>
@@ -306,7 +306,7 @@
 														type="text">
 													<button type="button"
 														class="btn btn-success ml-4 float-left col"
-														onclick="addterminatetranslation();">
+														data-astpp-click="addterminatetranslation();">
 														<i class="fa fa-plus"></i>
 													</button>
 												</div>
@@ -331,7 +331,7 @@
 														type="text">
 													<button type="button"
 														class="btn btn-success ml-4 float-left col"
-														onclick="addterminateoutcallertranslation();">
+														data-astpp-click="addterminateoutcallertranslation();">
 														<i class="fa fa-plus"></i>
 													</button>
 												</div>
@@ -347,12 +347,12 @@
 							type="submit"><?php echo gettext('Save')?></button>
 						<button type="button" value="cancel"
 							class="btn btn-secondary ml-2"
-							onclick="return redirect_page('/localization/localization_list/')"><?php echo gettext('Cancel')?></button>
+							data-astpp-click="return redirect_page('/localization/localization_list/')"><?php echo gettext('Cancel')?></button>
 					</div>
 				</form>
 				<?php 
 					if (isset($validation_errors) && $validation_errors != '') { ?>
-						<script>
+						<script<?php echo csp_nonce_attr(); ?>>
 							var ERR_STR = '<?php echo $validation_errors; ?>';
 							print_error(ERR_STR);
 						</script>

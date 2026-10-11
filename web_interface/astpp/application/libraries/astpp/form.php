@@ -838,7 +838,7 @@ class Form {
 							$className = (isset ( $field_arr ['9'] ) && $field_arr ['9'] != '') ? $field_arr ['9'] : "chkRefNos";
 							
 							$custom_value =!empty($field_arr[3]) ? $row[$field_arr[3]] : $row['id'];
-							$jsn_tmp [$field_key] = '<input type="checkbox" name="chkAll" id=' . $row ['id'] . ' class="ace ' . $className . '" onclick="clickchkbox(' . $custom_value . ')" value=' .$custom_value. '><lable class="lbl"></lable>';
+							$jsn_tmp [$field_key] = '<input type="checkbox" name="chkAll" id=' . $row ['id'] . ' class="ace ' . $className . '" data-astpp-click="clickchkbox(' . $custom_value . ')" value=' .$custom_value. '><lable class="lbl"></lable>';
 						}
 					}
 				}
@@ -897,7 +897,7 @@ class Form {
 					if ($field_arr [0] == "Action") {
 						$jsn_tmp [$field_key] = $this->CI->{$this->lib_class}->get_action_buttons ( $field_arr [5], $row ["id"] );
 					} else {
-						$jsn_tmp [$field_key] = '<input type="checkbox" name="chkAll" id=' . $row ['id'] . ' class="ace chkRefNos" onclick="clickchkbox(' . $row ['id'] . ')" value=' . $row ['id'] . '><lable class="lbl"></lable>';
+						$jsn_tmp [$field_key] = '<input type="checkbox" name="chkAll" id=' . $row ['id'] . ' class="ace chkRefNos" data-astpp-click="clickchkbox(' . $row ['id'] . ')" value=' . $row ['id'] . '><lable class="lbl"></lable>';
 					}
 				}
 			}

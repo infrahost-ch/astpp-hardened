@@ -5,7 +5,7 @@
 <?= gettext($page_title); ?>
 <? endblock() ?>
 <?= startblock('content') ?>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 function open_menu(module){	
 	var div_id= module+"_menu";
 	$('#'+div_id).toggle();
@@ -75,7 +75,7 @@ table {
 	font-size: 16px;
 }
 </style>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 function login_type_change(val){
 	var post_data={};
 	post_data['login_type']=val;
@@ -186,7 +186,7 @@ $(document).ready(function(){
 											id="login_type"
 											class='col-md-12 form-control form-control-lg selectpicker'
 											data-live-search='true'
-											onchange="login_type_change(this.value);">
+											data-astpp-change="login_type_change(this.value);">
 											<option value='0'
 												<?php if (isset($login_type) && astpp_eq0($login_type)) { echo "selected"; } ?>><?php echo gettext("Admin")?></option>
 											<option value='1'
@@ -196,9 +196,9 @@ $(document).ready(function(){
 									<div class="col-md-12 text-right">
 										<input id="save_button" class="save_button btn btn-success"
 											name="save_button" value="<?php echo gettext('Save');  ?>" type="button"
-											onclick="form_submit()"> <input name="action" type="button"
+											data-astpp-click="form_submit()"> <input name="action" type="button"
 											value="<?php echo gettext('Cancel');  ?>" class="btn btn-secondary ml-2"
-											onclick="return redirect_page('/permissions/permissions_list/')">
+											data-astpp-click="return redirect_page('/permissions/permissions_list/')">
 
 									</div>
 								</div>
@@ -212,7 +212,7 @@ foreach ($permission_main_array as $module_key => $module_value) {
     ?>
 <div class="col-md-12 alert-primary heading">
 									<a class="btn"
-										onclick="open_menu('<?php echo $module_key; ?>');"><h3
+										data-astpp-click="open_menu('<?php echo $module_key; ?>');"><h3
 											class="text-left m-0"><?php echo gettext(ucwords(str_replace("_"," ",$module_key))); ?></h3></a>
 									<div id="<?php echo $div_function_name; ?>"
 										class="backgroundfff" style="display: none;">
@@ -233,7 +233,7 @@ foreach ($permission_main_array as $module_key => $module_value) {
 												value="0" style="width: 20px;">
 												<div class="float-left">
 													<a
-														onclick="open_sub_menu('<?php echo $link_id; ?>','<?php echo $sub_module_key; ?>','<?php echo $i?>');"
+														data-astpp-click="open_sub_menu('<?php echo $link_id; ?>','<?php echo $sub_module_key; ?>','<?php echo $i?>');"
 														class="btn btn-link"> <span
 														class="collaps-<?php echo $i; ?>"><i class='fa fa-plus'></i></span>
 				<?php

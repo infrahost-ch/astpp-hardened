@@ -1,6 +1,6 @@
 </section>
 </span></span>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.dlmenu.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery.dlmenu.js"<?php echo csp_nonce_attr(); ?>></script>
 <script<?php echo csp_nonce_attr(); ?>>
 	$(document).ready(function() {
   $('.btn-quick > div:first-child').on('click', function(){

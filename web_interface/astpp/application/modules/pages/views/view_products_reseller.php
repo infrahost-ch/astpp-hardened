@@ -54,7 +54,7 @@
         </div>
         <div class="card float-right col-md-6">
             <div class="p-4">
-		<form method="post" id="topup_form" action="" onsubmit="return false;">
+		<form method="post" id="topup_form" action="" data-astpp-submit="return false;">
                   <label class="font-weight-bold"><?php echo gettext("Selected Plan"); ?></label>
                   <br>
                   <?php echo gettext("Amount Without Tax"); ?><h1 id="amount_without_tax_label"></h1>
@@ -83,7 +83,7 @@
 <? endblock() ?>
 <? end_extend() ?>
 <?php /* ASTPP fork: Stripe scripts (third-party JS on every top-up page) removed - no Stripe payment exists server-side */ ?>
-<script type="text/javascript">
+<script type="text/javascript"<?php echo csp_nonce_attr(); ?>>
 
 $(document).ready(function(){
   $('#paypal_status').hide();

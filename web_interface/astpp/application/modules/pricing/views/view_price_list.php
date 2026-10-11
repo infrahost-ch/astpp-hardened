@@ -2,7 +2,7 @@
 <? startblock('extra_head') ?>
 
 
-<script type="text/javascript" language="javascript">
+<script type="text/javascript" language="javascript"<?php echo csp_nonce_attr(); ?>>
     $(document).ready(function() {
       
         build_grid("price_grid","",<? echo $grid_fields; ?>,<? echo $grid_buttons; ?>);

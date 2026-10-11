@@ -211,22 +211,22 @@
  </form>
 <?php
 						if (isset($validation_errors) && $validation_errors != '') { ?>
-						<script>
+						<script<?php echo csp_nonce_attr(); ?>>
 							var ERR_STR = '<?php echo $validation_errors; ?>';
 							print_error(ERR_STR);
 						</script>
 					<? } ?>
                   <div class="col-md-12 my-4">
                     <div class="col-md-4 float-left">
-                      <button class="btn btn-info btn-block" name="add_destination" disabled value="Add Destination" onclick="
+                      <button class="btn btn-info btn-block" name="add_destination" disabled value="Add Destination" data-astpp-click="
 
 add_package_destination();" type="button"> <i class="fa fa-plus-square-o"></i> <?php echo gettext('Add Destination'); ?> </button>
                     </div>
                     <div class="col-md-4 float-left">
-                      <button class="btn btn-success btn-block" name="add_product" id="add_product" value="Add Product" type="button" onclick="add_product_data();"> <?php echo gettext('Save'); ?></button>
+                      <button class="btn btn-success btn-block" name="add_product" id="add_product" value="Add Product" type="button" data-astpp-click="add_product_data();"> <?php echo gettext('Save'); ?></button>
                     </div>
                     <div class="col-md-4 float-left">
-                      <button class="btn btn-secondary mx-2 btn-block" name="cancel" onclick="return redirect_page('/products/products_list/')" value="Cancel" type="button"> <?php echo gettext('Cancel'); ?> </button>
+                      <button class="btn btn-secondary mx-2 btn-block" name="cancel" data-astpp-click="return redirect_page('/products/products_list/')" value="Cancel" type="button"> <?php echo gettext('Cancel'); ?> </button>
                     </div>                        
                   </div>
               <!-- Dhaval issue 145([BUG] Billing and Transfer Money to another account.) -->
@@ -238,7 +238,7 @@ add_package_destination();" type="button"> <i class="fa fa-plus-square-o"></i> <
 	
   </div>
 </section>
-<script>
+<script<?php echo csp_nonce_attr(); ?>>
 
 jQuery(document).ready(function() {  
 	
