@@ -789,7 +789,7 @@ class Signup extends MX_Controller
                 ));
                 $account['password'] = ''; // the notice never carries a password
                 $this->common->mail_to_users('new_password', $account);
-                log_message('error', 'password reset: new password set for account ' . (int) $account['id']);
+                error_log('ASTPP M8: password reset: new password set for account ' . (int) $account['id'] . ' from ' . $this->input->server('REMOTE_ADDR'));
                 redirect(base_url() . 'signup/successpassword/');
             }
             $error = gettext("The code is wrong or has expired. Please check it or request a new code.");
@@ -839,7 +839,7 @@ class Signup extends MX_Controller
             $window = $row['window_start'];
         }
         if ($issued >= self::RESET_MAX_CODES) {
-            log_message('error', 'password reset: code limit reached for account ' . $id);
+            error_log('ASTPP M8: password reset: code limit reached for account ' . $id);
             return;
         }
         $code = str_pad((string) random_int(0, (10 ** self::RESET_CODE_DIGITS) - 1), self::RESET_CODE_DIGITS, '0', STR_PAD_LEFT);
