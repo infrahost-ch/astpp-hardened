@@ -172,6 +172,13 @@ class Api extends CI_Controller {
 		if (! $this->api_keys->ip_allowed($ip, $key['allowed_ips'])) {
 			throw new Api_error(403, 'ip_not_allowed', 'This API key may not be used from ' . $ip . '. Allow the address for the key in the portal (API Access).');
 		}
+		// audit O5: administrator keys also only from admin_allowed_ips (astpp-config.conf, empty = no restriction)
+		if ((int) $key['acc_type'] === -1) {
+			$this->load->library('astpp/common');
+			if (! $this->common->admin_address_allowed($ip)) {
+				throw new Api_error(403, 'ip_not_allowed', 'Administrator access is not allowed from ' . $ip . ' (admin_allowed_ips in astpp-config.conf).');
+			}
+		}
 		$this->role = self::ROLE_NAMES[(int) $key['acc_type']];
 		$this->account_id = (int) $key['accountid'];
 		$this->api_keys->touch($key, $ip);

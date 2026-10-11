@@ -245,6 +245,11 @@ $config ['token_key'] = (isset ( $astpp_config ['token_key'] ) && $astpp_config 
 $config ['iv_key'] = (isset ( $astpp_config ['iv_key'] ) && $astpp_config ['iv_key'] != '') ? $astpp_config ['iv_key'] : $astpp_config ['ENCRYPTION_KEY'];
 $config ['api_decipher_auth_token'] = (isset ( $astpp_config ['api_decipher_auth_token'] ) && $astpp_config ['api_decipher_auth_token'] != '') ? $astpp_config ['api_decipher_auth_token'] : $astpp_config ['PRIVATE_KEY'];
 
+// ASTPP fork (audit O5): administrator logins (account types -1 and 2) only from these addresses or
+// networks, e.g. admin_allowed_ips = "203.0.113.10, 198.51.100.0/24, 2001:db8::/48" in
+// astpp-config.conf. Empty or missing: no restriction. See common::admin_address_allowed().
+$config ['admin_allowed_ips'] = isset ( $astpp_config ['admin_allowed_ips'] ) ? trim ( ( string ) $astpp_config ['admin_allowed_ips'] ) : '';
+
 // HARDENING/PRIVACY: vendor telemetry endpoint removed (was https://dcoll.inextrix.com)
 $config['data'] = '';
 $config['enable_data'] = 1; // HARDENING/PRIVACY: 1 = telemetry off

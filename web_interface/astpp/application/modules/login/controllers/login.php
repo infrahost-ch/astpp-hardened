@@ -80,6 +80,13 @@ class Login extends MX_Controller
                 // and returns the id of the account it matched
                 $user_valid = $this->Auth_model->verify_login($_POST['username'], $actual_password);
                 $_POST['password'] = '';
+                // ASTPP fork (audit O5): administrators only from admin_allowed_ips (astpp-config.conf);
+                // the answer is the one of a wrong password, the reason goes to the log
+                if ($user_valid > 0 && in_array((string) $this->common->get_field_name('type', 'accounts', array('id' => $user_valid)), array('-1', '2'), true) && ! $this->common->admin_address_allowed()) {
+                    error_log('ASTPP O5: login of administrator account ' . (int) $user_valid . ' refused from ' . $this->input->server('REMOTE_ADDR') . ' (admin_allowed_ips)');
+                    $this->session->unset_userdata('user_name');
+                    $user_valid = 0;
+                }
 
                 if ($user_valid > 0) {
                     $this->session->set_userdata('user_login', TRUE);
@@ -93,6 +100,10 @@ class Login extends MX_Controller
                     $result = $result[0];
                     // the row goes into the session (accountinfo, token) - without the password value
                     $result['password'] = '';
+                    // O5: the session stays bound to admin_allowed_ips, also after "login as"
+                    if ((string) $result['type'] === '-1' || (string) $result['type'] === '2') {
+                        $this->session->set_userdata('admin_session', TRUE);
+                    }
 
                     $user_multi_level = 0;
                     $addon_status = $this->db_model->countQuery("*", "addons", array(

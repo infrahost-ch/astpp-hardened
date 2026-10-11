@@ -10,6 +10,8 @@ if (! defined('BASEPATH')) {
  * customers and providers could read, change or delete records of other accounts by passing
  * their id in the URL or in a POST field. This hook runs after the controller constructor
  * (which checks the login) and before the method is called:
+ *  - administrator sessions (also after "login as"): only from admin_allowed_ips of
+ *    astpp-config.conf if set (audit O5, admin_address(); also for root controllers),
  *  - all roles: helper methods that are public only for internal calls cannot be called by
  *    URL, bulk actions (POST field selected_ids) are accepted by POST only,
  *  - administrators (-1, 2): no further restrictions,
@@ -355,6 +357,7 @@ class Access_control
 	{
 		$CI = & get_instance();
 		$this->CI = $CI;
+		$this->admin_address($CI);
 		$RTR = $CI->router;
 		$module = method_exists($RTR, 'fetch_module') ? (string) $RTR->fetch_module() : '';
 		if ($module === '') {
@@ -625,6 +628,38 @@ class Access_control
 	{
 		$row = $this->CI->db->query($sql)->row_array();
 		return (int) $row['n'];
+	}
+
+	/**
+	 * Audit O5: a session of an administrator - or one that started as administrator and switched
+	 * with "login as" (session flag admin_session) - works only from admin_allowed_ips
+	 * (astpp-config.conf; empty = no restriction). From another address the session ends: HTTP 403
+	 * with JSON for AJAX/JSON requests, otherwise back to the login page. Also for root controllers.
+	 */
+	private function admin_address($CI)
+	{
+		if (php_sapi_name() === 'cli' || defined('CRON') || trim((string) $CI->config->item('admin_allowed_ips')) === '' || ! $CI->session->userdata('user_login')) {
+			return;
+		}
+		$account = $CI->session->userdata('accountinfo');
+		$type = is_array($account) && isset($account['type']) ? (string) $account['type'] : '';
+		if ($type !== '-1' && $type !== '2' && ! $CI->session->userdata('admin_session')) {
+			return;
+		}
+		$CI->load->library('astpp/common');
+		if ($CI->common->admin_address_allowed()) {
+			return;
+		}
+		error_log('ASTPP O5: administrator session (account ' . (is_array($account) && isset($account['id']) ? (int) $account['id'] : 0) . ') used from ' . $CI->input->server('REMOTE_ADDR') . ', not in admin_allowed_ips - session ended');
+		$CI->session->sess_destroy();
+		if ($CI->input->is_ajax_request() || stripos((string) $CI->input->server('HTTP_ACCEPT'), 'application/json') !== false) {
+			set_status_header(403);
+			header('Content-Type: application/json');
+			echo json_encode(array('error' => 'Permission Denied!'));
+			exit();
+		}
+		redirect(base_url() . 'login/');
+		exit();
 	}
 
 	private function deny($key)

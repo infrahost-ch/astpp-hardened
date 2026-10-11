@@ -2206,6 +2206,33 @@ class common {
 		$dummy = defined ( 'PASSWORD_ARGON2ID' ) ? '$argon2id$v=19$m=65536,t=4,p=1$eXNoREE0MVYwOTd1dFguZA$MBfJSbbYoCal9cet7cNcVBtx8u9on9fnnXFNaaCnN58' : '$2y$12$B4pEcLfPT7w3HdHTr0Fz7.BfOi1gz00UVrqOf8ZnL5MqMUGwQuvXS';
 		password_verify ( (string) $plain, $dummy );
 	}
+	/*
+	 * ASTPP fork (audit O5): optional address restriction for administrators (account types -1, 2).
+	 * astpp-config.conf: admin_allowed_ips = "<addresses or networks, IPv4/IPv6, comma separated>";
+	 * empty or missing = off (default). Checked at the login (login controller), on every request of
+	 * a session that started as an administrator, also after "login as" (hook Access_control), and
+	 * for administrator API keys (controllers/api.php). Entries follow the rules of the API key lists
+	 * (address or network, at least /8 for IPv4 and /32 for IPv6); others are ignored and logged, a
+	 * list without a single valid entry admits nobody.
+	 */
+	function admin_address_allowed($ip = null) {
+		$list = trim ( ( string ) $this->CI->config->item ( 'admin_allowed_ips' ) );
+		if ($list === '') {
+			return true;
+		}
+		$ip = ($ip === null) ? ( string ) $this->CI->input->server ( 'REMOTE_ADDR' ) : ( string ) $ip;
+		$this->CI->load->library ( 'astpp/api_keys' );
+		$valid = array ();
+		foreach ( preg_split ( '/[\s,;]+/', $list, - 1, PREG_SPLIT_NO_EMPTY ) as $entry ) {
+			list ( $normalized, $error ) = $this->CI->api_keys->normalize_allowed_ips ( $entry );
+			if ($error === '') {
+				$valid [] = $normalized;
+			} else {
+				error_log ( 'ASTPP O5: admin_allowed_ips: entry ignored: ' . $error );
+			}
+		}
+		return $this->CI->api_keys->ip_allowed ( $ip, implode ( ',', $valid ) );
+	}
 	/** Replacement for #PASSWORD# in portal mails: the password is not readable, the user sets it at the reset page. */
 	function password_mail_hint() {
 		return gettext ( '(not sent by e-mail - set your password at' ) . ' ' . base_url () . 'forgotpassword/ ' . gettext ( 'with your account number and e-mail address)' );
