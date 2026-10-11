@@ -2060,12 +2060,14 @@ function user_fund_transfer_save()
                         if ($post_array['toaccountid']) {
                             $reseller_id = $toaccountinfo['reseller_id'];
 
-                            if (($toaccountinfo['type'] != 3) && ((!astpp_eq0($toaccountinfo['type'])))) {
-
-                                $this->session->set_flashdata('astpp_notification', gettext('Access Denied! unable transfer fund to this account'));
-                            }                            
+                            // ASTPP fork: the message was set but the transfer went on (also to
+                            // reseller and admin accounts of the same level); amounts as numbers -
+                            // astpp_number_format() added thousands separators and the checks
+                            // below then compared strings
+                            $to_denied = ($toaccountinfo['type'] != 3) && ((!astpp_eq0($toaccountinfo['type'])));
                             // Kinjal ASTPPCOM-1319 Start
-                            $post_array['credit'] = astpp_number_format($this->common_model->add_calculate_currency($post_array['credit'], '', '', false, false,'en_En'), 4);
+                            $post_array['credit'] = round((float) $this->common_model->add_calculate_currency($post_array['credit'], '', '', false, false,'en_En'), 4);
+                            $balance = (float) $balance;
                             // Kinjal ASTPPCOM-1319 END
 
                             $minimum_fund = (array) $this->db->get_where('system', array(
@@ -2073,17 +2075,19 @@ function user_fund_transfer_save()
                             ), 1)->first_row();
 
                             // Kinjal ASTPPCOM-1319 Start
-                            $minimum_fund['value'] = astpp_number_format($this->common_model->add_calculate_currency($minimum_fund['value'], '', '', false, false,'en_En'), 4);
+                            $minimum_fund['value'] = round((float) $this->common_model->add_calculate_currency($minimum_fund['value'], '', '', false, false,'en_En'), 4);
                             $from_currency = common_model::$global_config['system_config'] ['base_currency'];
                             $minimum_fund_value = astpp_number_format($this->common_model->add_calculate_currency($minimum_fund['value'],$from_currency, $currency['currency'], false, false,'en_En'), 4);
                             // Kinjal ASTPPCOM-1319 END
-                            if ($post_array['toaccountid'] == $account_info['number']) {
+                            if ($to_denied) {
+                                $this->session->set_flashdata('astpp_notification', gettext('Access Denied! unable transfer fund to this account'));
+                            } elseif ($post_array['toaccountid'] == $account_info['number']) {
                                 $this->session->set_flashdata('astpp_notification', gettext('You can not transfer fund in same account.'));
                             } elseif ($reseller_id != $account_info['reseller_id']) {
                                 $this->session->set_flashdata('astpp_notification', gettext('You can only transfer fund in same level account.'));
                             } elseif ($post_array['toaccountid'] == '') {
                                 $this->session->set_flashdata('astpp_notification', gettext('Please enter To account number.'));
-                            } elseif (empty($post_array['credit'])) {
+                            } elseif ($post_array['credit'] <= 0) {
                                 $this->session->set_flashdata('astpp_notification', gettext('Please enter valid amount.'));
                             } elseif ($post_array['credit'] > $balance) {
                                 $this->session->set_flashdata('astpp_notification', gettext('You have insufficient balance.'));
@@ -2102,7 +2106,9 @@ function user_fund_transfer_save()
                             } elseif (!$this->check_calls_running()) {
                                 $this->session->set_flashdata('astpp_notification', gettext('You can not transfer fund when your calls are running!'));
                             } else {
-                                $from['id'] = $post_array['id'];
+                                // ASTPP fork: always the logged-in account (upstream: hidden form field id,
+                                // while the balance check above used the own account)
+                                $from['id'] = $account_info['id'];
                                 $from['account_currency'] = $post_array['account_currency'];
                                 $from['accountid'] = $post_array['fromaccountid'];
 

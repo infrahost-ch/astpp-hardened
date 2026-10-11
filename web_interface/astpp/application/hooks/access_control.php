@@ -327,6 +327,7 @@ class Access_control
 		'user/user_myprofile' => array(array('post:id', 'own')),
 		'user/user_change_password' => array(array('post:id', 'own')),
 		'user/user_alert_threshold' => array(array('post:id', 'own')),
+		'user/user_fund_transfer_save' => array(array('post:id', 'own')),
 		'user/user_invoice_config' => array(array('post:id', 'invoice_conf')),
 	);
 
