@@ -72,8 +72,9 @@ if (not params) then
 end
 
 -- HARDENING: values taken from SIP signalling (dialed number, caller id, From user,
--- custom P- headers) are attacker controlled and are concatenated into SQL queries
--- and into the generated dialplan XML. Wrap params:getHeader() so every script only
+-- custom P- headers) are attacker controlled and are concatenated into the generated
+-- dialplan XML. SQL values are escaped by db_sql() (lib/astpp.db.lua); this filter
+-- stays as a second layer. Wrap params:getHeader() so every script only
 -- ever sees sanitized values, and ignore the voice-broadcast/accountcode override
 -- headers unless the call was originated by this server itself.
 do
