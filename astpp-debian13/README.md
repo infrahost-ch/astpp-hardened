@@ -17,6 +17,7 @@ Sicherheitslücken der Herstellerinstallation.
 | `tools/astpp-smoketest.php` | lesender Funktionstest der Weboberfläche (`php8.5 tools/astpp-smoketest.php`) |
 | `tools/astpp-admin-allowlist-sync.php` | setzt `admin_allowed_ips` aus der zentralen Verwaltungsliste (Audit O5, Cron alle 15 min, siehe *Betrieb*) |
 | `tools/password-list-build.php` | baut die Liste häufiger Passwörter der Passwortregel (N13) aus den SecLists-Quellen neu |
+| `tools/csp-scan.php`, `tools/csp-convert.php` | Content-Security-Policy (Audit O4): was fehlt bzw. mechanische Umstellung von Views (Nonce, `data-astpp-*`-Handler) und Prüfung der Handler |
 | `tools/npmfetch.sh`, `tools/gitfetch.sh` | Bibliotheken für `astpp/` herunterladen und prüfen (npm: SHA-512 der Registry, Composer: Commit laut Packagist) |
 | `tools/php85-port/` | Werkzeuge der PHP-8.5-Portierung (Umschreiber, Kompatibilitätstest, A/B-Testsuite) – auch für Code, der später aus Upstream übernommen wird |
 | `files/` | Konfigurationsvorlagen (nginx, PHP-FPM, MariaDB, FreeSWITCH, fail2ban, nftables, cron) |
@@ -455,17 +456,26 @@ Aktivieren auf einem bestehenden Server (als root; Stand des Repositories mit de
 
 **Content-Security-Policy (Audit O4)**
 
-Seit 11.10.2026 senden alle Seiten der Weboberfläche eine Content-Security-Policy im Report-Only-
-Modus: Der Browser blockiert nichts, meldet aber Verstösse an `/csp_report/` (gespeichert in der
-Tabelle `csp_reports`, ohne Adressen und Benutzer). Bedienung:
+Seit 11.10.2026 (Fork, Stufe 2) wird die Content-Security-Policy der Weboberfläche **erzwungen**:
+Skripte laufen nur aus eigenen Dateien oder aus `<script>`-Tags mit dem Nonce der Sitzung; es gibt
+keine Inline-Handler, keine `javascript:`-URLs und kein `eval` mehr. Ein eingeschleustes Skript wird
+blockiert und an `/csp_report/` gemeldet (Tabelle `csp_reports`, ohne Adressen und Benutzer).
+Bedienung:
 
-- Modus in `/var/lib/astpp/astpp-config.conf`: `csp = report` (Standard, auch wenn die Zeile fehlt),
-  `csp = off` (abgeschaltet), `csp = enforce` (erzwingen – erst nach Abschluss der Umstellung, vorher nur auf einer Testinstanz).
+- Modus in `/var/lib/astpp/astpp-config.conf`: `csp = enforce` (Standard, auch wenn die Zeile fehlt),
+  `csp = report` (nur melden – Rückfallebene, falls eine Seite bricht), `csp = off` (abgeschaltet).
+  Wirkt ab der nächsten Anfrage.
 - Berichte ansehen: `mariadb astpp -e "SELECT hits, page, directive, blocked, source, line, sample FROM csp_reports ORDER BY hits DESC LIMIT 50"`;
-  nach einer Korrekturrunde leeren: `mariadb astpp -e "TRUNCATE csp_reports"`.
-- Neue oder geänderte Views: Inline-Skripte nur mit `<script<?php echo csp_nonce_attr(); ?>>`, keine
-  `onclick=`/`onchange=`/`javascript:` mehr (Listener in einer Skriptdatei);
-  `php astpp-debian13/tools/csp-scan.php astpp/web_interface/astpp` zeigt den Stand.
+  nach einer Korrekturrunde leeren: `mariadb astpp -e "TRUNCATE csp_reports"`. Einträge mit Quelle
+  `chrome-extension` u. ä. stammen von Browser-Erweiterungen und sind harmlos.
+- Bricht nach einem Deploy eine Seite: `csp = report` setzen (sofort wirksam), Bericht auswerten,
+  korrigieren, wieder `enforce`.
+- Neue oder geänderte Views: jedes `<script>` mit `<?php echo csp_nonce_attr(); ?>` (auch mit
+  `src`), Handler als `data-astpp-click="..."` usw. (Funktion in `CALLS` von `assets/js/astpp_csp.js`
+  eintragen), kein `javascript:`, kein `eval`. Prüfen:
+  `php -d short_open_tag=1 astpp-debian13/tools/csp-scan.php astpp/web_interface/astpp` (Summe 0) und
+  `php -d short_open_tag=1 astpp-debian13/tools/csp-convert.php astpp/web_interface/astpp`
+  (Probelauf: nichts zu ändern, keine fehlerhaften Handler; mit `--write` stellt es Upstream-Code um).
 
 **Updates**
 - Debian-Sicherheitsupdates laufen automatisch (`unattended-upgrades`).
