@@ -264,6 +264,24 @@ function astpp_cron_background($task) {
 }
 
 /*
+ * ASTPP fork (audit O4): nonce attribute for the inline script blocks of the views, see
+ * application/hooks/csp.php. Empty while no policy is sent (csp = off, API, cron).
+ */
+function csp_nonce_attr() {
+	return class_exists ( 'Csp', false ) ? Csp::nonce_attr () : '';
+}
+
+/*
+ * ASTPP fork (audit O4): violation reports of the Content-Security-Policy (POST /csp_report/).
+ * Handled here, before CodeIgniter: a report must not read or renew the session - CodeIgniter
+ * renews the session id every few minutes, and browsers ignore cookies of report answers.
+ */
+if (isset ( $_SERVER ['REQUEST_URI'] ) && preg_match ( '~^/csp_report/?(\?|$)~', ( string ) $_SERVER ['REQUEST_URI'] )) {
+	require __DIR__ . '/application/csp_report.php';
+	exit ();
+}
+
+/*
  * HARDENING: global normalization of request parameters that ASTPP concatenates
  * into SQL in many places (bulk actions and the left panel quick search).
  *  - selected_ids:       "'1','2','3'" -> only quoted integers survive

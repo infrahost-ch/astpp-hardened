@@ -44,6 +44,13 @@ $hook ['pre_controller'][] = array (
 		'filename' => 'csrf_guard.php',
 		'filepath' => 'hooks'
 );
+// ASTPP fork (audit O4): Content-Security-Policy (Report-Only) and the nonce for inline scripts
+$hook ['post_controller_constructor'][] = array (
+		'class' => 'Csp',
+		'function' => 'header',
+		'filename' => 'csp.php',
+		'filepath' => 'hooks'
+);
 $hook ['post_controller_constructor'][] = array (
 		'class' => 'Csrf_guard',
 		'function' => 'check',

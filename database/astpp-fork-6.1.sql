@@ -120,3 +120,22 @@ DEALLOCATE PREPARE astpp_stmt;
 -- PRIVATE_KEY). The fork reads neither: a signup account gets its password through the link in the
 -- welcome mail. "!" matches no password (common::password_locked()).
 UPDATE account_unverified SET password = '!' WHERE password <> '!' AND password NOT LIKE '$%';
+
+-- Content-Security-Policy reports (audit O4, application/csp_report.php): one row per distinct
+-- violation (page path, directive, blocked resource, source file and line), repeated reports count
+-- up "hits". No addresses, user agents or cookies; at most 5000 rows.
+CREATE TABLE IF NOT EXISTS `csp_reports` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `report_key` char(40) NOT NULL,
+  `page` varchar(255) NOT NULL DEFAULT '',
+  `directive` varchar(64) NOT NULL DEFAULT '',
+  `blocked` varchar(255) NOT NULL DEFAULT '',
+  `source` varchar(255) NOT NULL DEFAULT '',
+  `line` int(11) NOT NULL DEFAULT 0,
+  `sample` varchar(80) NOT NULL DEFAULT '',
+  `hits` int(11) NOT NULL DEFAULT 1,
+  `first_seen` datetime NOT NULL,
+  `last_seen` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `report_key` (`report_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

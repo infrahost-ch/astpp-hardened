@@ -250,6 +250,10 @@ $config ['api_decipher_auth_token'] = (isset ( $astpp_config ['api_decipher_auth
 // astpp-config.conf. Empty or missing: no restriction. See common::admin_address_allowed().
 $config ['admin_allowed_ips'] = isset ( $astpp_config ['admin_allowed_ips'] ) ? trim ( ( string ) $astpp_config ['admin_allowed_ips'] ) : '';
 
+// ASTPP fork (audit O4): Content-Security-Policy - report (default: Report-Only, violations to
+// /csp_report/), off, enforce (test instance only until the conversion is done). See hooks/csp.php.
+$config ['csp'] = isset ( $astpp_config ['csp'] ) ? strtolower ( trim ( ( string ) $astpp_config ['csp'] ) ) : 'report';
+
 // HARDENING/PRIVACY: vendor telemetry endpoint removed (was https://dcoll.inextrix.com)
 $config['data'] = '';
 $config['enable_data'] = 1; // HARDENING/PRIVACY: 1 = telemetry off
