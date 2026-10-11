@@ -28,6 +28,7 @@ if (! defined('BASEPATH')) {
  *          'when' => [n, v] rule applies only if URI parameter n equals v
  *          'unless' => [n, v] rule applies only if URI parameter n differs from v
  *          'required' => true a missing value is denied too
+ *          'empty' => true    check 'reseller': '' and '0' select the own customers (logintype 1)
  * Values '' and '0' mean "no record" and are not checked (except check 'reseller' and
  * 'required').
  */
@@ -258,7 +259,7 @@ class Access_control
 		'orders/orders_complete' => array(array(1, 'orders_any')),
 		'orders/orders_terminate' => array(array(1, 'orders', 'col' => 'order_id')),
 		'orders/orders_users_terminate' => array(array('post:order_id', 'orders', 'col' => 'order_id')),
-		'orders/orders_reseller_accounts_dependency_dropdown' => array(array('post:reseller_id', 'reseller')),
+		'orders/orders_reseller_accounts_dependency_dropdown' => array(array('post:reseller_id', 'reseller', 'empty' => true)),
 		'pages/checkout' => array(array(1, 'product_buyable')),
 		'pages/proceed_payment' => array(array(1, 'product_buyable')),
 		'pages/payment_proceed' => array(array(1, 'product_buyable')),
@@ -477,7 +478,14 @@ class Access_control
 		$value = trim($value);
 		if ($check === 'reseller') {
 			// list of accounts below a reseller: own id or one of the own sub-resellers
-			if (! ctype_digit($value) || $this->role !== 'reseller') {
+			if ($this->role !== 'reseller') {
+				return false;
+			}
+			if (($value === '' || $value === '0') && ! empty($rule['empty'])) {
+				// the method lists the own customers for an empty selection, but only for logintype 1
+				return (string) $this->CI->session->userdata('logintype') === '1';
+			}
+			if (! ctype_digit($value)) {
 				return false;
 			}
 			return (int) $value === $this->me || $this->count("SELECT COUNT(*) AS n FROM accounts WHERE id = " . (int) $value . " AND reseller_id = {$this->me}") > 0;
