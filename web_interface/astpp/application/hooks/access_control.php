@@ -321,6 +321,7 @@ class Access_control
 		'user/user_animap_action' => array(array(2, 'ani_map', 'self' => true)),
 		'user/user_orders_complete' => array(array(1, 'orders_any', 'self' => true)),
 		'user/user_orders_terminate' => array(array(1, 'orders', 'col' => 'order_id', 'self' => true)),
+		'user/user_orders_termination' => array(array('post:order_id', 'orders', 'col' => 'order_id', 'self' => true)),
 		'user/user_fssipdevices_routing' => array(array(1, 'sip_devices', 'self' => true)),
 		'user/user_myprofile' => array(array('post:id', 'own')),
 		'user/user_change_password' => array(array('post:id', 'own')),
