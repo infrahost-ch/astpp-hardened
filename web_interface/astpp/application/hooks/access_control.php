@@ -309,6 +309,7 @@ class Access_control
 			array('post:free_didlist', 'dids_available', 'when' => array(1, 'add'))),
 		'user/user_did_forward' => array(array(1, 'dids_forward', 'self' => true, 'required' => true)),
 		'user/user_did_forward_save' => array(array('post:id', 'dids', 'self' => true)),
+		'user/user_did_local_change' => array(array(2, 'dids', 'self' => true, 'required' => true)),
 		'user/user_invoice_logo_delete' => array(array(1, 'accounts', 'self' => true)),
 		'user/user_invoices_download' => array(array(1, 'invoices', 'self' => true)),
 		'user/user_invoice_payment' => array(array(1, 'invoices', 'self' => true)),

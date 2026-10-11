@@ -1392,6 +1392,23 @@ function user_did_forward($id = '')
     $this->did->did_forward($id);
 }
 
+// BUGFIX: the DID forward form loads its extension list from did/did_local_change, which the
+// customer portal cannot use (module did). Same list here: own DIDs, own SIP devices only.
+function user_did_local_change($call_type_code = '', $did_id = '', $extensions = '')
+{
+    $accountinfo = $this->session->userdata('accountinfo');
+    $own = $this->db->get_where('dids', array(
+        'id' => (int) $did_id,
+        'accountid' => (int) $accountinfo['id']
+    ))->num_rows();
+    if (astpp_eq0($own)) {
+        echo '<select class="col-md-12 form-control form-control-lg selectpicker extensions_set" id="extensions_id" name="extensions"><option>--</option></select>';
+        return;
+    }
+    $this->load->module('did/did');
+    $this->did->did_local_change($call_type_code, (int) $did_id, $extensions);
+}
+
 function user_did_forward_save()
 {
     $add_array = $this->input->post();
