@@ -577,7 +577,7 @@ function package_calculation($destination_number, $package_id, $duration, $call_
 					// Ashish ASTPPCOM-823
 					$Insert_Query = "INSERT INTO counters (product_id,package_id,accountid,type) VALUES (" . $package_info ['product_id'] . "," . $package_info ['package_id'] . "," . $accountid . "," . $account_data['type'] . ")";
 					// Ashish 823 End
-					$logger->log ( "Insert Counters  : " . $Insert_query );
+					$logger->log ( "Insert Counters  : " . $Insert_Query );
 					$db->run ( $Insert_Query );
 					$counter_info = get_counters ( $accountid, $package_info ['package_id'], $db, $logger );
 				}
