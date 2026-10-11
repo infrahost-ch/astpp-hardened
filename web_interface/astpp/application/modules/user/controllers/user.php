@@ -688,49 +688,18 @@ function user_refill_coupon_number($refill_coupon_no)
 
 function user_refill_coupon_action($refill_coupon_no)
 {
+    // ASTPP fork: upstream booked any coupon number here without checking status or owner (also
+    // used or inactive coupons, again and again); now only via payment::redeem_coupon()
     $accountinfo = $this->session->userdata('accountinfo');
-    $reseller_id = $accountinfo['reseller_id'];
-    if (astpp_eq0($reseller_id)) {
-        $reseller_id = '-1';
-    }
-    $date = gmdate('Y-m-d H:i:s');
-
-    $customer_id = $accountinfo['id'];
-    $result = $this->db_model->getSelect("*", "refill_coupon", array(
-        "number" => $refill_coupon_no
-    ));
-    if ($result->num_rows() > 0) {
-        $result = $result->result_array()[0];
-        $balance = $this->common->get_field_name("balance", "accounts", array(
-            "id" => $customer_id
-        ));
-        $new_balance = ($accountinfo["posttoexternal"] == 1) ? (astpp_n($balance) - astpp_n($result['amount'])) : (astpp_n($balance) + astpp_n($result['amount']));
-
-        $this->db->where('number', $refill_coupon_no);
-        $refill_coupon_data = array(
-            'status' => 2,
-            "account_id" => $customer_id,
-            'firstused' => $date
-        );
-        $this->db->update('refill_coupon', $refill_coupon_data);
-
-        $payment_info = array(
-            "price" => $result['amount'],
-            "payment_by" => "Voucher",
-            "payment_fee" => 0,
-            "invoice_type" => "credit",
-            "product_category" => 3,
-            "description" => "Refill done using voucher'('" . $refill_coupon_no . " ')'",
-            "order_item_id" => 0,
-            "charge_type" => "Voucher"
-        );
-
-        $where = array(
-            'id' => $accountinfo['currency_id']
-        );
-        $currency_info = (array) $this->db->get_where("currency", $where)->result_array()[0];
-        $this->payment->add_payments_transcation($payment_info, $accountinfo, $currency_info);
+    $result = $this->payment->redeem_coupon($refill_coupon_no, $accountinfo['id']);
+    if ($result == 10) {
         $this->session->set_flashdata('astpp_errormsg', gettext('Refill Coupon amount is added successfully to your account'));
+    } elseif ($result == 1) {
+        $this->session->set_flashdata('astpp_notification', gettext('The Coupon Number field have inactive refill coupon.'));
+    } elseif ($result == 2) {
+        $this->session->set_flashdata('astpp_notification', gettext('This Coupon Number is already in use.'));
+    } else {
+        $this->session->set_flashdata('astpp_notification', gettext('This Coupon Number is not found.'));
     }
     redirect(base_url() . "user/user_refill_coupon_list/");
 }

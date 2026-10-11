@@ -651,76 +651,14 @@ function services($category= '') {
 		$data['accountid']=$accountinfo['id'];
 		$this->load->view ( 'view_add_refill_coupon',$data);
 	}
-	function user_refill_coupon_number($refill_coupon_no,$accountid) {
-		$accountinfo = $this->session->userdata ( 'token' );
-		$accountinfo = ((isset($accountinfo)) && $accountinfo != '')?$accountinfo:$this->session->userdata ( "accountinfo" );
-		if(astpp_gt($accountinfo['reseller_id'], 0)){
-			$this->db->where ( 'reseller_id', $accountinfo['reseller_id']);
-			$this->db->where ( 'number', $refill_coupon_no );
-			$this->db->select ( '*' );
-			$refill_coupon_result = $this->db->get ( 'refill_coupon' );
-
-		}else{
-			$this->db->where ( 'number', $refill_coupon_no );
-			$this->db->select ( '*' );
-			$refill_coupon_result = $this->db->get ( 'refill_coupon' );
-		}
-		if ($refill_coupon_result->num_rows () > 0) {
-			$refill_coupon_result = $refill_coupon_result->result_array ();
-			
-			$refill_coupon_result = $refill_coupon_result [0];
-			if ($refill_coupon_result ['status'] == 1) {
-				echo json_encode ( 1 );
-			} elseif ($refill_coupon_result ['status'] == 2) {
-				echo json_encode ( 2 );
-			} else {
-				
-				$date = gmdate ( 'Y-m-d H:i:s' );
-				$customer_id=$accountid;
-				$this->db->where ( 'id', $customer_id );
-				$accountinfo = $this->db->get ( 'accounts' );
-				$accountinfo=$accountinfo->row_array ();
-				$balance =$this->common->get_field_name("balance","accounts",array("id"=>$customer_id));
-				$new_balance = ($accountinfo ["posttoexternal"] == 1) ? (astpp_n($balance) - astpp_n($refill_coupon_result['amount'])) : (astpp_n($balance) +  astpp_n($refill_coupon_result['amount']));
-				
-				$this->db->where ( 'number', $refill_coupon_no );
-				$refill_coupon_data = array (
-						'status' => 2,
-						"account_id" => $customer_id,
-						'firstused' => $date 
-				);
-				$this->db->update ( 'refill_coupon', $refill_coupon_data );
-				/*$tax_calculation=$this->common_model->calculate_taxes($accountinfo,$refill_coupon_result['amount']);
-				if(isset($tax_calculation['tax']) && !empty($tax_calculation['tax'])){
-					$amount = $refill_coupon_result['amount'] - $tax_calculation['total_tax'];
-				}else{
-					$amount = $refill_coupon_result['amount'];
-				}*/
-				$payment_info=array(
-						"price"=>$refill_coupon_result['amount'],
-						"payment_by"=>"Voucher",
-						"payment_fee"=>0,
-						"invoice_type"=>"credit",
-						"product_category"=>3,
-						"description"=>"Refill done using voucher'('".$refill_coupon_no." ')'",
-						"order_item_id"=>0,
-						"charge_type"=>"Voucher",
-						"is_apply_tax"=>"true"
-
-				);
-				$where = array ('id' => $accountinfo['currency_id']);
-				$currency_info = ( array ) $this->db->get_where( "currency", $where )->result_array()[0];
-				
-				$invoiceid=$this->payment->add_payments_transcation($payment_info,$accountinfo,$currency_info);
-				$where = array ('id' => $accountinfo['currency_id']);
-				$currency_info = ( array ) $this->db->get_where( "currency", $where )->result_array()[0];
-				echo json_encode ( 10 );
-				$this->session->set_flashdata ( 'astpp_errormsg',  gettext('Refill Coupon amount is Added Successfully' ));
-				
-				
-			}
-		} else {
-			echo json_encode ( 3 );
+	function user_refill_coupon_number($refill_coupon_no,$accountid = '') {
+		// ASTPP fork: only active coupons of the own seller, only once (payment::redeem_coupon); always
+		// the logged-in account (the second URL parameter is kept for the existing links)
+		$accountinfo = $this->session->userdata ( "accountinfo" );
+		$result = $this->payment->redeem_coupon($refill_coupon_no, isset($accountinfo['id']) ? $accountinfo['id'] : 0);
+		echo json_encode ( $result );
+		if ($result == 10) {
+			$this->session->set_flashdata ( 'astpp_errormsg',  gettext('Refill Coupon amount is Added Successfully' ));
 		}
 	}
 
