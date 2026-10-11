@@ -133,6 +133,15 @@ folgt jede Änderung als eigener Commit (`git log -- astpp`): Härtung, PHP-8.5-
   verschickt.
 - Bibliotheken mit bekannten Lücken ersetzt (Tabelle unten), CKEditor samt öffentlicher Beispielseiten
   entfernt.
+- **CSRF-Schutz** (Audit M1/O2, 11.10.2026, Hook `application/hooks/csrf_guard.php`): Jede Sitzung
+  hat ein Zufallstoken, das bei jeder An-/Ummeldung (auch `login_as_*`) neu entsteht. Ein
+  Ausgabefilter setzt es in jedes POST-Formular der eigenen Seite (auch in Popups und Grid-JSON) und
+  an die Links ändernder GET-Aktionen (Löschen, Freigeben, `*_action`, Kündigen, `login_as` …);
+  `assets/js/astpp_csrf.js` schickt es bei jedem AJAX-Aufruf als Header `X-CSRF-Token` mit.
+  Ändernde Anfragen ohne gültiges Token oder mit fremder Origin/fremdem Referer lehnt der Hook ab
+  („This page has expired …“, bei AJAX HTTP 403). Ausgenommen: `/api/v1` (eigener Schlüssel),
+  FreeSWITCH-/Cron-/interne Root-Controller, PayPal-Rückleitungen; Login, Signup und
+  „Passwort vergessen“ prüfen nur die Origin.
 
 **Bibliotheken** (alle selbst ausgeliefert unter `assets/vendor/<name>-<version>/`, Downloads gegen
 npm-/Packagist-Prüfsummen verifiziert)
@@ -358,6 +367,14 @@ Regeln direkt in `/etc/nftables.conf` (Sets `ssh_allow4/6`, `sip_allow4/6`) pfle
 - Session-Cookies sind `Secure; HttpOnly; SameSite=Lax`. Zahlungsanbieter, die per **POST** auf
   ASTPP zurückleiten, sehen danach evtl. keine Sitzung (Rückleitung per GET ist unproblematisch).
 - Die Schnellsuche entfernt Anführungszeichen/Backslashes aus Suchbegriffen.
+- **CSRF-Token:** Formulare und Aktions-Links gelten nur in der Sitzung, in der die Seite geladen
+  wurde. Nach erneuter Anmeldung oder „Login as …“ in einem anderen Tab melden ältere Tabs beim
+  Speichern „This page has expired …“ – Seite neu laden. Fremde Seiten, Skripte und Werkzeuge
+  können nicht mehr in die Weboberfläche posten; Automatisierung nur über die API.
+  Für Entwickler: neue ändernde Aktionen als POST bauen; ändert eine GET-Methode Daten, ihren Namen
+  in `$get_protected` (`csrf_guard.php`) aufnehmen und per Skript erzeugte Navigationen zu solchen
+  URLs über `csrf_url(url)` führen. Prüfung: Rollenmatrix mit `MX_CSRF=ohne` (keine Tabellen
+  dürfen sich ändern), siehe Testplan.
 
 ## Validierung / Testplan
 
@@ -383,3 +400,10 @@ noch aus; die Funktionen für Abgleich, Rechte und Protokoll teilen sich Install
   (`nft list table inet f2b-table` zeigt `meta l4proto { tcp, udp }`)
 - [ ] `curl -k https://astpp.example.com/getstatus/reload_freeswitch/status` → 404
 - [ ] `curl -k https://astpp.example.com/purge/ProcessPurge` → 404
+- [x] CSRF-Schutz (11.10.2026, Testinstanz): Funktionstests `flow-*.php` und Rollenmatrix mit Token
+  unverändert; Matrix `MX_CSRF=ohne`/`fremd` ändert keine Daten (ausser dem PayPal-Platzhalter der
+  Aufladeseite); `flow-csrf.php` 36/36; API 41/41, API-Portal 39/39; Browser-Stichprobe Admin,
+  Reseller, Kunde (Popups, Sammelaktionen, Upload, TinyMCE, `login_as`, abgelaufene Seite)
+- [ ] nach dem Deploy: Formular speichern und ein Popup im Admin-, Reseller- und Kundenportal;
+  `curl -sk -X POST https://astpp.example.com/user/user_myprofile/` → Weiterleitung zum Login
+  (ohne Sitzung) bzw. mit Sitzung, aber ohne Token → „This page has expired …“
