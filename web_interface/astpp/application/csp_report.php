@@ -21,7 +21,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 	exit();
 }
 $cfg = @parse_ini_file(getenv('ASTPP_CONFIG') ?: '/var/lib/astpp/astpp-config.conf');
-$mode = is_array($cfg) ? strtolower(trim((string) ($cfg['csp'] ?? 'report'))) : 'off';
+$mode = is_array($cfg) ? strtolower(trim((string) ($cfg['csp'] ?? 'enforce'))) : 'off';
 if ($mode === 'off') {
 	http_response_code(204);
 	exit();

@@ -6,25 +6,27 @@ if (! defined('BASEPATH')) {
 /*
  * ASTPP fork (audit O4): Content-Security-Policy (hook post_controller_constructor, config/hooks.php).
  *
- * Stage 1: the policy is sent as Content-Security-Policy-Report-Only - the browser blocks nothing
- * and reports every violation to /csp_report/ (index.php -> application/csp_report.php, stored
- * deduplicated in the table csp_reports). Upstream views contain several hundred inline <script>
- * blocks, event handler attributes (onclick=...) and javascript: links; enforcing the policy now
- * would break most pages. astpp-debian13/tools/csp-scan.php lists what is missing before enforcing.
+ * Stage 2 (11.10.2026): the policy is enforced (Content-Security-Policy). Every <script> tag of the
+ * views carries the nonce (<script ...<?php echo csp_nonce_attr(); ?>>, also <script src>: jQuery
+ * runs the scripts of AJAX popups only with the nonce of the tag); event handlers are
+ * data-astpp-<event>="..." attributes, run without eval by assets/js/astpp_csp.js; no javascript:
+ * URLs, no eval. Violations are still reported to /csp_report/ (index.php ->
+ * application/csp_report.php, stored deduplicated in the table csp_reports).
+ * Stage 1 (report only) is still available as csp = report.
  *
- *  - script-src 'self' 'nonce-<n>': own script files and inline <script> blocks that carry the nonce
- *    (views: <script<?php echo csp_nonce_attr(); ?>>, so far the global layout, login and password
- *    pages). The nonce belongs to the session and is renewed when the login state changes (like the
- *    CSRF token), not per response: popups are loaded by AJAX into the page, their scripts must
- *    match the policy of that page.
+ *  - script-src 'self' 'nonce-<n>': own script files and script tags that carry the nonce. The
+ *    nonce belongs to the session and is renewed when the login state changes (like the CSRF
+ *    token), not per response: popups are loaded by AJAX into the page, their scripts must match
+ *    the policy of that page. No 'unsafe-inline', no 'unsafe-eval'.
  *  - style-src keeps 'unsafe-inline' (style attributes in nearly every view; lower risk, later stage).
  *  - form-action allows PayPal (payment forms post there), everything else is this host only.
  *  - reports via report-uri only: browsers send them at once. With report-to (Reporting API) Chrome
  *    ignores report-uri and batches the reports (the browser of the test sent none at all).
  *    'report-sample' adds the first 40 characters of a blocked inline script to the report.
  *
- * Mode from astpp-config.conf: csp = report (default) | off | enforce (test instance only until
- * the conversion is done). Not sent for the API, FreeSWITCH, cron and internal root controllers.
+ * Mode from astpp-config.conf: csp = enforce (default, also when the line is missing) | report
+ * (Report-Only, fallback if something breaks) | off. Not sent for the API, FreeSWITCH, cron and
+ * internal root controllers.
  */
 #[\AllowDynamicProperties]
 class Csp
@@ -62,7 +64,7 @@ class Csp
 	public static function mode()
 	{
 		$mode = strtolower(trim((string) config_item('csp')));
-		return in_array($mode, array('off', 'report', 'enforce'), true) ? $mode : 'report';
+		return in_array($mode, array('off', 'report', 'enforce'), true) ? $mode : 'enforce';
 	}
 
 	public static function policy($nonce)
