@@ -547,7 +547,9 @@ function package_calculation($destination_number, $package_id, $duration, $call_
 	}
 	$custom_destination = number_loop ( $destination_number, "patterns", $db );
 	
-	$query = "SELECT *,P.id as package_id,P.product_id as product_id FROM packages_view  as P inner join package_patterns as PKGPTR on P.product_id = PKGPTR.product_id WHERE " . $custom_destination . " AND accountid = " . $accountid . " ORDER BY LENGTH(PKGPTR.patterns) DESC";
+	// ASTPP fork: equal pattern lengths in order of the package id, as in the Lua dialplan (MariaDB
+	// returned equal packages in varying order, so the counted package changed from call to call)
+	$query = "SELECT *,P.id as package_id,P.product_id as product_id FROM packages_view  as P inner join package_patterns as PKGPTR on P.product_id = PKGPTR.product_id WHERE " . $custom_destination . " AND accountid = " . $accountid . " ORDER BY LENGTH(PKGPTR.patterns) DESC, P.id, PKGPTR.id";
 	$logger->log ( "Package query  : " . $query );
 	$package_info_arr = $db->run ( $query );
 	// ASTPP fork: the packages covering the destination form one pool. Seconds a package cannot

@@ -485,7 +485,10 @@ function package_calculation (destination_number,userinfo,call_direction)
 	custom_destination = number_loop(destination_number,"patterns")
 	local package_info_arr = {}   
 	local i = 1  
-	local query = "SELECT *,P.id as package_id,P.product_id as product_id FROM ".. TBL_PACKAGE.." as P inner join "..TBL_PACKAGE_PATTERN.." as PKGPTR on P.product_id = PKGPTR.product_id WHERE ".. custom_destination..db_sql(" AND accountid = ?i ORDER BY LENGTH(PKGPTR.patterns) DESC", package_act_id);
+	-- ASTPP fork: longest pattern first as upstream; packages with patterns of the same length (e.g.
+	-- several equal packages per account) in order of their id (order), so the same package carries
+	-- the call every time. MariaDB returned them in varying order. Same order in astpp.cdr.php.
+	local query = "SELECT *,P.id as package_id,P.product_id as product_id FROM ".. TBL_PACKAGE.." as P inner join "..TBL_PACKAGE_PATTERN.." as PKGPTR on P.product_id = PKGPTR.product_id WHERE ".. custom_destination..db_sql(" AND accountid = ?i ORDER BY LENGTH(PKGPTR.patterns) DESC, P.id, PKGPTR.id", package_act_id);
 	Logger.debug("[GET_PACKAGE_INFO] Query :" .. query)
 	assert (dbh:query(query, function(u)
 		package_info_arr[i] = u
