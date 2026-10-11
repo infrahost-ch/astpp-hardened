@@ -20,6 +20,7 @@ $logo = ($logo != '') ? $logo : 'logo.png';
 $favicon = $this->session->userdata('user_favicon');
 $expire = common_model::$global_config['system_config']['otp_expire'];
 $expire = astpp_gt($expire, 0) ? (int) $expire : 30;
+$this->load->library('astpp/password_policy'); // N13: rule hint and minimum length
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -75,11 +76,12 @@ body {
 						</div>
 						<div class="form-group">
 							<label class="control-label" for="password"><?php echo gettext('New Password'); ?></label>
-							<input type="password" class="form-control m-0" id="password" name="password" value="" maxlength="100" autocomplete="new-password" required>
+							<input type="password" class="form-control m-0" id="password" name="password" value="" minlength="<?php echo Password_policy::MIN_LENGTH; ?>" maxlength="100" autocomplete="new-password" aria-describedby="password_hint" required>
+							<small class="form-text text-muted" id="password_hint"><?php echo $h($this->password_policy->hint()); ?></small>
 						</div>
 						<div class="form-group">
 							<label class="control-label" for="confirm_password"><?php echo gettext('Confirm Password'); ?></label>
-							<input type="password" class="form-control m-0" id="confirm_password" name="confirm_password" value="" maxlength="100" autocomplete="new-password" required>
+							<input type="password" class="form-control m-0" id="confirm_password" name="confirm_password" value="" minlength="<?php echo Password_policy::MIN_LENGTH; ?>" maxlength="100" autocomplete="new-password" required>
 						</div>
 						<button type="submit" id="submit" class="btn btn-block text-uppercase border_box"><?php echo gettext('Set new password'); ?></button>
 					</form>

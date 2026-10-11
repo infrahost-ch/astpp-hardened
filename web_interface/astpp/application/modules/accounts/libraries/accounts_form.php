@@ -298,7 +298,7 @@ class Accounts_form extends common
                     'size' => '20',
                     'class' => "text field medium"
                 ),
-                'notMatch[number]|chk_password_expression', // M6: empty keeps the stored password
+                'portal_password', // M6: empty keeps the stored password; N13: rule in libraries/astpp/password_policy.php
                 'tOOL TIP',
                 ''
             );
@@ -464,7 +464,7 @@ class Accounts_form extends common
                     'onmouseover' => 'seetext(password)',
                     'onmouseout' => 'hidepassword(password)'
                 ),
-                'required|chk_password_expression',
+                'required|portal_password', // N13
                 'tOOL TIP',
                 '',
                 '<i style="cursor:pointer; font-size: 17px; position:absolute; right:20px; bottom: 7px;" title="Reset Password" class="change_pass align-self-end text-success fa fa-refresh" ></i>'
@@ -1702,7 +1702,7 @@ class Accounts_form extends common
                     'size' => '20',
                     'class' => "text field medium"
                 ),
-                'notMatch[number]|chk_password_expression', // M6: empty keeps the stored password
+                'portal_password', // M6: empty keeps the stored password; N13: rule in libraries/astpp/password_policy.php
                 'tOOL TIP',
                 ''
             );
@@ -1844,7 +1844,7 @@ class Accounts_form extends common
                     'onmouseover' => 'seetext(password)',
                     'onmouseout' => 'hidepassword(password)'
                 ),
-                'required|chk_password_expression',
+                'required|portal_password', // N13
                 'tOOL TIP',
                 '',
                 '<i style="cursor:pointer; font-size: 17px; position:absolute; right:20px; bottom: 7px;" title="Reset Password" class="change_pass align-self-end text-success fa fa-refresh" ></i>'
@@ -2368,7 +2368,7 @@ class Accounts_form extends common
                     'size' => '20',
                     'class' => "text field medium"
                 ),
-                'notMatch[number]|chk_password_expression', // M6: empty keeps the stored password
+                'portal_password', // M6: empty keeps the stored password; N13: rule in libraries/astpp/password_policy.php
                 'tOOL TIP',
                 ''
             );
@@ -2558,7 +2558,7 @@ class Accounts_form extends common
                     'onmouseover' => 'seetext(password)',
                     'onmouseout' => 'hidepassword(password)'
                 ),
-                'required|chk_password_expression',
+                'required|portal_password', // N13
                 'tOOL TIP',
                 '',
                 '<i style="cursor:pointer; font-size: 17px; position:absolute; right:20px; bottom: 7px;" title="Reset Password" class="change_pass align-self-end text-success fa fa-refresh" ></i>'

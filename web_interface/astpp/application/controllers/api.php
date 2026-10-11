@@ -303,7 +303,7 @@ class Api extends CI_Controller {
 	}
 
 	private function customer_create() {
-		$in = $this->body(array('reseller_id', 'company_name', 'first_name', 'last_name', 'email', 'phone', 'address', 'country', 'currency', 'timezone', 'billing_type', 'credit_limit', 'max_channels', 'rate_group_id', 'localization_id', 'send_welcome_email'));
+		$in = $this->body(array('reseller_id', 'company_name', 'first_name', 'last_name', 'email', 'phone', 'address', 'country', 'currency', 'timezone', 'billing_type', 'credit_limit', 'max_channels', 'rate_group_id', 'localization_id', 'send_welcome_email', 'portal_password'));
 		$welcome = false;
 		if (array_key_exists('send_welcome_email', $in)) {
 			if (! is_bool($in['send_welcome_email'])) {
@@ -330,7 +330,8 @@ class Api extends CI_Controller {
 			throw new Api_error(422, 'validation_failed', 'Invalid input.', array('send_welcome_email' => 'Requires an e-mail address.'));
 		}
 		$this->load->library('astpp/signup_lib');
-		$password = $this->common->generate_password();
+		// N13: without portal_password a generated one (passes the rule), returned once in the response
+		$password = isset($fields['password']) ? NULL : $this->common->generate_password();
 		$number = $this->common->find_uniq_rendno_customer(isset(Common_model::$global_config['system_config']['cardlength']) ? Common_model::$global_config['system_config']['cardlength'] : 10, 'number', 'accounts');
 		$account = array_merge(array(
 			'company_name' => '',
@@ -342,7 +343,7 @@ class Api extends CI_Controller {
 			// is 0; only on request, the account gets the system default afterwards
 			'notifications' => $welcome ? '0' : '1',
 			'number' => $number,
-			'password' => $this->common->password_store($password), // M6: hash; the response carries the password once
+			'password' => $password === NULL ? '' : $this->common->password_store($password), // M6: hash; the response carries a generated password once (N13: portal_password in $fields wins)
 			'type' => 0,
 			'reseller_id' => $owner,
 			'sweep_id' => 2,
@@ -375,14 +376,16 @@ class Api extends CI_Controller {
 		$this->db->update('accounts', array('notifications' => isset(Common_model::$global_config['system_config']['notifications']) ? Common_model::$global_config['system_config']['notifications'] : '0'));
 		$this->log_target = 'customer ' . $id;
 		$out = $this->customer_out($this->db->get_where('accounts', array('id' => $id))->row_array());
-		$out['portal_password'] = $password;
+		if ($password !== NULL) {
+			$out['portal_password'] = $password;
+		}
 		$this->send(201, array('data' => $out));
 	}
 
 	private function customer_update($id) {
 		$customer = $this->load_customer($id);
-		$in = $this->body(array('company_name', 'first_name', 'last_name', 'email', 'phone', 'address', 'country', 'timezone', 'billing_type', 'credit_limit', 'max_channels', 'rate_group_id', 'localization_id', 'status'));
-		$fields = $this->customer_fields($in, false, (int) $customer['reseller_id']);
+		$in = $this->body(array('company_name', 'first_name', 'last_name', 'email', 'phone', 'address', 'country', 'timezone', 'billing_type', 'credit_limit', 'max_channels', 'rate_group_id', 'localization_id', 'status', 'portal_password'));
+		$fields = $this->customer_fields($in, false, (int) $customer['reseller_id'], $customer);
 		if (array_key_exists('status', $in)) {
 			if ($in['status'] !== 'active' && $in['status'] !== 'inactive') {
 				throw new Api_error(422, 'validation_failed', 'Invalid input.', array('status' => 'Must be active or inactive.'));
@@ -796,7 +799,7 @@ class Api extends CI_Controller {
 	// ------------------------------------------------------------------ input validation
 
 	/** Customer fields shared by create and update; returns accounts columns. */
-	private function customer_fields($in, $create, $owner) {
+	private function customer_fields($in, $create, $owner, $customer = NULL) {
 		$errors = array();
 		$f = array();
 		foreach (array('company_name' => 40, 'first_name' => 40, 'last_name' => 40) as $name => $max) {
@@ -901,6 +904,26 @@ class Api extends CI_Controller {
 					} else {
 						$f['localization_id'] = $loc;
 					}
+				}
+			}
+		}
+		// audit N13: portal password chosen by the client, same rule as the portal
+		// (libraries/astpp/password_policy.php); stored as hash only, never returned
+		if (array_key_exists('portal_password', $in)) {
+			if (! is_string($in['portal_password'])) {
+				$errors['portal_password'] = 'Must be a string.';
+			} else {
+				$personal = array(isset($f['email']) ? $f['email'] : '');
+				if ($customer !== NULL) {
+					$personal[] = $customer['number'];
+					$personal[] = $customer['email'];
+				}
+				$this->load->library('astpp/password_policy');
+				$rule = $this->password_policy->check($in['portal_password'], $personal);
+				if ($rule !== '') {
+					$errors['portal_password'] = $this->password_policy->field_message($rule);
+				} else {
+					$f['password'] = $this->common->password_store($in['portal_password']);
 				}
 			}
 		}

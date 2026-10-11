@@ -86,9 +86,21 @@ class common {
 		}
 		return $this->CI->db->count_all_results() > 0 ? $path : false;
 	}
+	/*
+	 * ASTPP fork (audit N13): generated passwords have at least 16 characters and pass the portal
+	 * password rule (application/libraries/astpp/password_policy.php); upstream made 8 characters.
+	 * Also used for SIP device passwords, longer ones are fine there.
+	 */
 	function generate_password() {
+		$this->CI->load->library ( 'astpp/password_policy' );
+		do {
+			$pass = $this->generate_password_candidate ();
+		} while ( $this->CI->password_policy->check ( $pass ) !== '' );
+		return $pass;
+	}
+	private function generate_password_candidate() {
 
-		$length         = (common_model::$global_config ['system_config'] ['pinlength'] < 8) ? 8 : common_model::$global_config ['system_config'] ['pinlength'];
+		$length         = (common_model::$global_config ['system_config'] ['pinlength'] < 16) ? 16 : common_model::$global_config ['system_config'] ['pinlength'];
 		
 		$length=(int)$length;
 		$password_type  = common_model::$global_config ['system_config'] ['password_type'];
@@ -132,7 +144,7 @@ class common {
    			$pass        = array(); 
    			$alphaLength = strlen($alphabet) - 1; 
 
-			for ($i = 0; $i < 8; $i++) {
+			for ($i = 0; $i < $length; $i++) {
 			    $n = astpp_random_int(0, $alphaLength);
 			    $pass[] = $alphabet[$n];
 			}

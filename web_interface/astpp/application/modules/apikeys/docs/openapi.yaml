@@ -129,7 +129,7 @@ paths:
             schema: { $ref: "#/components/schemas/CustomerCreate" }
       responses:
         "201":
-          description: Created. Contains portal_password, returned only once.
+          description: Created. Without portal_password in the request the response contains a generated portal_password (16+ characters), returned only once.
           content:
             application/json:
               schema:
@@ -140,7 +140,7 @@ paths:
                       - $ref: "#/components/schemas/Customer"
                       - type: object
                         properties:
-                          portal_password: { type: string, description: Password for the customer portal }
+                          portal_password: { type: string, description: "Generated password for the customer portal; only when the request had no portal_password" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -633,6 +633,7 @@ components:
         rate_group_id: { type: integer }
         localization_id: { type: integer, nullable: true }
         send_welcome_email: { type: boolean, default: false, description: "Requires email. The mail names the account number and links the page to set the password; it never contains a password." }
+        portal_password: { type: string, minLength: 12, maxLength: 255, description: "Password for the customer portal (audit N13 rule): 12-255 characters, no control characters, not a common password or a simple variant of one, not the account number, the e-mail address or its local part. Stored as hash only, never returned. Violations: 422 validation_failed with fields.portal_password." }
     CustomerUpdate:
       type: object
       additionalProperties: false
@@ -651,6 +652,7 @@ components:
         max_channels: { type: integer, minimum: 0, maximum: 1000 }
         rate_group_id: { type: integer }
         localization_id: { type: integer, nullable: true }
+        portal_password: { type: string, minLength: 12, maxLength: 255, description: "Password for the customer portal (audit N13 rule): 12-255 characters, no control characters, not a common password or a simple variant of one, not the account number, the e-mail address or its local part. Stored as hash only, never returned. Violations: 422 validation_failed with fields.portal_password." }
     Balance:
       type: object
       properties:

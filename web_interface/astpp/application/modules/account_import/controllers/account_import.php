@@ -266,8 +266,15 @@ class Account_import extends MX_Controller
                     $invalid_flag = TRUE;
                 }
                 if ($invalid_flag == FALSE) {
-
                     $new_array['password'] = ! empty($add_array["password-select"]) && ! empty($csv_data[$add_array["password-select"]]) ? $csv_data[$add_array["password-select"]] : (! empty($add_array['password']) ? $add_array['password'] : $this->common->generate_password());
+                    // ASTPP fork (audit N13): a password from the file or the form must pass the portal
+                    // password rule, otherwise the row counts as invalid (like a duplicate number)
+                    $this->load->library('astpp/password_policy');
+                    if ($this->password_policy->check($new_array['password'], array($new_array['number'], isset($new_array['email']) ? $new_array['email'] : '')) !== '') {
+                        $invalid_flag = TRUE;
+                    }
+                }
+                if ($invalid_flag == FALSE) {
                     $current_password = $new_array['password'];
                     $new_array['password'] = $this->common->password_store($current_password); // M6: hash
                     $new_array['first_name'] = ! empty($add_array["first_name-select"]) && ! empty($csv_data[$add_array["first_name-select"]]) ? $csv_data[$add_array["first_name-select"]] : (! empty($add_array['first_name']) ? $add_array['first_name'] : $new_array['number']);

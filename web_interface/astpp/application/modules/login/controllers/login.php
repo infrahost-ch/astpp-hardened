@@ -159,7 +159,10 @@ class Login extends MX_Controller
                         if ($result['status'] == 1) {
                             $this->session->set_flashdata('astpp_danger_alert', gettext("Your account has been deactive please contact to your administrator"));
                         } else {
-                            if (($actual_password == 'admin') or (!$this->form_validation->chk_password_expression($actual_password,false))) {
+                            // ASTPP fork (audit N13): existing passwords stay valid; one that would not pass the
+                            // portal password rule today only gets the warning
+                            $this->load->library('astpp/password_policy');
+                            if (($actual_password == 'admin') or ($this->password_policy->check($actual_password, array($result['number'], $result['email'])) !== '')) {
                                 if ($logintype == - 1 || $logintype == 2 || $logintype == 4)
                                     $url = "/accounts/admin_edit/" . $result['id'];
                                 elseif (astpp_eq0($logintype) || $logintype == 3 || $logintype == 1)

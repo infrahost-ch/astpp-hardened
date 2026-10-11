@@ -776,10 +776,13 @@ class Signup extends MX_Controller
         $password = (string) $this->input->post('password');
         $confirm = (string) $this->input->post('confirm_password');
         // the password rules first: they say nothing about the account and cost no code attempt
+        // (N13: compared with the account number and e-mail address as entered, not with stored data)
+        $this->load->library('astpp/password_policy');
+        $rule = $this->password_policy->check($password, array($number, $email));
         if ($password === '' || $password !== $confirm) {
             $error = gettext("Please enter the same new password in both fields.");
-        } elseif (! $this->form_validation->chk_password_expression($password)) {
-            $error = gettext("The new password must be at least 8 characters long and contain letters and digits.");
+        } elseif ($rule !== '') {
+            $error = $this->password_policy->message($rule, gettext('The new password'));
         } else {
             $account = ($number !== '' && $email !== '') ? $this->reset_account($number, $email) : array();
             if (! empty($account) && $this->reset_check_code($account, $code)) {

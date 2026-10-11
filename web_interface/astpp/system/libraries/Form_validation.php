@@ -1577,6 +1577,45 @@ class CI_Form_validation {
 		    	}
     		}
 		}
+		/*
+		 * ASTPP fork (audit N13): rule for portal passwords, see
+		 * application/libraries/astpp/password_policy.php. Empty passes: in the edit forms empty
+		 * keeps the stored password, "required" catches it where a password is needed.
+		 * portal_password        account number and e-mail address from the POST and of the
+		 *                        stored account of POST id (account forms);
+		 * portal_password[session] the account of the session (change password).
+		 */
+		public function portal_password($str, $source = '') {
+			$str = (string) $str;
+			if ($str === '') {
+				return TRUE;
+			}
+			$personal = array();
+			$id = 0;
+			if ($source === 'session') {
+				$account = $this->CI->session->userdata('accountinfo');
+				$id = (is_array($account) && isset($account['id'])) ? (int) $account['id'] : 0;
+			} else {
+				foreach (array('number', 'email') as $field) {
+					$personal[] = (string) $this->CI->input->post($field);
+				}
+				$id = (int) $this->CI->input->post('id');
+			}
+			if ($id > 0) {
+				$row = $this->CI->db->select('number, email')->get_where('accounts', array('id' => $id))->row_array();
+				if (! empty($row)) {
+					$personal[] = $row['number'];
+					$personal[] = $row['email'];
+				}
+			}
+			$this->CI->load->library('astpp/password_policy');
+			$error = $this->CI->password_policy->check($str, $personal);
+			if ($error === '') {
+				return TRUE;
+			}
+			$this->set_message('portal_password', $this->CI->password_policy->message($error, '%s'));
+			return FALSE;
+		}
 		public function alpha_dash_numeric_space($str){
 			return ( ! preg_match("/^[._A-Za-z0-9\s]+$/", $str)) ? FALSE : TRUE;
 		 }

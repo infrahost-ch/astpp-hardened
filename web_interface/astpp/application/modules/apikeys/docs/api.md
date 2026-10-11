@@ -210,10 +210,20 @@ Pakete, die Kunden zugewiesen werden können. Reseller sehen die Pakete, die sie
 | `max_channels` | Zahl 0-1000 | ja | ja | gleichzeitige Gespräche, `0` = unbegrenzt |
 | `rate_group_id` | Zahl | **Pflicht** | ja | Tarifgruppe aus `GET /rate-groups` |
 | `localization_id` | Zahl oder `null` | ja | ja | Nummernumschreibung (Wahlformat) |
+| `portal_password` | Text, 12-255 Zeichen | ja | ja | Passwort für das Kundenportal, siehe [Passwortregel](#passwortregel); wird nie zurückgegeben. Ohne Angabe beim Anlegen erzeugt das System eines |
 | `send_welcome_email` | `true` / `false` | ja | - | Willkommensmail senden (Kontonummer und Link zum Setzen des Passworts, kein Passwort), nur mit `email` |
 | `created_at`, `expires_at` | Zeitpunkt | - | - | Anlage, Ablauf des Kontos |
 
 ¹ Beim Anlegen ist `company_name` oder `first_name` nötig.
+
+<a id="passwortregel"></a>
+**Passwortregel** (gleich wie im Portal): mindestens 12 Zeichen, höchstens 255, keine Steuerzeichen, sonst alle Zeichen erlaubt; nicht in der Liste häufiger Passwörter (auch nicht als einfache Abwandlung wie `Sommer2024!`, Wiederholung wie `abcabcabcabc` oder Folge wie `123456789012`); nicht gleich Kontonummer, E-Mail-Adresse oder deren Teil vor dem `@`. Verstösse ergeben `422 validation_failed` mit dem Feld `portal_password`, zum Beispiel:
+
+```json
+{ "error": { "code": "validation_failed", "message": "Invalid input.", "fields": { "portal_password": "Is a commonly used password or a simple variant of one. Please choose another password." } } }
+```
+
+Mögliche Meldungen: `Must be at least 12 characters long.`, `Must not be longer than 255 characters.`, `Must not contain control characters.`, `Must not be the account number, the e-mail address or the user name.`, `Is a commonly used password or a simple variant of one. Please choose another password.`, `Must be a string.`
 
 Die Tarifgruppe muss zum Reseller des Kunden gehören, bei Kunden des Admins zum Admin. Für eine Lokalisierung gilt dasselbe, zusätzlich sind Lokalisierungen des Admins erlaubt.
 
@@ -243,7 +253,7 @@ curl -s -X POST {{API_BASE}}customers \
       }'
 ```
 
-Antwort `201` mit dem Kunden und zusätzlich `portal_password`, dem Passwort für das Kundenportal. Es wird nur in dieser Antwort geliefert; gespeichert ist nur ein Hash (Argon2id), niemand kann es später auslesen. Ohne Weitergabe setzt der Kunde sein Passwort selbst über „Passwort vergessen“ (Kontonummer und E-Mail-Adresse).
+Antwort `201` mit dem Kunden. Ohne `portal_password` in der Anfrage erzeugt das System ein Passwort (mindestens 16 Zeichen, erfüllt die [Passwortregel](#passwortregel)) und liefert es einmal als `portal_password` in dieser Antwort; gespeichert ist nur ein Hash (Argon2id), niemand kann es später auslesen. Mit `portal_password` in der Anfrage gilt dieses Passwort, die Antwort enthält es nicht. Ohne Weitergabe setzt der Kunde sein Passwort selbst über „Passwort vergessen“ (Kontonummer und E-Mail-Adresse).
 
 ```json
 {
@@ -271,6 +281,12 @@ Ohne `send_welcome_email: true` verschickt das System keine Willkommensmail. Die
 ```
 
 Ein gesperrter Kunde kann nicht telefonieren, seine SIP-Geräte melden sich nicht mehr an, und das Kundenportal ist gesperrt. Kunden werden über die API nicht gelöscht, Sperren ist der vorgesehene Weg.
+
+Neues Passwort für das Kundenportal setzen (gleiche [Passwortregel](#passwortregel), Antwort ohne Passwort; SIP-Passwörter bleiben unverändert):
+
+```json
+{ "portal_password": "Mein-sicheres-Passwort-2026" }
+```
 
 <a id="guthaben-paketverbrauch-und-gespraechsdaten"></a>
 ## Guthaben, Paketverbrauch und Gesprächsdaten
@@ -388,7 +404,7 @@ Löscht das Gerät. Antwort `204`.
 ## Ablauf: neuen Kunden einrichten
 
 1. Tarifgruppe und Paket bestimmen: `GET /rate-groups`, `GET /products`.
-2. Kunden anlegen: `POST /customers`. `id` und `portal_password` speichern.
+2. Kunden anlegen: `POST /customers`. `id` speichern, dazu `portal_password`, falls das System es erzeugt hat.
 3. SIP-Zugang anlegen: `POST /customers/{id}/sip-devices`. `username` und `password` in der Telefonanlage eintragen.
 4. Pakete zuweisen: `POST /customers/{id}/products` mit `quantity` = Anzahl Kanäle.
 5. Kontrollieren: `GET /customers/{id}/usage`.
