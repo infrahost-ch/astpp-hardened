@@ -564,10 +564,24 @@ class Orders extends MX_Controller
             exit();
         } else {
             if (! empty($update_array)) {
-                if ($update_array['creation'] != '') {
-                    $order_id = $this->common->get_field_name("id", "orders", array(
-                        "order_id" => $update_array['order_id']
+                // ASTPP fork: the date picker allows today up to the end of the paid period only;
+                // upstream took any date (also as gmdate() format string), so a later date kept the
+                // package active (packages_view) after billing had stopped (is_terminated = 1)
+                $order_id = $this->common->get_field_name("id", "orders", array(
+                    "order_id" => $update_array['order_id']
+                ));
+                $next_billing = (string) $this->common->get_field_name("next_billing_date", "order_items", array(
+                    "order_id" => $order_id
+                ));
+                $date = trim((string) $update_array['creation']);
+                $parsed = DateTime::createFromFormat('!Y-m-d', $date, new DateTimeZone('UTC'));
+                if (! $parsed || $parsed->format('Y-m-d') !== $date || $date < gmdate('Y-m-d') || ($next_billing !== '' && $date > substr($next_billing, 0, 10))) {
+                    echo json_encode(array(
+                        'creation_error' => gettext('Please select a date between today and the next billing date.')
                     ));
+                    exit();
+                }
+                if ($update_array['creation'] != '') {
                     $order_update_array = array(
                         "is_terminated" => 1,
                         "termination_date" => gmdate("" . $update_array['creation'] . " H:i:s"),
