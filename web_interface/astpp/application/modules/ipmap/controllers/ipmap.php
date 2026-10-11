@@ -76,13 +76,11 @@ class IPMAP extends MX_Controller
     function ipmap_save()
     {
         $add_array = $this->input->post();
-        $ip = $add_array['ip'];
-        if (! preg_match("/[a-zA-Z\-]/i", $ip)) {
-            if (strpos($ip, '/') !== false) {
-                $add_array['ip'] = $add_array['ip'];
-            } else {
-                $add_array['ip'] = $add_array['ip'] . '/32';
-            }
+        // ASTPP fork: store the network as "address/bits" (/32 or /128 if none given) and refuse
+        // anything else (see common::ipmap_cidr())
+        $ip_cidr = $this->common->ipmap_cidr($add_array['ip']);
+        if ($ip_cidr !== false) {
+            $add_array['ip'] = $ip_cidr;
         }
         $data['form'] = $this->form->build_form($this->ipmap_form->get_ipmap_form_fields(), $add_array);
         if ($add_array['id'] != '') {
@@ -90,6 +88,12 @@ class IPMAP extends MX_Controller
             if ($this->form_validation->run() == FALSE) {
                 $data['validation_errors'] = validation_errors();
                 echo $data['validation_errors'];
+                exit();
+            }
+            if ($ip_cidr === false) {
+                echo json_encode(array(
+                    "ip_error" => gettext("Please enter a valid IP address or network, e.g. 192.0.2.10 or 192.0.2.0/24.")
+                ));
                 exit();
             }
             $this->db->select('prefix,ip');
@@ -124,6 +128,12 @@ class IPMAP extends MX_Controller
             if ($this->form_validation->run() == FALSE) {
                 $data['validation_errors'] = validation_errors();
                 echo $data['validation_errors'];
+                exit();
+            }
+            if ($ip_cidr === false) {
+                echo json_encode(array(
+                    "ip_error" => gettext("Please enter a valid IP address or network, e.g. 192.0.2.10 or 192.0.2.0/24.")
+                ));
                 exit();
             }
             $this->db->select('prefix,ip');

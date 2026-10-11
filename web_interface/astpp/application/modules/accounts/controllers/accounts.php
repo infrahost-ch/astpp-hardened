@@ -462,16 +462,14 @@
         $add_array = $this->input->post();
         if ($action == "add" && ! empty($add_array)) {
             if ($add_array['ip'] != "") {
-                $ip = $add_array['ip'];
-                if (strpos($ip, '/') !== false) {
-                    $add_array['ip'] = $add_array['ip'];
-                } else {
-                    if (preg_match('/[^a-zA-Z]/', $add_array['ip'])) {
-                        $add_array['ip'] = $add_array['ip'] . '/32';
-                    } else {
-                        $add_array['ip'] = $add_array['ip'] . '/64';
-                    }
+                // ASTPP fork: "address/bits", /32 or /128 if none given (upstream appended /32 to
+                // IPv6 addresses too); anything else is refused, see common::ipmap_cidr()
+                $ip_cidr = $this->common->ipmap_cidr($add_array['ip']);
+                if ($ip_cidr === false) {
+                    $this->session->set_flashdata('astpp_notification', gettext('Please enter a valid IP address or network, e.g. 192.0.2.10 or 192.0.2.0/24.'));
+                    redirect(base_url() . "accounts/" . $accounttype . "_ipmap/" . $accountid . "/");
                 }
+                $add_array['ip'] = $ip_cidr;
                 $where = array(
                     "ip" => trim($add_array['ip']),
                     "prefix" => trim($add_array['prefix'])
@@ -2655,11 +2653,11 @@ function customer_validate_ip()
 {
     $add_array = $this->input->post();
     if (! empty($add_array)) {
-        $ip = $add_array['ip'];
-        if (strpos($ip, '/') !== false) {
-            $add_array['ip'] = $add_array['ip'];
-        } else {
-            $add_array['ip'] = $add_array['ip'] . '/32';
+        // ASTPP fork: same form as stored by customer_ipmap_action(); not an IP / network = invalid
+        $add_array['ip'] = $this->common->ipmap_cidr($add_array['ip']);
+        if ($add_array['ip'] === false) {
+            echo 'FALSE';
+            return;
         }
         $this->db->where('ip', $add_array['ip']);
         $this->db->where('prefix', $add_array['prefix']);

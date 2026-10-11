@@ -1554,12 +1554,14 @@ function user_ipmap_action($action = 'delete', $id = false)
     $add_array = $this->input->post();
     $accountinfo = $this->session->userdata('accountinfo');
     if ($action == 'add') {
-        $ip = $add_array['ip'];
-        if (strpos($ip, '/') !== false) {
-            $add_array['ip'] = $add_array['ip'];
-        } else {
-            $add_array['ip'] = $add_array['ip'] . '/32';
+        // ASTPP fork: "address/bits", /32 or /128 if none given; anything else is refused
+        // (see common::ipmap_cidr())
+        $ip_cidr = $this->common->ipmap_cidr($add_array['ip']);
+        if ($ip_cidr === false) {
+            $this->session->set_flashdata('astpp_notification', gettext('Please enter a valid IP address or network, e.g. 192.0.2.10 or 192.0.2.0/24.'));
+            redirect(base_url() . "user/user_ipmap/");
         }
+        $add_array['ip'] = $ip_cidr;
         $where = array(
             "ip" => trim($add_array['ip']),
             "prefix" => trim($add_array['prefix'])
@@ -2800,11 +2802,11 @@ function user_customer_validate_ip()
 {
     $add_array = $this->input->post();
     if (! empty($add_array)) {
-        $ip = $add_array['ip'];
-        if (strpos($ip, '/') !== false) {
-            $add_array['ip'] = $add_array['ip'];
-        } else {
-            $add_array['ip'] = $add_array['ip'] . '/32';
+        // ASTPP fork: same form as stored by user_ipmap_action(); not an IP / network = invalid
+        $add_array['ip'] = $this->common->ipmap_cidr($add_array['ip']);
+        if ($add_array['ip'] === false) {
+            echo 'FALSE';
+            return;
         }
         $this->db->where('ip', $add_array['ip']);
         $this->db->where('prefix', $add_array['prefix']);

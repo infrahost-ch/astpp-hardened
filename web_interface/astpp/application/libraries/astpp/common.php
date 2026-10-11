@@ -33,6 +33,29 @@ class common {
 		$this->CI->load->library ( 'session' );
 	}
 	/**
+	 * ASTPP fork: an IP map entry as "address/bits", or false if it is none. Without "/bits" an IPv4
+	 * address becomes /32, an IPv6 address /128; bits must be a number up to 32 or 128. Upstream
+	 * stored IPv6 without prefix (IP map module) or with /32 (account page) and accepted any text after
+	 * "/"; the dialplan's IP query failed for every account on a row without valid prefix.
+	 */
+	function ipmap_cidr($ip) {
+		$parts = explode('/', trim((string) $ip), 2);
+		if (filter_var($parts[0], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false) {
+			$max_bits = 32;
+		} elseif (filter_var($parts[0], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false) {
+			$max_bits = 128;
+		} else {
+			return false;
+		}
+		if (! isset($parts[1])) {
+			return $parts[0] . '/' . $max_bits;
+		}
+		if (! ctype_digit($parts[1]) || strlen($parts[1]) > 3 || (int) $parts[1] > $max_bits) {
+			return false;
+		}
+		return $parts[0] . '/' . (int) $parts[1];
+	}
+	/**
 	 * ASTPP fork: absolute path of a call recording the logged-in account may download, or false.
 	 * Recordings are named <call uuid>.wav. Admin / sub admin: every recording; reseller: CDRs of
 	 * its customers; everybody else: own CDRs. Previously any logged-in account could fetch any
