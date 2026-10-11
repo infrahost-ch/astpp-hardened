@@ -1494,7 +1494,16 @@
                 echo $data['validation_errors'];
                 exit();
             } else {
-              $post_array['credit'] = $this->common_model->add_calculate_currency($post_array['credit'], '', '', false, false);
+              // ASTPP fork: plain amount > 0 (greater_than[0] also accepted 1e308, 0x1A ...); payment
+              // type only refill (0) or post charge (1)
+              $credit = order::amount(trim((string) $post_array['credit']), 999999999);
+              if ($credit === false || $credit <= 0 || ! in_array((string) $post_array['payment_type'], array('0', '1'), true)) {
+                  echo json_encode(array(
+                      'credit_error' => gettext('Please enter valid amount.')
+                  ));
+                  exit();
+              }
+              $post_array['credit'] = $this->common_model->add_calculate_currency($credit, '', '', false, false);
               $response = $this->accounts_model->account_process_payment($post_array);
               $customer_info['refill_amount'] = $post_array['credit'];
               if ($post_array['payment_type'] == 1) {

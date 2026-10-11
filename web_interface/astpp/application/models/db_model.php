@@ -1045,6 +1045,9 @@ class Db_model extends CI_Model {
 		return $available_bal;
 	}
 	function update_balance($amount, $accountid, $payment_type) {
+		// ASTPP fork: amount and id are concatenated into SQL - numbers only (decimal(20,5))
+		$amount = sprintf('%.5F', (float) astpp_n($amount));
+		$accountid = (int) $accountid;
 		if ($payment_type == "debit" || $payment_type == "0") {
 
 			$query = "update accounts set balance =  IF(posttoexternal=1,balance+" . $amount . ",balance-" . $amount . ") where id ='" . $accountid . "'";
