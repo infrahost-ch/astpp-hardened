@@ -375,6 +375,20 @@ Aktivieren (wirkt ab der nächsten Anfrage, kein Neustart; der Deploy ändert di
 Ausgesperrt? Per SSH die Zeile leeren (`admin_allowed_ips = ""`) oder die eigene Adresse ergänzen –
 wirkt sofort.
 
+**Content-Security-Policy (Audit O4)**
+
+Seit 11.10.2026 senden alle Seiten der Weboberfläche eine Content-Security-Policy im Report-Only-
+Modus: Der Browser blockiert nichts, meldet aber Verstösse an `/csp_report/` (gespeichert in der
+Tabelle `csp_reports`, ohne Adressen und Benutzer). Bedienung:
+
+- Modus in `/var/lib/astpp/astpp-config.conf`: `csp = report` (Standard, auch wenn die Zeile fehlt),
+  `csp = off` (abgeschaltet), `csp = enforce` (erzwingen – erst nach Abschluss der Umstellung, vorher nur auf einer Testinstanz).
+- Berichte ansehen: `mariadb astpp -e "SELECT hits, page, directive, blocked, source, line, sample FROM csp_reports ORDER BY hits DESC LIMIT 50"`;
+  nach einer Korrekturrunde leeren: `mariadb astpp -e "TRUNCATE csp_reports"`.
+- Neue oder geänderte Views: Inline-Skripte nur mit `<script<?php echo csp_nonce_attr(); ?>>`, keine
+  `onclick=`/`onchange=`/`javascript:` mehr (Listener in einer Skriptdatei);
+  `php astpp-debian13/tools/csp-scan.php astpp/web_interface/astpp` zeigt den Stand.
+
 **Updates**
 - Debian-Sicherheitsupdates laufen automatisch (`unattended-upgrades`).
 - **PHP 8.5 (Sury) und FreeSWITCH** werden *nicht* automatisch aktualisiert – monatlich
