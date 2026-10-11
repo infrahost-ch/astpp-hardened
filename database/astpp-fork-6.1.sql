@@ -98,3 +98,25 @@ CREATE TABLE IF NOT EXISTS `password_resets` (
   `client_ip` varchar(45) NOT NULL DEFAULT '',
   PRIMARY KEY (`accountid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Portal passwords as password_hash() (audit M6, common::password_store()): an Argon2id hash has
+-- about 100 characters (bcrypt 60), the columns held only the Blowfish value. Widened once (the
+-- check keeps every later deploy from rebuilding the table). Old Blowfish values stay valid and
+-- are replaced by a hash at the next successful login of the account.
+SET @astpp_sql = IF((SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'accounts' AND COLUMN_NAME = 'password') < 255,
+                    'ALTER TABLE accounts MODIFY `password` varchar(255) NOT NULL DEFAULT \'\'', 'DO 0');
+PREPARE astpp_stmt FROM @astpp_sql;
+EXECUTE astpp_stmt;
+DEALLOCATE PREPARE astpp_stmt;
+SET @astpp_sql = IF((SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'account_unverified' AND COLUMN_NAME = 'password') < 255,
+                    'ALTER TABLE account_unverified MODIFY `password` varchar(255) NOT NULL', 'DO 0');
+PREPARE astpp_stmt FROM @astpp_sql;
+EXECUTE astpp_stmt;
+DEALLOCATE PREPARE astpp_stmt;
+-- The old "forgot password" flow copied the Blowfish password of the account into
+-- account_unverified, signups stored their generated password there (both readable with the
+-- PRIVATE_KEY). The fork reads neither: a signup account gets its password through the link in the
+-- welcome mail. "!" matches no password (common::password_locked()).
+UPDATE account_unverified SET password = '!' WHERE password <> '!' AND password NOT LIKE '$%';

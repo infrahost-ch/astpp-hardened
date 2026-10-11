@@ -1511,39 +1511,31 @@ class CI_Form_validation {
 		/* ASTPP  3.0
          * For Old Password checking
          */
-		public function password_check($str,$table){
+		/*
+		 * ASTPP fork (M6): the stored password is a hash (or an old Blowfish value), compared with
+		 * common::password_matches(). The account is the one of the session (upstream: POST field
+		 * id; the access hook already allows only the own id there).
+		 */
+		private function password_account_value($table){
+		  $account = $this->CI->session->userdata('accountinfo');
+		  $id = (is_array($account) && isset($account['id'])) ? $account['id'] : $this->CI->input->post('id');
 		  $this->CI->db->select('password');
-		  $this->CI->db->where('id',$_POST['id']);
+		  $this->CI->db->where('id', (int) $id);
 		  $result=$this->CI->db->get($table);
 		  if($result->num_rows() > 0 ){
 			  $result=(array)$result->first_row();
-			  $password=$this->CI->common->decode($result['password']);
-			  if($password && $password == $str){
-				  return true;
-			  }else{
-				  return false;
-			  }
-		  }else{
-			  return false;
+			  return (string) $result['password'];
 		  }
+		  return null;
+		}
+		public function password_check($str,$table){
+		  $stored = $this->password_account_value($table);
+		  return $stored !== null && $this->CI->common->password_matches($str, $stored);
 		}
 		public function password_check_old($str,$table){
-
-		  $this->CI->db->select('password');
-		  $this->CI->db->where('id',$_POST['id']);
-		  $result=$this->CI->db->get($table);
-
-		  if($result->num_rows() > 0 ){
-			  $result=(array)$result->first_row();
-			  $password=$this->CI->common->decode($result['password']);
-			  if($password == $_POST ['new_password']) {
-				  return false;
-			  }else {
-				  return true;
-			  }
-		  }else{
-			  return true;
-		  }
+		  // the new password must differ from the current one
+		  $stored = $this->password_account_value($table);
+		  return $stored === null || ! $this->CI->common->password_matches($this->CI->input->post('new_password'), $stored);
 		}
 
 		public function phn_number($str)

@@ -1529,7 +1529,7 @@ class common {
 		
 		$message = str_replace('#NAME#', $accountinfo['first_name'] . " " . $accountinfo['last_name'], $message);
         $message = str_replace('#NUMBER#', $accountinfo['number'], $message);
-        $message = str_replace('#PASSWORD#', $accountinfo['password'], $message);
+        $message = str_replace('#PASSWORD#', $this->password_mail_hint(), $message); // M6: portal passwords are not readable
         $message = str_replace('#COMPANY_WEBSITE#', $company_website, $message);
 		$message = str_replace('#COMPANY_EMAIL#', $settings_reply_email, $message);
 		break;
@@ -1627,7 +1627,7 @@ class common {
             case 'new_password':
 			
 				$message = str_replace('#NAME#', $accountinfo['first_name'] . " " . $accountinfo['last_name'], $message);
-                $message = str_replace('#PASSWORD#', $accountinfo['password'], $message);
+                $message = str_replace('#PASSWORD#', $this->password_mail_hint(), $message); // M6: portal passwords are not readable
                 $message = str_replace('#COMPANY_WEBSITE#', $company_website, $message);
 				$message = str_replace('#COMPANY_EMAIL#', $settings_reply_email, $message);
 			
@@ -1635,7 +1635,7 @@ class common {
            
            	case 'reset_password':
 				$message = str_replace('#NAME#', $accountinfo['first_name'] . " " . $accountinfo['last_name'], $message);
-                $message = str_replace('#PASSWORD#', $accountinfo['password'], $message);
+                $message = str_replace('#PASSWORD#', $this->password_mail_hint(), $message); // M6: portal passwords are not readable
                 $message = str_replace('#COMPANY_WEBSITE#', $company_website, $message);
 				$message = str_replace('#COMPANY_EMAIL#', $settings_reply_email, $message);
 			
@@ -2146,6 +2146,69 @@ class common {
 		$iv = substr($crypttext, 0, $ivSize);
 		$data = openssl_decrypt(substr($crypttext, $ivSize), 'BF-ECB', $this->CI->config->item ( 'private_key' ), OPENSSL_RAW_DATA, $iv);
 		return $data;
+	}
+
+	/*
+	 * ASTPP fork (audit M6): portal passwords (accounts.password) are stored with password_hash()
+	 * (Argon2id, bcrypt where PHP has no Argon2). Upstream stored them with encode() (Blowfish-ECB
+	 * with the PRIVATE_KEY of astpp-config.conf): whoever had the database and the configuration had
+	 * every password, and the edit forms, "show password" and the welcome mail showed them.
+	 * Old Blowfish values stay valid until the next successful login, which replaces them with a
+	 * hash (Auth_model::verify_login). Every place that sets or checks a portal password uses these
+	 * functions; nothing decodes a portal password any more. SIP device passwords are a different
+	 * thing: FreeSWITCH needs them readable (sip_devices.dir_params).
+	 */
+	function password_store($plain) {
+		return password_hash ( (string) $plain, defined ( 'PASSWORD_ARGON2ID' ) ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT );
+	}
+	function password_is_hash($stored) {
+		return password_get_info ( (string) $stored ) ['algoName'] !== 'unknown';
+	}
+	/** True if $plain is the password stored in $stored (hash or old Blowfish value). */
+	function password_matches($plain, $stored) {
+		$plain = (string) $plain;
+		$stored = (string) $stored;
+		if ($plain === '' || $stored === '') {
+			return false;
+		}
+		if ($this->password_is_hash ( $stored )) {
+			return password_verify ( $plain, $stored );
+		}
+		return hash_equals ( $stored, (string) $this->encode ( $plain ) );
+	}
+	/**
+	 * Value for accounts whose password nobody knows (bulk creation): matches no password (neither a
+	 * hash nor a Blowfish value, encode() never yields "!"), costs no hashing; the password is set in
+	 * the account form or with "forgot password".
+	 */
+	function password_locked() {
+		return '!' . bin2hex ( random_bytes ( 16 ) );
+	}
+	/** Password field of an account form: empty keeps the stored password, otherwise its hash is saved. */
+	function password_from_form(&$fields, $key = 'password') {
+		if (! isset ( $fields [$key] ) || (string) $fields [$key] === '') {
+			unset ( $fields [$key] );
+			return;
+		}
+		$fields [$key] = $this->password_store ( $fields [$key] );
+	}
+	/** Old Blowfish value or a hash with outdated parameters. */
+	function password_needs_update($stored) {
+		$stored = (string) $stored;
+		return ! $this->password_is_hash ( $stored ) || password_needs_rehash ( $stored, defined ( 'PASSWORD_ARGON2ID' ) ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT );
+	}
+	/**
+	 * Same work as one password_verify() against a stored hash, for logins of unknown or not yet
+	 * migrated accounts (otherwise the answer time tells whether an account exists). Hashes of a
+	 * random value nobody knows, with the default parameters of password_store().
+	 */
+	function password_dummy_check($plain) {
+		$dummy = defined ( 'PASSWORD_ARGON2ID' ) ? '$argon2id$v=19$m=65536,t=4,p=1$eXNoREE0MVYwOTd1dFguZA$MBfJSbbYoCal9cet7cNcVBtx8u9on9fnnXFNaaCnN58' : '$2y$12$B4pEcLfPT7w3HdHTr0Fz7.BfOi1gz00UVrqOf8ZnL5MqMUGwQuvXS';
+		password_verify ( (string) $plain, $dummy );
+	}
+	/** Replacement for #PASSWORD# in portal mails: the password is not readable, the user sets it at the reset page. */
+	function password_mail_hint() {
+		return gettext ( '(not sent by e-mail - set your password at' ) . ' ' . base_url () . 'forgotpassword/ ' . gettext ( 'with your account number and e-mail address)' );
 	}
 	function set_recording($status = '') {
 		$status_array = array (

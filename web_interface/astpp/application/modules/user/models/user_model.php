@@ -65,7 +65,7 @@ class user_model extends CI_Model
     {
         $this->db->where('id', $id);
         $this->db->update('accounts', array(
-            'password' => $update
+            'password' => $this->common->password_store($update) // M6 (upstream stored the plain text)
         ));
     }
 

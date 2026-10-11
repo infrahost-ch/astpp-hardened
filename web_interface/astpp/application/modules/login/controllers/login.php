@@ -76,16 +76,23 @@ class Login extends MX_Controller
         if ($this->session->userdata('user_login') == FALSE) {
             if (! empty ( $_POST ) && isset($_POST ['username']) && isset($_POST ['password']) && trim ( $_POST ['username'] ) != '' && trim ( $_POST ['password'] ) != '') {
                 $actual_password = $_POST['password'];
-                $_POST['password'] = $this->common->encode($_POST['password']);
-                $user_valid = $this->Auth_model->verify_login($_POST['username'], $_POST['password']);
+                // ASTPP fork (M6): verify_login() checks the typed password against the stored hash
+                // and returns the id of the account it matched
+                $user_valid = $this->Auth_model->verify_login($_POST['username'], $actual_password);
+                $_POST['password'] = '';
 
-                if ($user_valid == 1) {
+                if ($user_valid > 0) {
                     $this->session->set_userdata('user_login', TRUE);
-                    $where = "(number = '" . $this->db->escape_str($_POST['username']) . "' OR email = '" . $this->db->escape_str($_POST['username']) . "') and deleted = 0";
+                    $where = array(
+                        'id' => $user_valid,
+                        'deleted' => 0
+                    );
 
                     $result = $this->db_model->getSelect("*", "accounts", $where);
                     $result = $result->result_array();
                     $result = $result[0];
+                    // the row goes into the session (accountinfo, token) - without the password value
+                    $result['password'] = '';
 
                     $user_multi_level = 0;
                     $addon_status = $this->db_model->countQuery("*", "addons", array(
@@ -545,8 +552,8 @@ class Login extends MX_Controller
             );
         }
         $this->session->set_userdata('user_login', TRUE);
+        $account_res['password'] = ''; // M6: the row goes into the session without the password value
         $result = $account_res;
-	$password=$this->common->decode($result['password']);
         $permission_result = $this->db_model->getSelect("*", "permissions", array(
             'id' => $result['permission_id']
         ));
@@ -567,17 +574,9 @@ class Login extends MX_Controller
         $this->session->set_userdata('ipsettings_token', $accessid);
 
         $this->session->set_userdata('permissioninfo', $permission_decode);
-        if (($password == 'admin') or (!$this->form_validation->chk_password_expression($password,false))) {
-            if ($logintype == - 1 || $logintype == 2 || $logintype == 4)
-                $url = "/accounts/admin_edit/" . $result['id'];
-            elseif (astpp_eq0($logintype) || $logintype == 3 || $logintype == 1)
-                $url = "/user/user_change_password";
-            else
-                $url = "#";
-            $this->session->set_flashdata('astpp_danger_alert', gettext("Please do not use default or less secure password for your account!! You must change password from")." "." <a href='" . $url . "'><b>".gettext("HERE"). "</b></a> .");
-
-            {}
-        }
+        // ASTPP fork (M6): "login as" needs no password of either account. Upstream decoded the
+        // password of the target account here for the "weak password" warning; the warning is
+        // shown at the real login of the account (the only moment its password is known).
         $this->db->select("*");
         if ($result['type'] == '2' || $result['type'] == '-1') {
             $this->db->where(array(

@@ -470,6 +470,12 @@ class CI_Session {
 		{
 			foreach ($newdata as $key => $val)
 			{
+				// ASTPP fork (M6): "accountinfo" (and "token" after the login) is the account row;
+				// its password column (hash or old Blowfish value) never goes into the session table
+				if (($key === 'accountinfo' || $key === 'token') && is_array($val) && isset($val['password']))
+				{
+					$val['password'] = '';
+				}
 				$this->userdata[$key] = $val;
 			}
 		}
