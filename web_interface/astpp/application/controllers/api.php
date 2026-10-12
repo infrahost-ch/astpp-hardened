@@ -1111,11 +1111,14 @@ class Api extends CI_Controller {
 		return empty($row) ? NULL : $row[$column];
 	}
 
+	/** With a letter and a digit, so the portal form takes the device unchanged (chk_password_expression). */
 	private function random_password($length) {
-		$out = '';
-		for ($i = 0; $i < $length; $i++) {
-			$out .= self::SIP_PASSWORD_CHARS[random_int(0, strlen(self::SIP_PASSWORD_CHARS) - 1)];
-		}
+		do {
+			$out = '';
+			for ($i = 0; $i < $length; $i++) {
+				$out .= self::SIP_PASSWORD_CHARS[random_int(0, strlen(self::SIP_PASSWORD_CHARS) - 1)];
+			}
+		} while (! preg_match('/\d/', $out) || ! preg_match('/[A-Za-z]/', $out));
 		return $out;
 	}
 

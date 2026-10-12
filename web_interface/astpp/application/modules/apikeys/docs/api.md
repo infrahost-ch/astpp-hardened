@@ -383,7 +383,7 @@ Alle Felder sind optional:
 ```
 
 - `username`: 4-40 Zeichen aus Buchstaben, Ziffern und `. _ -`. Fehlt er, vergibt das System eine zehnstellige Nummer. Bereits vergeben: `409 conflict`.
-- `password`: 12-64 Zeichen aus Buchstaben, Ziffern und `. _ ~ ! @ # % ^ + = , : -`. Fehlt es, erzeugt das System ein zufälliges Passwort mit 24 Zeichen.
+- `password`: 12-64 Zeichen aus Buchstaben, Ziffern und `. _ ~ ! @ # % ^ + = , : -`. Fehlt es, erzeugt das System ein zufälliges Passwort mit 24 Zeichen (mindestens ein Buchstabe und eine Ziffer). Hinweis: Das Formular im Portal verlangt für SIP-Passwörter mindestens einen Buchstaben und eine Ziffer und erlaubt neben Buchstaben und Ziffern nur `! @ # $ % ^ & * ( ) +` (Standardeinstellung von *Password Strength*). Ein über die API gesetztes Passwort mit `. _ ~ = , : -` oder ohne Ziffer muss ersetzt werden, wenn das Gerät später im Portal bearbeitet wird; erzeugte Passwörter erfüllen beide Regeln.
 - `caller_id_number`: Ziffern, optional mit führendem `+`.
 
 Antwort `201` mit dem Gerät und `password`.

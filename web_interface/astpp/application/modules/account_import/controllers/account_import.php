@@ -392,7 +392,9 @@ class Account_import extends MX_Controller
                         }
                         $sip_username_array[$username] = $username;
                         $params_array = array(
-                            'password' => ! empty($add_array["sip_password-select"]) && isset($csv_data[$add_array["sip_password-select"]]) && ! empty($csv_data[$add_array["sip_password-select"]]) ? $csv_data[$add_array["sip_password-select"]] : ($add_array['sip_password'] == 'number' ? $new_array['number'] : (($add_array['sip_password'] == "random" || $add_array['sip_password'] == "password") ? $this->common->find_uniq_rendno('10', '', '') : '')),
+                            // ASTPP fork (audit N13): "Random" = generate_password() like the SIP device forms;
+                            // upstream used a 10-digit number, which the form rule chk_password_expression rejects
+                            'password' => ! empty($add_array["sip_password-select"]) && isset($csv_data[$add_array["sip_password-select"]]) && ! empty($csv_data[$add_array["sip_password-select"]]) ? $csv_data[$add_array["sip_password-select"]] : ($add_array['sip_password'] == 'number' ? $new_array['number'] : (($add_array['sip_password'] == "random" || $add_array['sip_password'] == "password") ? $this->common->generate_password() : '')),
                             "vm-enabled" => "false",
                             "vm-password" => "",
                             "vm-mailto" => "",

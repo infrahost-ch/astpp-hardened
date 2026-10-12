@@ -707,6 +707,7 @@ components:
       minLength: 12
       maxLength: 64
       pattern: "^[A-Za-z0-9._~!@#%^+=,:-]{12,64}$"
+      description: "Generated passwords (24 characters) contain a letter and a digit. The portal form for SIP devices requires a letter and a digit and allows only !@#$%^&*()+ besides letters and digits (default password strength): a password set here with . _ ~ = , : - or without a digit has to be replaced when the device is edited in the portal."
     SipDevice:
       type: object
       properties:

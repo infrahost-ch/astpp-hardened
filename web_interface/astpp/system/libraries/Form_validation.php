@@ -1553,10 +1553,11 @@ class CI_Form_validation {
 
     		if( $password_type == '0' ) {
     			if(1 !== preg_match('/^(?=.*\d)(?=.*[A-Za-z])[0-9A-Za-z!@#$%^&*()+]{8,}$/', $str)) {
-				if (strpos($str, ';') || strpos($str, '=') || strpos($str, '?') || strpos($str, ',') || strpos($str, '&')  || strpos($str, ':') || strpos($str, '[') || strpos($str, ']')  || strpos($str, '+') || strpos($str, '/') || strpos($str, "'") !== false) {
+				// ASTPP fork (audit N13): every violation is an error. Upstream returned NULL - "valid"
+				// for CodeIgniter - unless the password also contained one of ;=?,&:[]+/' (not at the
+				// start), so the SIP device forms took almost anything.
             		$this->CI->form_validation->set_message('chk_password_expression', gettext("%s must be at least 8 characters and must contain at least one lower case letter, one upper case letter and one digit and any special characters must have included NOTE (?;=,&:\[]+/) not allowed in special characters"));
                 	return FALSE;
-				}
 			    } else {
 		        
 		        	return TRUE;
