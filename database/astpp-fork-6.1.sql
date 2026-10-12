@@ -15,6 +15,15 @@ UPDATE invoice_conf
        website_title = 'ASTPP', website_footer = ''
  WHERE accountid = 1 AND company_name = 'Inextrix Technologies Pvt. Ltd.';
 
+-- Upstream appended "ASTPP - #1 Open Source VoIP Solution Powered by Inextrix Technologies Pvt. Ltd."
+-- to every notification mail (common::emailFunction(), "<br>\n<br>\n" before it became "\n\n"),
+-- also to mails of reseller customers. The fork no longer appends it; removed from the stored mails
+-- as well, so "Resend" in the e-mail history does not send it again.
+UPDATE mail_details
+   SET body = REPLACE(REPLACE(body, '\n\nASTPP - #1 Open Source VoIP Solution Powered by Inextrix Technologies Pvt. Ltd.', ''),
+                      'ASTPP - #1 Open Source VoIP Solution Powered by Inextrix Technologies Pvt. Ltd.', '')
+ WHERE body LIKE '%ASTPP - #1 Open Source VoIP Solution Powered by Inextrix Technologies Pvt. Ltd.%';
+
 -- Country list: the row for +372 (ISO EE, capital Tallinn) was labelled ERITREA, so Estonia
 -- was missing from every country drop-down and Eritrea appeared twice.
 UPDATE countrycode SET country = 'ESTONIA' WHERE id = 61 AND iso = 'EE' AND countrycode = 372 AND country = 'ERITREA';
