@@ -226,7 +226,13 @@ macOS-Dateien, Duplikate, die sich nur in Gross-/Kleinschreibung unterschieden.
 - Herstellerwerbung entfernt: Social-Media-Links, „Powered by Inextrix“, Hersteller-Copyright,
   Dashboard-Kasten (News, Forum, Dienstleistungen, Spenden), Profilmenü-Links (Doku, Bugtracker,
   „Get Addons“), Werbung für die Hersteller-App, Enterprise-/Premium-Addon-Platzhalter,
-  Slogans in Seitentiteln; Firmendaten des Herstellers im Seed (`database/astpp-fork-6.1.sql`).
+  Slogans in Seitentiteln; Firmendaten des Herstellers im Seed (`database/astpp-fork-6.1.sql`);
+  seit 12.10.2026 auch die Zeile „ASTPP - #1 Open Source VoIP Solution Powered by Inextrix …“, die
+  `common::emailFunction()` an jede Benachrichtigungs-Mail hängte, auch an die Mails von
+  Reseller-Kunden. Bei der Umstellung auf 6.1 war sie übersehen worden. Der Seed entfernt sie
+  zusätzlich aus den gespeicherten Mails (`mail_details`), damit „Erneut senden“ sie nicht wieder
+  verschickt. SMS, Push-Nachrichten, Mail-Vorlagen und Rechnungs-PDFs enthalten keinen
+  Herstellertext.
 - Lizenz: ASTPP steht unter der GNU AGPL v3 ohne Zusatzbedingungen. Jede Seite zeigt
   „© infrahost“, „Based on ASTPP © iNextrix Technologies Pvt. Ltd.“, Lizenz und Gewährleistungs-
   ausschluss (Login-Seite in Kurzform). Die Copyright-Zeilen der Originalautoren in den
