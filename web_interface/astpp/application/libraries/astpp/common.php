@@ -1910,7 +1910,9 @@ class common {
 					$alert_template = str_replace('&nbsp;', '', $alert_template);
 					$alert_template = str_replace('<br />', '', $alert_template);
 
-					$message .= "<br>\n<br>\nASTPP - #1 Open Source VoIP Solution Powered by Inextrix Technologies Pvt. Ltd.";
+					// ASTPP fork: no vendor advertising appended to the mail body ("ASTPP - #1 Open Source
+					// VoIP Solution Powered by Inextrix ..."), also not for mails of reseller customers
+					// (white label). The templates name the sender themselves (#COMPANY_NAME#).
 					// Kinjal ASTPPCOM-1078 Start
 					$message = str_replace('<br>', '', $message);
 					// Kinjal ASTPPCOM-1078 END
