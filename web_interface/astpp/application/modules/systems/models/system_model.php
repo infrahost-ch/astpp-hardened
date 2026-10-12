@@ -105,13 +105,17 @@ class System_model extends CI_Model
         $this->db->where("reseller_id", $reseller_id);
         $this->db->where("name", $name);
         $this->db->update("system", $add_array);
-        if ($name == 'base_currency') {
+        // ASTPP fork (audit F6): the new base currency gets the rate 1 - upstream always set INR.
+        // Only for the system-wide setting: the currency table is global, and resellers reach this
+        // too (systems/configuration) although they have no base_currency row of their own;
+        // otherwise a reseller could set the rate of any currency to 1.
+        if ($name == 'base_currency' && astpp_eq0($reseller_id) && isset($add_array['value'])) {
 
             astpp_cron_background('CurrencyUpdate');
             $this->db->update("currency", array(
                 "currencyrate" => '1'
             ), array(
-                "currency" => "INR"
+                "currency" => (string) $add_array['value']
             ));
         }
     }
