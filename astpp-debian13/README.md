@@ -183,7 +183,10 @@ folgt jede Änderung als eigener Commit (`git log -- astpp`): Härtung, PHP-8.5-
   `password_policy_list.txt` daneben). Gilt in allen Kontoformularen, bei „Passwort ändern“ und
   „Passwort vergessen“, in der API (`portal_password`) und im CSV-Import; erzeugte Passwörter haben
   16 Zeichen. Bestehende Passwörter bleiben gültig, beim Login erscheint für regelwidrige die Warnung
-  „unsicheres Passwort“. SIP-Passwörter sind nicht betroffen.
+  „unsicheres Passwort“. SIP-Passwörter haben ihre eigene Regel (`chk_password_expression`: mindestens
+  8 Zeichen, Buchstabe und Ziffer, Sonderzeichen nur `!@#$%^&*()+`); sie griff bis 12.10.2026 kaum und
+  wird jetzt in allen SIP-Geräteformularen durchgesetzt. Erzeugte SIP-Passwörter (Formulare, API,
+  CSV-Import „Random“) erfüllen sie immer.
 
 **Bibliotheken** (alle selbst ausgeliefert unter `assets/vendor/<name>-<version>/`, Downloads gegen
 npm-/Packagist-Prüfsummen verifiziert)
@@ -238,7 +241,10 @@ macOS-Dateien, Duplikate, die sich nur in Gross-/Kleinschreibung unterschieden.
 
 **Weitere Korrekturen:** Konfigurationsdatei per `ASTPP_CONFIG` umstellbar (Testinstanzen),
 Signup-Seite (verirrte PHP-Ausgaben brachen die Vorbelegung von Land/Zeitzone/Währung),
-DID-Listen und Kontrollkästchen unter jQuery 3.
+DID-Listen und Kontrollkästchen unter jQuery 3. Seit 12.10.2026: Ein Wechsel der Basiswährung setzt
+den Kurs der neuen Basiswährung auf 1 (upstream immer INR) und wirkt nur noch als Admin-Einstellung;
+SMS-Benachrichtigungen lesen ihre Einstellungen aus der Gruppe *Notifications* und gehen nur mit
+eigenen Nexmo-Schlüsseln (nicht den Platzhaltern) und mit Empfänger hinaus.
 
 **Verifikation** (09.10.2026, Testinstanz mit Kopie der Produktionsdatenbank, Browser + Server-Crawler):
 45 Admin-Seiten, 12 Kundenprofil-Unterseiten, 18 Seiten des Kundenportals und die öffentlichen
