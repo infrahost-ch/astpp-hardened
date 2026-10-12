@@ -25,7 +25,9 @@
 class Payment extends MX_Controller
 {
 
-    function Payment()
+    // BUGFIX: PHP 4 style constructor (Payment()) is no constructor since PHP 8; login check added
+    // (upstream had none here, the methods handled a missing session themselves or failed with HTTP 500)
+    function __construct()
     {
         parent::__construct();
         $this->load->helper('template_inheritance');
@@ -33,6 +35,9 @@ class Payment extends MX_Controller
         $this->load->library('encrypt');
         $this->load->library('ASTPP_Sms');
         $this->load->helper('form');
+        if ($this->session->userdata('user_login') == FALSE) {
+            redirect(base_url() . 'login/login');
+        }
     }
 
     /*

@@ -22,7 +22,7 @@
 // ##############################################################################
 #[\AllowDynamicProperties]
 class Getbalance extends MX_Controller {
-	function Getbalance() {
+	function __construct() { // BUGFIX: PHP 4 style constructor (Getbalance()) is no constructor since PHP 8 - the check below never ran
 		parent::__construct ();
 		// HARDENING: unauthenticated balance lookup by SIP user/account number (info leak).
 		// Only allowed from this server. Remove this check if IP phones must query it directly.
