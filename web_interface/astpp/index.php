@@ -264,6 +264,28 @@ function astpp_cron_background($task) {
 }
 
 /*
+ * ASTPP fork: may an SMS notification go out? $settings = name => value of the system settings
+ * group "notifications" (Configuration -> Notifications, part "SMS"): sms_notications "0" means
+ * enabled (ASTPP convention, anything else or missing = off), plus the operator's own
+ * sms_api_key / sms_secret_key. The installation seeds the placeholders "EnterAPIKey" /
+ * "EnterSecretKey"; like empty values they count as "not configured", so no request with them
+ * goes to the SMS provider.
+ */
+function astpp_sms_configured($settings) {
+	$enabled = isset ( $settings ['sms_notications'] ) ? trim ( ( string ) $settings ['sms_notications'] ) : '';
+	if ($enabled !== '0') {
+		return FALSE;
+	}
+	foreach ( array ('sms_api_key', 'sms_secret_key') as $name ) {
+		$value = isset ( $settings [$name] ) ? trim ( ( string ) $settings [$name] ) : '';
+		if ($value === '' || in_array ( strtolower ( $value ), array ('enterapikey', 'entersecretkey'), true )) {
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+/*
  * ASTPP fork (audit O4): nonce attribute for the inline script blocks of the views, see
  * application/hooks/csp.php. Empty while no policy is sent (csp = off, API, cron).
  */

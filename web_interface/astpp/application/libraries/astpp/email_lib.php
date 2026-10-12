@@ -90,10 +90,12 @@ class email_lib {
 		}
 	}
 	
+	// ASTPP fork: the SMS settings are in group "notifications" (upstream read group "sms", which does
+	// not exist; send_notifications_email() had usually loaded them already via get_email_settings()).
 	function get_sms_settings(){
 
 		$where = array (
-				'group_title' => 'sms'
+				'group_title' => 'notifications'
 		);
 		$query = $this->CI->db_model->getSelect ( "*", "system", $where );
 		$query = $query->result_array ();
@@ -101,6 +103,14 @@ class email_lib {
 			$tempvar = strtolower ( $val ['name'] );
 			$this->$tempvar = $val ['value'];
 		}
+	}
+	// ASTPP fork: the SMS settings loaded by get_sms_settings() for astpp_sms_configured() (index.php)
+	private function sms_settings() {
+		$settings = array ();
+		foreach ( array ( 'sms_notications', 'sms_api_key', 'sms_secret_key' ) as $name ) {
+			$settings [$name] = isset ( $this->$name ) ? $this->$name : '';
+		}
+		return $settings;
 	}
 	function push_alert_settings(){
 		$where = array (
@@ -317,7 +327,10 @@ class email_lib {
 				$this->set_email_paramenters ( $details );
 			}
 
-			if (!$this->sms_notications) {
+			// ASTPP fork: only when enabled and configured and the mail has a number and a text; upstream
+			// also sent with empty settings, the seeded placeholder keys ("!" on an unset value is true)
+			// and without recipient (common::emailFunction() stores neither, only signup does)
+			if (astpp_sms_configured ( $this->sms_settings () ) && trim ( ( string ) $this->to_number ) !== '' && trim ( ( string ) $this->sms_body ) !== '') {
 				$url = 'https://rest.nexmo.com/sms/json?' . http_build_query([
    			    	'api_key'    => $this->sms_api_key,
    			    	'api_secret' => $this->sms_secret_key,
@@ -327,6 +340,7 @@ class email_lib {
    				 ]);
 				$ch = curl_init($url);
 				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+				curl_setopt($ch, CURLOPT_TIMEOUT, 15); // runs in the minute cron (broadcast_email)
 				$response = curl_exec($ch);
 			}
 		}
@@ -429,9 +443,10 @@ class email_lib {
 			}
 		}
 	}
+	// ASTPP fork: no caller (dead code); same checks as send_notifications_sms()
 	function send_sms() {
 		$this->get_sms_settings();
-		if (!$this->sms_notications) {
+		if (astpp_sms_configured ( $this->sms_settings () )) {
 			$accountinfo = $this->CI->session->userdata ( 'accountinfo' );
 			$country_code = $this->CI->common->get_field_name('countrycode','countrycode',array ("id" => $accountinfo['country_id']));
 			$contact_no=isset($accountinfo['telephone_1'])?$accountinfo['telephone_1']:$accountinfo['telephone_2'];

@@ -77,9 +77,10 @@ class notification {
 					$this->send_email_notification($notification_template_data,$accountinfo,$invoiceconf);
 				}
 
-				if(astpp_eq0(Common_model::$global_config ['system_config']['account_generate'])){
-					$this->send_sms_notification($notification_template_data,$accountinfo,$invoiceconf);
-				}
+				// ASTPP fork: send_sms_notification() checks the SMS settings itself. Upstream asked the
+				// setting "account_generate" first, which does not exist (always true, PHP warning).
+				// Note: send_notification() has no caller (upstream neither).
+				$this->send_sms_notification($notification_template_data,$accountinfo,$invoiceconf);
 
 			}else{
 				$error_msg = gettext('counld not find invoice configuration.');
@@ -111,13 +112,16 @@ class notification {
 		// SECURITY: upstream sent every notification as SMS through a hard-coded third-party Nexmo
 		// account (API key/secret in the source), unencoded and without TLS verification, whenever
 		// the non-existent setting "account_generate" was "0". Now: only if SMS notifications are
-		// enabled and with the operator's own SMS credentials (Configuration -> SMS).
+		// enabled and with the operator's own SMS credentials (Configuration -> Notifications -> SMS).
+		// ASTPP fork: the settings are in group "notifications" - the fork read group "sms", which
+		// does not exist, so no SMS ever went out; the seeded placeholder keys count as not
+		// configured (astpp_sms_configured() in index.php).
 		$sms = array();
-		$query = $this->CI->db_model->getSelect ( "name,value", "system", array ( 'group_title' => 'sms' ) );
+		$query = $this->CI->db_model->getSelect ( "name,value", "system", array ( 'group_title' => 'notifications' ) );
 		foreach ( $query->result_array () as $row ) {
 			$sms [strtolower ( $row ['name'] )] = $row ['value'];
 		}
-		if (! isset ( $sms ['sms_notications'] ) || ! astpp_eq0 ( $sms ['sms_notications'] ) || empty ( $sms ['sms_api_key'] ) || empty ( $sms ['sms_secret_key'] )) {
+		if (! astpp_sms_configured ( $sms )) {
 			return $uniq_rendno;
 		}
 		$message = str_replace ( array ( "<p>", "</p>" ), "", $notification_template_data['template'] );
