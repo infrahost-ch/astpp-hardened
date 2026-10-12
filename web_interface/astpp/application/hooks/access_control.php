@@ -336,6 +336,9 @@ class Access_control
 	/** POST fields checked on every request of resellers, customers and providers. */
 	private static $post_accounts = array('accountid', 'account_id', 'accountcode');
 
+	/** Methods whose POST field accountid carries the account NUMBER (read-only display field of the form). */
+	private static $post_account_number = array('accounts/customer_payment_save');
+
 	/** Scope names that are checked on another table. */
 	private static $alias = array('products_optin' => 'products');
 
@@ -434,8 +437,13 @@ class Access_control
 				if ($value === false) {
 					continue;
 				}
+				$rule = array('post:' . $field, 'accounts', 'self' => true);
+				if ($field === 'accountid' && in_array($key, self::$post_account_number, true)) {
+					// refill form: shows the account number in accountid (the controller uses the posted id)
+					$rule['col'] = 'number';
+				}
 				foreach ((array) $value as $v) {
-					if (is_array($v) || ! $this->allowed(array('post:' . $field, 'accounts', 'self' => true), (string) $v)) {
+					if (is_array($v) || ! $this->allowed($rule, (string) $v)) {
 						$this->deny($key);
 					}
 				}
