@@ -2,7 +2,8 @@
 # =============================================================================
 #  ASTPP-Codebaum auf dem Server - gemeinsam fuer install.sh und tools/astpp-deploy.sh
 #
-#  Quelle ist das Verzeichnis astpp/ dieses Repositories (der infrahost-Fork).
+#  Quelle ist der ASTPP-Baum des infrahost-Forks: das Verzeichnis astpp/ neben
+#  astpp-debian13/ oder der Baum, in dem astpp-debian13/ selbst liegt.
 #  Erwartet: SCRIPT_DIR (= astpp-debian13), ASTPP_SRC, ASTPP_WEB, PHP_VER sowie die
 #  Funktionen log/die.
 # =============================================================================
@@ -30,19 +31,45 @@ ASTPP_RUNTIME_DIRS=(upload attachments invoices database_backup language assets/
 # Laufzeitdaten ausserhalb von ASTPP_WEB (relativ zu ASTPP_SRC)
 ASTPP_RUNTIME_SRC_DIRS=(freeswitch/scripts/astpp/lib/addons freeswitch/fs/lib/addons)
 
-# Quellbaum (astpp/ neben astpp-debian13/) finden und pruefen
+# Quellbaum finden und pruefen. ASTPP_TREE gesetzt: dieser Baum. Sonst astpp/ neben
+# astpp-debian13/ (Repository mit beiden Verzeichnissen), und fehlt es, der Baum, in dem
+# astpp-debian13/ liegt (astpp-debian13/ neben web_interface/, freeswitch/ ...).
 astpp_tree_dir() {
-	local tree="${ASTPP_TREE:-$(cd "${SCRIPT_DIR}/.." && pwd)/astpp}"
+	local parent tree
+	parent="$(cd "${SCRIPT_DIR}/.." && pwd)"
+	if [ -n "${ASTPP_TREE:-}" ]; then
+		tree="${ASTPP_TREE}"
+	elif [ -f "${parent}/astpp/web_interface/astpp/index.php" ]; then
+		tree="${parent}/astpp"
+	else
+		tree="${parent}"
+	fi
 	[ -f "${tree}/web_interface/astpp/index.php" ] && [ -f "${tree}/web_interface/astpp/application/php7compat.php" ] \
-		|| die "ASTPP-Quellbaum nicht gefunden: ${tree} (erwartet: Repository-Checkout mit astpp/ neben astpp-debian13/, oder ASTPP_TREE setzen)"
+		|| die "ASTPP-Quellbaum nicht gefunden: ${tree} (erwartet: astpp/ neben astpp-debian13/ oder astpp-debian13/ im ASTPP-Baum, sonst ASTPP_TREE setzen)"
 	printf '%s' "${tree}"
+}
+
+# Liegt das Installationspaket (SCRIPT_DIR) im Baum, sein Pfad relativ zum Baum, sonst nichts.
+# Dieser Teil gehoert nicht zu ASTPP: keine Syntaxpruefung, kein Abgleich nach ASTPP_SRC,
+# Aenderungen daran zaehlen nicht als lokale Aenderungen des Baums.
+astpp_tree_skip() {
+	local tree inst
+	tree="$(cd "$1" && pwd -P)"
+	inst="$(cd "${SCRIPT_DIR}" && pwd -P)"
+	case "${inst}" in
+		"${tree}"/*) printf '%s' "${inst#"${tree}"/}" ;;
+	esac
 }
 
 # Revision des Quellbaums fuer Protokolle ("<commit> (Repository)" oder "unbekannt")
 astpp_tree_revision() {
-	local tree="$1" rev
+	local tree="$1" rev skip ex=()
+	skip="$(astpp_tree_skip "${tree}")"
+	if [ -n "${skip}" ]; then
+		ex=(":(exclude)${skip}")
+	fi
 	if rev="$(git -C "${tree}" rev-parse --short=12 HEAD 2>/dev/null)"; then
-		git -C "${tree}" diff --quiet HEAD -- . 2>/dev/null || rev="${rev}+lokale-Aenderungen"
+		git -C "${tree}" diff --quiet HEAD -- . "${ex[@]}" 2>/dev/null || rev="${rev}+lokale-Aenderungen"
 		printf '%s' "${rev}"
 	else
 		printf 'unbekannt'
@@ -51,8 +78,12 @@ astpp_tree_revision() {
 
 # Syntaxpruefung aller PHP- und Lua-Dateien eines Baums
 astpp_lint_tree() {
-	local tree="$1" out f bad=0
-	out="$(find "${tree}" -name '*.php' -not -path '*/.git/*' -print0 \
+	local tree="$1" out f bad=0 skip prune=()
+	skip="$(astpp_tree_skip "${tree}")"
+	if [ -n "${skip}" ]; then
+		prune=(-path "${tree}/${skip}" -prune -o)
+	fi
+	out="$(find "${tree}" "${prune[@]}" -name '*.php' -not -path '*/.git/*' -print0 \
 		| xargs -0 -n 200 -P "$(nproc)" "php${PHP_VER}" -l 2>&1 | grep -v '^No syntax errors detected' | grep -v '^$' || true)"
 	if [ -n "${out}" ]; then
 		printf '%s\n' "${out}" >&2
@@ -62,7 +93,7 @@ astpp_lint_tree() {
 		luac5.3 -p "${f}" || bad=1
 	done < <(find "${tree}/freeswitch" -name '*.lua' -print0)
 	[ "${bad}" -eq 0 ] || die "Syntaxfehler im ASTPP-Quellbaum ${tree} - Abbruch."
-	log "Syntaxpruefung: $(find "${tree}" -name '*.php' -not -path '*/.git/*' | wc -l) PHP-, $(find "${tree}/freeswitch" -name '*.lua' | wc -l) Lua-Dateien ok"
+	log "Syntaxpruefung: $(find "${tree}" "${prune[@]}" -name '*.php' -not -path '*/.git/*' -print | wc -l) PHP-, $(find "${tree}/freeswitch" -name '*.lua' | wc -l) Lua-Dateien ok"
 }
 
 # Laufzeitverzeichnisse relativ zu ASTPP_SRC
@@ -78,8 +109,12 @@ astpp_runtime_paths() {
 #     Logos tragen dieselben Namen wie die mitgelieferten), nie loeschen
 # Mit -n (Probelauf) wird nur Schritt 1 ausgegeben.
 astpp_sync_tree() {
-	local tree="$1" p args=(-rlt --delete --exclude=/.git)
+	local tree="$1" p skip args=(-rlt --delete --exclude=/.git)
 	shift
+	skip="$(astpp_tree_skip "${tree}")"
+	if [ -n "${skip}" ]; then
+		args+=("--exclude=/${skip}/")
+	fi
 	# .gitignore kommt mit: es haelt die Laufzeitdaten aus astpp_git_record heraus
 	while IFS= read -r p; do args+=("--exclude=/${p}/"); done < <(astpp_runtime_paths)
 	rsync "${args[@]}" "$@" "${tree}/" "${ASTPP_SRC}/"

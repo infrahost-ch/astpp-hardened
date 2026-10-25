@@ -8,7 +8,7 @@ Sicherheitslücken der Herstellerinstallation.
 
 | Pfad | Zweck |
 |---|---|
-| [`../astpp/`](../astpp) | **ASTPP-Quellcode (infrahost-Fork)** – wird von Installer und Deploy unverändert installiert, siehe [Fork](#fork-astpp) |
+| [`../astpp/`](../astpp) | **ASTPP-Quellcode (infrahost-Fork)** – wird von Installer und Deploy unverändert installiert, siehe [Fork](#fork-astpp); liegt `astpp-debian13/` im Quellbaum selbst, gilt dieser (siehe [Installation](#installation)) |
 | `install.sh` | Installer für Debian 13 (ersetzt das `install.sh` des Herstellers) |
 | `install.conf.example` | Einstellungen (FQDN, E-Mail, FreeSWITCH-Token, Firewall) |
 | `lib/astpp-tree.sh` | gemeinsame Funktionen von Installer und Deploy (Syntaxprüfung, Abgleich, Rechte) |
@@ -274,6 +274,11 @@ Crawler über 318 URLs: nur bekannte Upstream-Fehler.
   FreeSWITCH-Pakete – ohne Token wird FreeSWITCH aus dem Quellcode gebaut (20–40 Minuten)
 
 ## Installation
+
+Installer und Deploy finden den ASTPP-Quellbaum in zwei Anordnungen: `astpp/` neben
+`astpp-debian13/` (dieses Repository) oder `astpp-debian13/` direkt im Quellbaum (neben
+`web_interface/`, `freeswitch/` …); im zweiten Fall wird `astpp-debian13/` selbst weder geprüft
+noch nach `/opt/ASTPP` kopiert. Ein anderer Baum lässt sich mit `ASTPP_TREE` angeben.
 
 Das ganze Repository (mindestens `astpp/` und `astpp-debian13/` nebeneinander) auf den Server
 bringen, z. B. als `git clone` oder per Bundle:

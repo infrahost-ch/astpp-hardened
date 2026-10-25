@@ -51,6 +51,7 @@ PHP_OPEN_BASEDIR="yes"
 ADMIN_ALLOWLIST_SYNC="no"
 ADMIN_ALLOWLIST_URLS=""    # z.B. "https://whitelist.example.net/lists/management-ipv4.txt https://whitelist.example.net/lists/management-ipv6.txt"
 
-# ASTPP-Quellbaum (Standard: astpp/ neben astpp-debian13/) und gepruefte FreeSWITCH-Versionen
+# ASTPP-Quellbaum (Standard: astpp/ neben astpp-debian13/, sonst der Baum, in dem
+# astpp-debian13/ liegt) und gepruefte FreeSWITCH-Versionen
 #ASTPP_TREE="/root/astpp/astpp"
 #FS_VERSION="v1.11.3"

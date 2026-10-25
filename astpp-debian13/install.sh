@@ -7,7 +7,8 @@
 #   - nur Debian 13; MariaDB 11.8 aus Debian statt Oracle-MySQL-Repo
 #   - PHP 8.5 von packages.sury.org; ASTPP 6 (CodeIgniter 2.1) ist dafuer portiert
 #     (PHP-7-Semantik ueber application/php7compat.php)
-#   - ASTPP-Quellcode aus dem infrahost-Fork (Verzeichnis astpp/ dieses Repositories):
+#   - ASTPP-Quellcode aus dem infrahost-Fork (astpp/ neben astpp-debian13/ oder der Baum,
+#     in dem astpp-debian13/ liegt):
 #     Upstream V6.0 + Haertung + PHP-8.5-Port + aktualisierte, selbst ausgelieferte Bibliotheken
 #   - keine Telemetrie (Upstream-Installer schickte E-Mail/IP an astppbilling.org,
 #     die Anwendung selbst alle Kundenkontaktdaten an dcoll.inextrix.com)
@@ -17,7 +18,8 @@
 #   - kein ionCube, kein "apt purge php8.*", keine --no-check-certificate-Downloads
 #   - nftables-Firewall, fail2ban (SSH, SIP, Web-Login), Let's-Encrypt-TLS
 #
-#  Aufruf (im Checkout des Repositories, astpp/ liegt neben astpp-debian13/):
+#  Aufruf (im Checkout des Repositories, astpp/ neben astpp-debian13/ oder astpp-debian13/
+#  im ASTPP-Baum):
 #            cp install.conf.example install.conf && $EDITOR install.conf
 #            bash install.sh
 #  Bestehende Installation aktualisieren: tools/astpp-deploy.sh
@@ -54,7 +56,7 @@ ADMIN_ALLOWLIST_SYNC="${ADMIN_ALLOWLIST_SYNC:-no}"   # yes = admin_allowed_ips a
 ADMIN_ALLOWLIST_URLS="${ADMIN_ALLOWLIST_URLS:-}"     # https-URLs, z.B. https://whitelist.example.net/lists/management-ipv4.txt
 FORCE="${FORCE:-no}"
 
-ASTPP_TREE="${ASTPP_TREE:-}"                 # leer = astpp/ neben astpp-debian13/
+ASTPP_TREE="${ASTPP_TREE:-}"                 # leer = astpp/ neben astpp-debian13/, sonst der Baum darueber
 FS_VERSION="${FS_VERSION:-v1.11.3}"
 SOFIA_VERSION="${SOFIA_VERSION:-v1.13.18}"
 SPANDSP_VERSION="${SPANDSP_VERSION:-v3.1.1}"

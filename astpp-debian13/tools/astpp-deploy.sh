@@ -23,7 +23,8 @@
 #      YES=yes        ohne Rueckfrage
 #      FORCE=yes      lokale Aenderungen/Zusatzdateien trotzdem ueberschreiben/loeschen
 #      DB_BACKUP=no   keine Datenbanksicherung
-#      ASTPP_TREE=..  anderer Quellbaum als astpp/ neben astpp-debian13/
+#      ASTPP_TREE=..  anderer Quellbaum (Standard: astpp/ neben astpp-debian13/, sonst
+#                     der Baum, in dem astpp-debian13/ liegt)
 #      ASTPP_SRC=..   Probe-Deploy in eine Kopie (z.B. cp -a /opt/ASTPP /root/kopie) -
 #                     dann ohne nginx/PHP-FPM/Funktionspruefung
 #      BACKUP_ROOT=.. Sicherungsverzeichnis (Standard /var/backups/astpp)
