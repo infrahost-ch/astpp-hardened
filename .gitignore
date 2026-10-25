@@ -11,3 +11,5 @@
 /web_interface/astpp/application/logs/*
 /freeswitch/scripts/astpp/lib/addons/*
 /freeswitch/fs/lib/addons/*
+# Installation-specific settings of the installer (copy of install.conf.example)
+/astpp-debian13/install.conf
