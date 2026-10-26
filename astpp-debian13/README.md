@@ -238,10 +238,11 @@ macOS-Dateien, Duplikate, die sich nur in Gross-/Kleinschreibung unterschieden.
   ausschluss (Login-Seite in Kurzform). Die Copyright-Zeilen der Originalautoren in den
   Quelldateien bleiben; `astpp/NOTICE` beschreibt Herkunft, Änderungen und dass die
   infrahost-Logos nicht unter die AGPL fallen.
-- **Noch offen (AGPL §13):** Nutzer, die die veränderte Version über das Netz verwenden, müssen den
-  Quellcode genau dieser Version beziehen können. Das Angebot (z. B. Download-Link in der
-  Fusszeile) wird eingerichtet, bevor externe Kunden/Reseller das System nutzen – zusammen mit
-  der Meldung der Sicherheitslücken an den Hersteller, da der Quellcode die Korrekturen zeigt.
+- **Quellcode-Angebot (AGPL §13):** Nutzer, die die veränderte Version über das Netz verwenden,
+  müssen den Quellcode dieser Version beziehen können. Die Fusszeile jeder Seite und die
+  Login-Seite verlinken ihn („Source code“): standardmässig das öffentliche Repository des Forks
+  (`https://github.com/infrahost-ch/astpp-hardened`), sonst `source_url` in `astpp-config.conf`.
+  Wer den Code ändert, lässt `source_url` auf den Quellcode seiner Version zeigen.
 - Statische eigene Dateien (CSS, JS, Logos) werden vom Browser bei jeder Nutzung revalidiert, damit
   ein Deploy sofort sichtbar ist; nach der Umstellung einmal hart neu laden (Strg+F5).
 
