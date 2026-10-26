@@ -141,7 +141,9 @@ ASTPP and this fork are free software under the
   `web_interface/astpp/assets/vendor/` and
   `web_interface/astpp/application/libraries/html2pdf/`).
 - If you offer a modified version to users over a network, the AGPL requires you to offer
-  them its source code as well.
+  them its source code as well. Every page of the web interface and the login page link to
+  the source code ("Source code"). By default the link points to this repository; set
+  `source_url` in `/var/lib/astpp/astpp-config.conf` to the source of your version.
 - The infrahost logos are trademarks of infrahost and are not covered by the AGPL. If you
   redistribute this software, replace them with your own (see `NOTICE`).
 

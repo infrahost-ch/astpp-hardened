@@ -138,7 +138,8 @@ jQuery(function($) {
 	 * ASTPP fork: footer without vendor branding (social media, "Powered by Inextrix").
 	 * Left: operator - or the footer text a reseller set for its customers (white label).
 	 * Middle: origin and license (GNU AGPL v3 "Appropriate Legal Notices": copyright, no
-	 * warranty, where to find the license) - shown on every page, also in reseller portals.
+	 * warranty, where to find the license) - shown on every page, also in reseller portals -
+	 * and the source code offer of AGPL section 13 (config item source_url).
 	 */
 	$astpp_footer_text = (string) $this->session->userdata('user_footer');
 	$astpp_logintype = $this->session->userdata('logintype');
@@ -154,6 +155,7 @@ jQuery(function($) {
    <div class="col-md-4 py-2 px-2 text-md-center text-light astpp-footer-legal">
 	<?php echo gettext('Based on'); ?> <a href="https://github.com/iNextrix/ASTPP" target="_blank" rel="noopener">ASTPP</a> &copy; iNextrix Technologies Pvt. Ltd.<br>
 	<?php echo gettext('Free software under the'); ?> <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL v3</a>, <?php echo gettext('without any warranty'); ?>.
+	<a href="<?php echo htmlspecialchars((string) $this->config->item('source_url'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><?php echo gettext('Source code'); ?></a>
    </div>
    <div class="col-md-4 py-2 px-2 text-md-right" id="floating-label">
     <select class="col-lg-3 col-md-6 form-control selectpicker language" data-live-search='false' data-live-search-style='begins'>

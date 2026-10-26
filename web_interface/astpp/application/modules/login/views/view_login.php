@@ -197,11 +197,12 @@ body {
             </p>
 
 			</div>
-			<?php // ASTPP fork: operator, origin and license (the login page had no footer) ?>
+			<?php // ASTPP fork: operator, origin, license and source code offer (the login page had no footer) ?>
 			<p class="text-center small text-muted mt-4 mb-0 astpp-login-legal">
 				&copy; <?php echo date('Y'); ?> <a class="text-muted" href="https://infrahost.ch" target="_blank" rel="noopener">infrahost</a>
 				&middot; <?php echo gettext('Based on'); ?> <a class="text-muted" href="https://github.com/iNextrix/ASTPP" target="_blank" rel="noopener">ASTPP</a>
 				&middot; <a class="text-muted" href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL v3</a>
+				&middot; <a class="text-muted" href="<?php echo htmlspecialchars((string) $this->config->item('source_url'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><?php echo gettext('Source code'); ?></a>
 			</p>
 
 		</form>

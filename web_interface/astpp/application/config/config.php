@@ -254,6 +254,11 @@ $config ['admin_allowed_ips'] = isset ( $astpp_config ['admin_allowed_ips'] ) ? 
 // (Report-Only, fallback), off; violations go to /csp_report/ in both modes. See hooks/csp.php.
 $config ['csp'] = isset ( $astpp_config ['csp'] ) ? strtolower ( trim ( ( string ) $astpp_config ['csp'] ) ) : 'enforce';
 
+// ASTPP fork: source code offer (GNU AGPL v3 section 13), linked in the footers of the web interface
+// and the login page. Whoever runs a modified version sets source_url in astpp-config.conf to the
+// source of that version. Empty, missing or not an http(s) URL: the public repository of this fork.
+$config ['source_url'] = (isset ( $astpp_config ['source_url'] ) && preg_match ( '#^https?://[^\s"\'<>]+$#i', trim ( ( string ) $astpp_config ['source_url'] ) )) ? trim ( ( string ) $astpp_config ['source_url'] ) : 'https://github.com/infrahost-ch/astpp-hardened';
+
 // HARDENING/PRIVACY: vendor telemetry endpoint removed (was https://dcoll.inextrix.com)
 $config['data'] = '';
 $config['enable_data'] = 1; // HARDENING/PRIVACY: 1 = telemetry off
