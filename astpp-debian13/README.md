@@ -378,6 +378,15 @@ Passwortmanager löschen). Passwörter werden **nie** auf dem Terminal ausgegebe
 - nginx begrenzt `/api/` auf 10 Anfragen/s pro Quell-IP (Spitze 40), Anfragen höchstens 1 MB.
 - Dokumentation im Portal (API Access → API documentation), Quelle
   `application/modules/apikeys/docs/api.md`, OpenAPI-Beschreibung `docs/openapi.yaml` daneben.
+- **Gesprächsdaten mit SIP-Call-ID** (seit 30.10.2026): `/customers/{id}/cdrs` und `/cdrs` (alle
+  Kunden des Schlüssels, Admin/Reseller) liefern `sip_call_id`. Der CDR-Endpunkt
+  (`freeswitch/fs/lib/astpp.cdr.php`) schreibt sie in die Spalte `cdrs.sip_call_id` (mit Index), und
+  zwar die FreeSWITCH-Kanalvariable `sip_call_id` des verrechneten Kanals = Call-ID des INVITE, den
+  ASTPP erhalten hat (A-Leg; der B-Leg zum Carrier hat kein `account_id` und wird nicht verbucht).
+  Gespräche von vorher: `''` in der Tabelle, `null` in der API. Eine FreeSWITCH-Telefonanlage
+  (FusionPBX) sendet als Call-ID nur dann die UUID ihres ausgehenden Kanals (B-Leg), wenn im
+  SIP-Profil `outbound-use-uuid-as-callid=true` steht; sonst ist die Call-ID eine zufällige Kennung
+  von sofia-sip, die die Anlage nirgends speichert.
 - Neue Menüpunkte erscheinen erst nach dem nächsten Login (das Menü wird beim Login aufgebaut).
 
 **Admin-Zugang auf freigegebene Netze beschränken (Audit O5)**
@@ -519,7 +528,10 @@ bash /root/astpp/astpp-debian13/tools/astpp-deploy.sh
 Das Skript prüft die Syntax aller PHP-/Lua-Dateien, plant den Abgleich (`rsync --checksum`) und bricht
 ab, wenn dabei am Server geänderte oder zusätzlich angelegte Dateien verloren gingen (Liste wird
 ausgegeben; `FORCE=yes` verwirft sie). Danach: Sicherung nach `/var/backups/astpp/` (Code als tar,
-Datenbank per `mariadb-dump`, nginx-Site), Abgleich nach `/opt/ASTPP`, Rechte, nginx-Site neu aus der
+Datenbank per `mariadb-dump`, nginx-Site), Datenbank-Anpassungen des Forks
+(`astpp/database/astpp-fork-*.sql` aus dem Checkout, jede Anweisung wiederholbar; seit 30.10.2026
+**vor** dem Code-Abgleich, damit neuer Code neue Spalten schon vorfindet – Anpassungen dürfen deshalb
+nur hinzufügen, was auch der bisherige Code verträgt), Abgleich nach `/opt/ASTPP`, Rechte, nginx-Site neu aus der
 Vorlage (FQDN, Zertifikat und Socket bleiben), PHP-FPM neu laden, Funktionsprüfung (Weboberfläche,
 xml_curl, Smoketest der Admin-Seiten, SIP-Profil, neue Einträge im PHP-Fehlerlog) und Eintrag in
 `/opt/ASTPP/.git`. Laufzeitdaten (Uploads, Rechnungen, Captchas, Logs, Caches) werden nie gelöscht
@@ -607,6 +619,16 @@ noch aus; die Funktionen für Abgleich, Rechte und Protokoll teilen sich Install
   zählt der Anruf auf das Paket mit der kleinsten ID (`counters`)
 - [ ] nach dem Deploy: IP-Map im Portal ohne `/Bits` speichern → Eintrag mit `/32`; `abc` oder
   `/33` → Fehlermeldung, kein Eintrag
+- [x] SIP-Call-ID in den CDRs (30.10.2026, ohne Testinstanz): `process_cdr()` mit Attrappe statt
+  Datenbank unter PHP 8.5 – 10 Fälle (normal, ohne/leere/zu lange/Sonderzeichen-/Array-Call-ID,
+  LOCAL und DID mit Empfängerzeile, Calling Card, Reseller-Kette), jede `INSERT INTO cdrs` mit 35
+  Spalten und 35 Werten; alle übrigen Abfragen bitgleich mit dem alten Code. SQL des Query-Builders
+  für `/customers/{id}/cdrs` und `/cdrs` (Admin, Reseller mit Kunde) erzeugt und lesend gegen die
+  Produktionsdatenbank geprüft; Bedingungen der Schemaänderung lesend ausgewertet
+- [ ] nach dem Deploy der SIP-Call-ID: `SHOW CREATE TABLE cdrs` mit Spalte und Index `sip_call_id`;
+  nach dem nächsten Gespräch `sip_call_id` gefüllt und gleich der `call-id` aus
+  `grep '<uniqueid> .*receiving invite' /var/log/freeswitch/freeswitch.log`; API `/customers/{id}/cdrs`
+  und `/cdrs` liefern das Feld
 - [ ] nach dem Deploy: Formular speichern und ein Popup im Admin-, Reseller- und Kundenportal;
   `curl -sk -X POST https://astpp.example.com/user/user_myprofile/` → Weiterleitung zum Login
   (ohne Sitzung) bzw. mit Sitzung, aber ohne Token → „This page has expired …“
