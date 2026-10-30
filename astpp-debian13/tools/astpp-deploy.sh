@@ -8,7 +8,9 @@
 #    2. Abgleich planen und pruefen: Dateien, die am Server geaendert oder hinzugefuegt
 #       wurden und ueberschrieben bzw. geloescht wuerden, fuehren zum Abbruch
 #    3. Sicherung: /opt/ASTPP (tar), Datenbank (mariadb-dump), nginx-Site
-#    4. rsync nach /opt/ASTPP - Laufzeitdaten (Uploads, Rechnungen, Logs, ...) bleiben
+#    4. Datenbank-Anpassungen des Forks (database/astpp-fork-*.sql aus dem Quellbaum, vor dem
+#       Code, damit neuer Code neue Spalten schon vorfindet), dann rsync nach /opt/ASTPP -
+#       Laufzeitdaten (Uploads, Rechnungen, Logs, ...) bleiben
 #    5. Rechte, nginx-Site aus der Vorlage (FQDN/Zertifikat bleiben), fail2ban-Filter,
 #       Sync-Werkzeug der Admin-Freigabe (nur wenn installiert),
 #       PHP-FPM neu laden
@@ -210,13 +212,17 @@ deploy_nginx() {
 	fi
 }
 
-# Datenbank-Anpassungen des Forks (database/astpp-fork-*.sql, jede Anweisung wiederholbar)
+# Datenbank-Anpassungen des Forks (database/astpp-fork-*.sql, jede Anweisung wiederholbar).
+# Laufen aus dem Quellbaum VOR dem Code-Abgleich: neuer Code findet neue Spalten schon vor
+# (sonst scheitert z.B. das Schreiben der CDRs, bis die Spalte da ist, und die Gespraeche fehlen).
+# Deshalb nur Erweiterungen, die auch der bisherige Code vertraegt (Spalten/Tabellen hinzufuegen,
+# nichts entfernen oder umbenennen).
 deploy_database() {
 	step "Datenbank-Anpassungen des Forks"
 	local db f
 	db="$(sed -n 's/^[[:space:]]*dbname[[:space:]]*=[[:space:]]*"\{0,1\}\([A-Za-z0-9_]*\)"\{0,1\}.*/\1/p' "${ASTPP_CONFIG}" | head -1)"
 	[ -n "${db}" ] || die "dbname nicht in ${ASTPP_CONFIG} gefunden."
-	for f in "${ASTPP_SRC}"/database/astpp-fork-*.sql; do
+	for f in "${ASTPP_TREE}"/database/astpp-fork-*.sql; do
 		[ -f "${f}" ] || continue
 		mariadb "${db}" <"${f}"
 		log "angewendet: $(basename "${f}")"
@@ -319,9 +325,11 @@ main() {
 	plan
 	confirm
 	backup
-	deploy_code
 	if [ "${SERVICES}" = "yes" ]; then
 		deploy_database
+	fi
+	deploy_code
+	if [ "${SERVICES}" = "yes" ]; then
 		deploy_nginx
 		deploy_fail2ban
 		deploy_admin_allowlist
