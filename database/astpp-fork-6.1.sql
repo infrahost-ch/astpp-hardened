@@ -148,3 +148,22 @@ CREATE TABLE IF NOT EXISTS `csp_reports` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `report_key` (`report_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- SIP Call-ID of a call (freeswitch/fs/lib/astpp.cdr.php: channel variable sip_call_id of the leg
+-- ASTPP bills, i.e. the Call-ID of the INVITE that ASTPP received). Lets the PBX or SIP client that
+-- placed the call match a CDR to its own call record (API: GET /api/v1/customers/{id}/cdrs and
+-- GET /api/v1/cdrs, field sip_call_id). Added once, the checks keep every later deploy from altering
+-- the table again; rows written before keep '' (unknown). The trigger cdr_records copies a fixed
+-- column list into cdrs_staging and is not affected.
+SET @astpp_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cdrs' AND COLUMN_NAME = 'sip_call_id') = 0,
+                    'ALTER TABLE cdrs ADD COLUMN `sip_call_id` varchar(255) NOT NULL DEFAULT \'\'', 'DO 0');
+PREPARE astpp_stmt FROM @astpp_sql;
+EXECUTE astpp_stmt;
+DEALLOCATE PREPARE astpp_stmt;
+SET @astpp_sql = IF((SELECT COUNT(*) FROM information_schema.STATISTICS
+                      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cdrs' AND INDEX_NAME = 'sip_call_id') = 0,
+                    'ALTER TABLE cdrs ADD KEY `sip_call_id` (`sip_call_id`)', 'DO 0');
+PREPARE astpp_stmt FROM @astpp_sql;
+EXECUTE astpp_stmt;
+DEALLOCATE PREPARE astpp_stmt;

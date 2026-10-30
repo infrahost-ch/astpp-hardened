@@ -136,7 +136,8 @@ Fehler haben immer dieselbe Form:
 | PATCH | `/customers/{id}` | Admin, Reseller | Kunde ändern, sperren, entsperren |
 | GET | `/customers/{id}/balance` | alle | Guthaben und Kreditlimit |
 | GET | `/customers/{id}/usage` | alle | Paketminuten: frei, verbraucht, übrig |
-| GET | `/customers/{id}/cdrs` | alle | Gesprächsdaten |
+| GET | `/customers/{id}/cdrs` | alle | Gesprächsdaten eines Kunden |
+| GET | `/cdrs` | Admin, Reseller | Gesprächsdaten aller Kunden |
 | GET | `/customers/{id}/products` | alle | aktive Pakete |
 | POST | `/customers/{id}/products` | Admin, Reseller | Paket zuweisen |
 | DELETE | `/customers/{id}/products/{item_id}` | Admin, Reseller | Paket kündigen |
@@ -319,7 +320,7 @@ Paketminuten werden pro Gespräch auf die volle Minute aufgerundet.
 
 ### GET /customers/{id}/cdrs
 
-Gesprächsdaten, neueste zuerst. Abfrageparameter: `from` und `to` (Datum `2026-10-01` oder Zeitpunkt `2026-10-01T12:00:00Z`, Standard: letzte 30 Tage), `limit` (Standard 100, höchstens 500), `offset`.
+Gesprächsdaten, neueste zuerst (bei gleichem Beginn nach `id`, damit seitenweises Abrufen nichts doppelt liefert oder auslässt). Abfrageparameter: `from` und `to` (Datum `2026-10-01` oder Zeitpunkt `2026-10-01T12:00:00Z`, Standard: letzte 30 Tage; massgebend ist der Beginn des Gesprächs), `limit` (Standard 100, höchstens 500), `offset`.
 
 ```json
 {
@@ -327,13 +328,39 @@ Gesprächsdaten, neueste zuerst. Abfrageparameter: `from` und `to` (Datum `2026-
     { "id": "8f1c...", "start": "2026-10-09T10:15:00Z", "end": "2026-10-09T10:15:24Z",
       "caller_id": "\"Buero\" <0041445550100>", "destination": "41795551234", "destination_name": "Schweiz",
       "duration": 24, "disposition": "NORMAL_CLEARING [16]", "direction": "outbound",
-      "package_call": true, "charge": 0.0, "sip_user": "4000000022" }
+      "package_call": true, "charge": 0.0, "sip_user": "4000000022",
+      "sip_call_id": "3f0b1c2e-7a4d-4c1b-9e2f-5a6b7c8d9e0f" }
   ],
   "meta": { "total": 1, "limit": 100, "offset": 0, "from": "2026-09-10T00:00:00Z", "to": "2026-10-10T08:30:00Z" }
 }
 ```
 
 `duration` ist die verrechnete Gesprächsdauer in Sekunden. `package_call` ist `true`, wenn das Gespräch über Paketminuten lief, `charge` ist dann `0`.
+
+`sip_call_id` ist die SIP-Call-ID des verrechneten Gesprächs, also die Call-ID des INVITE, den der Server von der Telefonanlage oder dem Telefon erhalten hat. Damit lässt sich ein Gespräch dem Datensatz der eigenen Telefonanlage zuordnen. Hinweise:
+
+- `null` bei Gesprächen, die vor der Einführung des Felds gespeichert wurden.
+- Eine Telefonanlage, die Gespräche als B2BUA weitervermittelt (z. B. FreeSWITCH, Asterisk), erzeugt für das Gespräch zu diesem Server eine eigene Call-ID. FreeSWITCH verwendet dafür nur dann die UUID des ausgehenden Kanals (B-Leg), wenn im SIP-Profil `outbound-use-uuid-as-callid` auf `true` steht; sonst ist es eine zufällige Kennung, die nur im SIP-Verkehr vorkommt.
+- Bei internen Gesprächen zwischen zwei Konten und bei eingehenden Gesprächen auf eine Rufnummer (DID) tragen beide Datensätze dieselbe Call-ID, und zwar die des ankommenden Gesprächs (bei DID die des Anbieters, nicht die des Abschnitts zur Telefonanlage des Kunden).
+
+### GET /cdrs
+
+Gesprächsdaten aller Kunden auf einmal (Admin: alle Kunden, Reseller: die eigenen Kunden), zum Beispiel für den regelmässigen Abgleich mit einer Abrechnung. Gleiche Abfrageparameter, Reihenfolge und Felder wie bei `GET /customers/{id}/cdrs`, jeder Datensatz zusätzlich mit `customer_id`. Optional `customer_id`, um auf einen Kunden einzuschränken (ausserhalb der eigenen Sicht: `404`). Gespräche gelöschter Kunden sind nicht enthalten.
+
+```
+GET {{API_BASE}}cdrs?from=2026-10-01&to=2026-10-31&limit=500&offset=0
+```
+
+```json
+{
+  "data": [
+    { "customer_id": 22, "id": "8f1c...", "start": "2026-10-09T10:15:00Z", "...": "...", "sip_call_id": "3f0b1c2e-7a4d-4c1b-9e2f-5a6b7c8d9e0f" }
+  ],
+  "meta": { "total": 1, "limit": 500, "offset": 0, "from": "2026-10-01T00:00:00Z", "to": "2026-10-31T23:59:59Z" }
+}
+```
+
+Weitere Seiten mit `offset` = bisheriges `offset` + `limit` abrufen, bis `offset` ≥ `total`.
 
 <a id="pakete"></a>
 ## Pakete

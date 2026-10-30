@@ -227,20 +227,13 @@ paths:
       - $ref: "#/components/parameters/CustomerId"
     get:
       tags: [customers]
-      summary: Call records, newest first
+      summary: Call records of a customer, newest first
+      description: Filtered by call start; equal start times are ordered by id, so paging with offset neither repeats nor skips records.
       operationId: listCdrs
       parameters:
-        - name: from
-          in: query
-          description: Date (2026-10-01) or date-time (2026-10-01T12:00:00Z). Default - 30 days ago.
-          schema: { type: string }
-        - name: to
-          in: query
-          description: Date (end of day) or date-time. Default - now.
-          schema: { type: string }
-        - name: limit
-          in: query
-          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+        - $ref: "#/components/parameters/CdrFrom"
+        - $ref: "#/components/parameters/CdrTo"
+        - $ref: "#/components/parameters/CdrLimit"
         - $ref: "#/components/parameters/Offset"
       responses:
         "200":
@@ -253,15 +246,40 @@ paths:
                   data:
                     type: array
                     items: { $ref: "#/components/schemas/Cdr" }
-                  meta:
-                    allOf:
-                      - $ref: "#/components/schemas/ListMeta"
-                      - type: object
-                        properties:
-                          from: { type: string, format: date-time }
-                          to: { type: string, format: date-time }
+                  meta: { $ref: "#/components/schemas/CdrListMeta" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /cdrs:
+    get:
+      tags: [customers]
+      summary: Call records of all customers in scope, newest first (admin, reseller)
+      description: Admin keys see the call records of all customers, reseller keys those of their own customers. Same window, order and fields as /customers/{id}/cdrs, each record with customer_id. Records of deleted customers are not included.
+      operationId: listAllCdrs
+      parameters:
+        - $ref: "#/components/parameters/CdrFrom"
+        - $ref: "#/components/parameters/CdrTo"
+        - $ref: "#/components/parameters/CdrLimit"
+        - $ref: "#/components/parameters/Offset"
+        - name: customer_id
+          in: query
+          description: Only this customer (404 if outside the scope of the key)
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/CdrWithCustomer" }
+                  meta: { $ref: "#/components/schemas/CdrListMeta" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
   /customers/{id}/products:
     parameters:
@@ -488,6 +506,20 @@ components:
       name: offset
       in: query
       schema: { type: integer, minimum: 0, default: 0 }
+    CdrFrom:
+      name: from
+      in: query
+      description: Call start from - date (2026-10-01) or date-time (2026-10-01T12:00:00Z). Default - 30 days ago.
+      schema: { type: string }
+    CdrTo:
+      name: to
+      in: query
+      description: Call start up to - date (end of day) or date-time. Default - now.
+      schema: { type: string }
+    CdrLimit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
   responses:
     BadRequest:
       description: Malformed request (invalid_body, unknown_fields, unknown_parameters, invalid_parameter)
@@ -702,6 +734,24 @@ components:
         package_call: { type: boolean }
         charge: { type: number }
         sip_user: { type: string }
+        sip_call_id:
+          type: string
+          nullable: true
+          maxLength: 255
+          description: SIP Call-ID of the billed call, i.e. of the INVITE the server received from the PBX or phone. Null for records stored before the field existed. Internal calls between two accounts and calls to a DID carry the same Call-ID in both records (the one of the incoming call).
+    CdrWithCustomer:
+      allOf:
+        - type: object
+          properties:
+            customer_id: { type: integer }
+        - $ref: "#/components/schemas/Cdr"
+    CdrListMeta:
+      allOf:
+        - $ref: "#/components/schemas/ListMeta"
+        - type: object
+          properties:
+            from: { type: string, format: date-time }
+            to: { type: string, format: date-time }
     SipPassword:
       type: string
       minLength: 12

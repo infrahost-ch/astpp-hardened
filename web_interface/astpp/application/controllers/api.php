@@ -112,6 +112,7 @@ class Api extends CI_Controller {
 			array('GET', '#^customers/(\d+)/balance$#', 'customer_balance', $all),
 			array('GET', '#^customers/(\d+)/usage$#', 'customer_usage', $all),
 			array('GET', '#^customers/(\d+)/cdrs$#', 'customer_cdrs', $all),
+			array('GET', '#^cdrs$#', 'cdrs_list', $ar),
 			array('GET', '#^customers/(\d+)/products$#', 'customer_products', $all),
 			array('POST', '#^customers/(\d+)/products$#', 'customer_product_assign', $ar),
 			array('DELETE', '#^customers/(\d+)/products/(\d+)$#', 'customer_product_terminate', $ar),
@@ -441,21 +442,62 @@ class Api extends CI_Controller {
 		$this->only_query(array('from', 'to', 'limit', 'offset'));
 		$c = $this->load_customer($id);
 		list($limit, $offset) = $this->paging(100, 500);
+		list($from, $to) = $this->cdr_window();
+		$apply = function () use ($c, $from, $to) {
+			$this->db->from('cdrs AS C');
+			$this->db->where(array('C.accountid' => (int) $c['id'], 'C.callstart >=' => $from, 'C.callstart <=' => $to));
+		};
+		$this->send_cdrs($apply, $limit, $offset, $from, $to, false);
+	}
+
+	/**
+	 * Call records of all customers in the key's scope (admin: all customers, reseller: own
+	 * customers), same time window and paging as customer_cdrs, each record with customer_id.
+	 * Filter customer_id: one customer (404 if outside the scope, as /customers/{id}/cdrs).
+	 */
+	private function cdrs_list() {
+		$this->only_query(array('from', 'to', 'limit', 'offset', 'customer_id'));
+		list($limit, $offset) = $this->paging(100, 500);
+		list($from, $to) = $this->cdr_window();
+		$customer = (isset($this->query['customer_id']) && $this->query['customer_id'] !== '') ? $this->load_customer($this->query_int('customer_id', 0)) : NULL;
+		$apply = function () use ($customer, $from, $to) {
+			$this->db->from('cdrs AS C');
+			// same visibility as load_customer(): customer accounts that are not deleted, for resellers their own
+			$this->db->join('accounts AS A', 'A.id = C.accountid', 'inner');
+			$this->db->where(array('A.type' => 0, 'A.deleted' => 0, 'C.callstart >=' => $from, 'C.callstart <=' => $to));
+			if ($this->role === 'reseller') {
+				$this->db->where('A.reseller_id', $this->account_id);
+			}
+			if ($customer !== NULL) {
+				$this->db->where('C.accountid', (int) $customer['id']);
+			}
+		};
+		$this->send_cdrs($apply, $limit, $offset, $from, $to, true);
+	}
+
+	/** Time window of the CDR lists: from/to (UTC), default the last 30 days. */
+	private function cdr_window() {
 		$from = $this->query_datetime('from', gmdate('Y-m-d 00:00:00', strtotime('-30 days')));
 		$to = $this->query_datetime('to', gmdate('Y-m-d H:i:s'));
-		$apply = function () use ($c, $from, $to) {
-			$this->db->from('cdrs');
-			$this->db->where(array('accountid' => (int) $c['id'], 'callstart >=' => $from, 'callstart <=' => $to));
-		};
+		return array($from, $to);
+	}
+
+	/**
+	 * Count and send one page of call records, newest first. $apply sets table (alias C) and
+	 * conditions; it runs twice (count, page). Equal start times are ordered by uniqueid, so
+	 * paging with offset neither repeats nor skips records.
+	 */
+	private function send_cdrs($apply, $limit, $offset, $from, $to, $with_customer) {
 		$apply();
 		$total = (int) $this->db->count_all_results();
 		$apply();
-		$this->db->select('uniqueid, callstart, end_stamp, callerid, callednum, notes, billseconds, disposition, call_direction, calltype, package_id, debit, sip_user');
-		$this->db->order_by('callstart', 'DESC');
+		$this->db->select('C.uniqueid, C.accountid, C.callstart, C.end_stamp, C.callerid, C.callednum, C.notes, C.billseconds, C.disposition, C.call_direction, C.calltype, C.debit, C.sip_user, C.sip_call_id');
+		$this->db->order_by('C.callstart', 'DESC');
+		$this->db->order_by('C.uniqueid', 'DESC');
 		$this->db->limit($limit, $offset);
 		$data = array();
 		foreach ($this->db->get()->result_array() as $r) {
-			$data[] = array(
+			$row = array(
 				'id' => $r['uniqueid'],
 				'start' => $this->iso($r['callstart']),
 				'end' => $this->iso($r['end_stamp']),
@@ -467,8 +509,14 @@ class Api extends CI_Controller {
 				'direction' => $r['call_direction'],
 				'package_call' => $r['calltype'] === 'FREE',
 				'charge' => $r['calltype'] === 'FREE' ? 0.0 : $this->money($r['debit']),
-				'sip_user' => $r['sip_user']
+				'sip_user' => $r['sip_user'],
+				// SIP Call-ID of the billed leg (INVITE received by ASTPP); NULL for records written before it was stored
+				'sip_call_id' => (string) $r['sip_call_id'] === '' ? NULL : $r['sip_call_id']
 			);
+			if ($with_customer) {
+				$row = array('customer_id' => (int) $r['accountid']) + $row;
+			}
+			$data[] = $row;
 		}
 		$this->send(200, array('data' => $data, 'meta' => array('total' => $total, 'limit' => $limit, 'offset' => $offset, 'from' => $this->iso($from), 'to' => $this->iso($to))));
 	}
