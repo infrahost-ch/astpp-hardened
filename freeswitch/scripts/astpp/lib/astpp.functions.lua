@@ -660,14 +660,10 @@ function number_loop(destination_number,code,skip_tild)
 	return number_loop_str
 end    
 
--- Adding slash \ if number starting with +. 
+-- Escape regex characters (leading +, * of feature codes etc.) for the dialplan condition.
 function plus_destination_number(destination_number)
     destination_number = destination_number:gsub("%s+", "")
-    local dnumber = destination_number
-	local dfirst =  string.match(dnumber, "^(.)")
-	if (dfirst == "+") then
-		dnumber = "\\"..dnumber
-	end
+    local dnumber = destination_number:gsub("([%^%$%(%)%.%[%]%*%+%?{}|\\])", "\\%1")
     return dnumber
 end
 
